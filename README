@@ -1,0 +1,11 @@
+Zombie Awareness
+
+An enhancement to the core of Minecrafts entities, the main focus being a re-activation of pathfinding and increased awareness.
+
+Main Features:
+--------------
+
+- Entities use pathfinding to aquire their targets, they no longer just move right towards you.
+- Scent based awareness that causes monsters to track blood spilt by animals or the player
+- Sound based awareness that causes monsters to track loud or heavily repeated noises, gives mining in caves a whole new challenge
+- Customizable PF range and PF usage exception list
