@@ -10,4 +10,4 @@ Main Features:
 - Sound based awareness that causes monsters to track loud or heavily repeated noises, gives mining in caves a whole new challenge
 - Customizable PF range and PF usage exception list
 
-Zombie Awareness also contains a basic entity AI API for a few hooks that I required in Pets Mod and Nightmare Mode, more details on the hooks available are in BaseEntityHooks.java
+- More (Accurate) Info: http://coros.us/mods/zombieawareness

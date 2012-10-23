@@ -1,9 +1,6 @@
-package net.minecraft.src;
+package ZombieAwareness;
 
-import net.minecraft.src.Entity;
-import net.minecraft.src.NBTTagCompound;
-import net.minecraft.src.World;
-import net.minecraft.src.mod_PathingActivated;
+import net.minecraft.src.*;
 
 public class EntityScent extends Entity {
 
@@ -19,12 +16,13 @@ public class EntityScent extends Entity {
         this.setSize(1.1F, 1.1F);
         this.strength = 100;
         this.age = 0;
-        mod_PathingActivated.traceCount++;
+        ZAUtil.traceCount++;
     }
 
-    public void setEntityDead() {
-        super.setEntityDead();
-        mod_PathingActivated.traceCount--;
+    @Override
+    public void setDead() {
+        super.setDead();
+        ZAUtil.traceCount--;
     }
 
     protected boolean canTriggerWalking() {
@@ -38,9 +36,17 @@ public class EntityScent extends Entity {
     public void entityInit() {}
 
     public float getRange() {
-        return (float)this.strength / 100.0F * 64.0F;
+        //return (float)this.strength / 100.0F * mod_ZombieAwareness.maxPFRange;
         //return (float)this.strength / 100.0F * (float)mod_PathingActivated.MaxPFRange.get().intValue();
-        //return this.type == 1?(float)this.strength / 100.0F * (float)mod_PathingActivated.MaxPFRange.get().intValue() / 2.0F:(float)this.strength / 100.0F * (float)mod_PathingActivated.MaxPFRange.get().intValue();
+    	
+    	if (this.type == 2) {
+    		return (float)this.strength / 100.0F * 128;
+    	} else if (this.type == 1) {
+    		return (float)this.strength / 100.0F * (float)mod_ZombieAwareness.maxPFRange / 2.0F;
+    	} else {
+    		return (float)this.strength / 100.0F * (float)mod_ZombieAwareness.maxPFRange;
+    	}
+        
     }
 
     public void setStrength(int var1) {
@@ -52,21 +58,24 @@ public class EntityScent extends Entity {
         //System.out.println("age: " + age);
     }
 
+    @Override
     public void onUpdate() {
         ++this.age;
         this.strength = 100 - this.age / 10;
-
+        //this.setDead();
         //System.out.println(this.getRange());
         if(this.strength <= 0) {
-            this.setEntityDead();
+        	this.setDead();
         }
     }
 
+    @Override
     public void writeEntityToNBT(NBTTagCompound var1) {
         var1.setShort("age", (short)age);
         var1.setShort("type", (short)type);
     }
 
+    @Override
     public void readEntityFromNBT(NBTTagCompound var1) {
         age = var1.getShort("age");
         type = var1.getShort("type");
