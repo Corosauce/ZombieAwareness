@@ -1,8 +1,17 @@
 package ZombieAwareness;
 
-import net.minecraft.src.*;
+import net.minecraft.entity.Entity;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.World;
 
-public class EntityScent extends Entity {
+import ZombieAwareness.config.ZAConfig;
+
+import com.google.common.io.ByteArrayDataInput;
+import com.google.common.io.ByteArrayDataOutput;
+
+import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
+
+public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
 
     public int type = 0;
     public boolean isUsed = false;
@@ -13,16 +22,24 @@ public class EntityScent extends Entity {
     public EntityScent(World var1) {
         super(var1);
         this.isImmuneToFire = true;
-        this.setSize(1.1F, 1.1F);
+        this.setSize(0.1F, 0.1F);
         this.strength = 100;
         this.age = 0;
-        ZAUtil.traceCount++;
+        if (!var1.isRemote) {
+        	ZAUtil.traceCount++;
+        }
+        //System.out.println("new trace: " + ZAUtil.traceCount);
+    }
+    
+    @Override
+    public boolean canBeCollidedWith() {
+    	return false;
     }
 
     @Override
     public void setDead() {
         super.setDead();
-        ZAUtil.traceCount--;
+        if (!worldObj.isRemote) ZAUtil.traceCount--;
     }
 
     protected boolean canTriggerWalking() {
@@ -42,9 +59,9 @@ public class EntityScent extends Entity {
     	if (this.type == 2) {
     		return (float)this.strength / 100.0F * 128;
     	} else if (this.type == 1) {
-    		return (float)this.strength / 100.0F * (float)mod_ZombieAwareness.maxPFRange / 2.0F;
+    		return (float)this.strength / 100.0F * (float)ZAConfig.maxPFRangeSense / 2.0F;
     	} else {
-    		return (float)this.strength / 100.0F * (float)mod_ZombieAwareness.maxPFRange;
+    		return (float)this.strength / 100.0F * (float)ZAConfig.maxPFRangeSense;
     	}
         
     }
@@ -60,11 +77,15 @@ public class EntityScent extends Entity {
 
     @Override
     public void onUpdate() {
+    	
         ++this.age;
         this.strength = 100 - this.age / 10;
         //this.setDead();
-        //System.out.println(this.getRange());
-        if(this.strength <= 0) {
+        if (type == 0) {
+        	//System.out.println(this.strength + " - " + worldObj.isRemote);
+        }
+        
+        if(!worldObj.isRemote && (this.strength <= 0 || age > 1200)) {
         	this.setDead();
         }
     }
@@ -80,4 +101,21 @@ public class EntityScent extends Entity {
         age = var1.getShort("age");
         type = var1.getShort("type");
     }
+
+	@Override
+	public void writeSpawnData(ByteArrayDataOutput data) {
+		data.writeInt(this.type);
+		data.writeInt(this.age);		
+	}
+
+	@Override
+	public void readSpawnData(ByteArrayDataInput data) {
+		
+		//for easy cleaning purposes
+		if (!worldObj.isRemote) this.setDead();
+		
+		type = data.readInt();
+		age = data.readInt();
+		//if (type == 0) System.out.println("synced age: " + age);
+	}
 }

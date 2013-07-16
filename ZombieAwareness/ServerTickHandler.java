@@ -2,21 +2,21 @@ package ZombieAwareness;
 
 import java.util.EnumSet;
 
-import net.minecraft.client.Minecraft;
+import net.minecraft.command.ServerCommandManager;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.src.GuiScreen;
-
+import net.minecraft.world.World;
+import net.minecraftforge.common.DimensionManager;
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.ITickHandler;
-import cpw.mods.fml.common.Side;
 import cpw.mods.fml.common.TickType;
 
 public class ServerTickHandler implements ITickHandler
 {
 	
-	mod_ZombieAwareness mod;
+	ZombieAwareness mod;
+	World lastWorld = null;
 	
-    public ServerTickHandler(mod_ZombieAwareness mod_ZombieAwareness) {
-		// TODO Auto-generated constructor stub
+    public ServerTickHandler(ZombieAwareness mod_ZombieAwareness) {
     	mod = mod_ZombieAwareness;
 	}
 
@@ -46,8 +46,11 @@ public class ServerTickHandler implements ITickHandler
 
     public void onTickInGame()
     {
+    	if (lastWorld != DimensionManager.getWorld(0)) {
+    		lastWorld = DimensionManager.getWorld(0);
+        	((ServerCommandManager)FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager()).registerCommand(new CommandZA());
+        }
+    	
     	mod.onTick(MinecraftServer.getServer());
-        //System.out.println("onTickInGame");
-        //TODO: Your Code Here
     }
 }
