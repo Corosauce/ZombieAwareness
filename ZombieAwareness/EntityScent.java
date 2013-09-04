@@ -3,7 +3,6 @@ package ZombieAwareness;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
-
 import ZombieAwareness.config.ZAConfig;
 
 import com.google.common.io.ByteArrayDataInput;

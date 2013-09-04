@@ -1,15 +1,8 @@
 package ZombieAwareness;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Level;
-
-import ZombieAwareness.config.ZAConfig;
-import ZombieAwareness.config.ZAConfigFeatures;
-import ZombieAwareness.config.ZAConfigPlayerLists;
-import ZombieAwareness.config.ZAConfigSpawning;
 
 import modconfig.ConfigMod;
 import net.minecraft.block.Block;
@@ -33,7 +26,10 @@ import CoroAI.PFCallbackItem;
 import CoroAI.c_CoroAIUtil;
 import CoroAI.componentAI.ICoroAI;
 import CoroAI.entity.c_EnhAI;
-import cpw.mods.fml.common.FMLLog;
+import ZombieAwareness.config.ZAConfig;
+import ZombieAwareness.config.ZAConfigFeatures;
+import ZombieAwareness.config.ZAConfigPlayerLists;
+import ZombieAwareness.config.ZAConfigSpawning;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.Init;
 import cpw.mods.fml.common.Mod.PreInit;
@@ -45,12 +41,13 @@ import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
 @NetworkMod(clientSideRequired = false, serverSideRequired = false)
-@Mod(modid = "ZAMod", name="Zombie Awareness", version="v1.85")
+@Mod(modid = "ZAMod", name="Zombie Awareness", version="v1.9")
 public class ZombieAwareness
     implements Runnable, IPFCallback {
 	
 	@Mod.Instance( value = "ZAMod" )
 	public static ZombieAwareness instance;
+	public static String modID = "zombieawareness";
 
 	//Usefull references
     public static MinecraftServer mc;
@@ -376,6 +373,11 @@ public class ZombieAwareness
 		try {
 			for (int i = 0; i < list.size(); i++) {
 				PFCallbackItem item = list.get(i);
+				
+				//lazy fix
+				/*if (item.speed == 0.23F) {
+					item.speed = 1F;
+				}*/
 				
 				if (!item.ent.isDead && c_CoroAIUtil.chunkExists(item.ent.worldObj, (int)item.ent.posX / 16, (int)item.ent.posZ / 16)) item.ent.getNavigator().setPath(item.pe, item.speed);
 			}

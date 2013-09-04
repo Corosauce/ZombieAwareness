@@ -4,18 +4,16 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import CoroAI.PFQueue;
-import CoroAI.c_CoroAIUtil;
-
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.util.ChatMessageComponent;
 import net.minecraftforge.common.DimensionManager;
+import CoroAI.PFQueue;
+import CoroAI.c_CoroAIUtil;
 
 public class CommandZA extends CommandBase {
 
@@ -25,13 +23,18 @@ public class CommandZA extends CommandBase {
 	}
 
 	@Override
+	public String getCommandUsage(ICommandSender icommandsender) {
+		return "";
+	}
+
+	@Override
 	public void processCommand(ICommandSender var1, String[] var2) {
 		
 		try {
 			if (var2.length < 1)
 	        {
 				//exception throws dont seem to always get sent to player, do it manually
-				var1.sendChatToPlayer("Invalid usage, example: '/za set maxZombiesNight 100, /za get count <entityname>, /za kill <entityname>', see ZAMod.cfg for all possible set configurations");
+				var1.sendChatToPlayer(ChatMessageComponent.func_111077_e("Invalid usage, example: '/za set maxZombiesNight 100, /za get count <entityname>, /za kill <entityname>', see ZAMod.cfg for all possible set configurations"));
 	            throw new WrongUsageException("Invalid usage");
 	        }
 	        else
@@ -53,7 +56,7 @@ public class CommandZA extends CommandBase {
 			        		c_CoroAIUtil.setPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1], boolVal);
 			        	}
 			        	
-			        	var1.sendChatToPlayer(var2[1] + " now set to: " + c_CoroAIUtil.getPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1]));
+			        	var1.sendChatToPlayer(ChatMessageComponent.func_111077_e(var2[1] + " now set to: " + c_CoroAIUtil.getPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1])));
 	        		}
 		        	
 		        	
@@ -64,42 +67,42 @@ public class CommandZA extends CommandBase {
 	        		if (var2[1].equalsIgnoreCase("count")) {
 	        			boolean exact = false;
 	        			if (var2.length > 3) exact = var2[3].equals("exact");
-	        			var1.sendChatToPlayer(var2[2] + " count: " + getEntityCount(var2[2], false, exact, ((EntityPlayer)var1).dimension));
+	        			var1.sendChatToPlayer(ChatMessageComponent.func_111077_e(var2[2] + " count: " + getEntityCount(var2[2], false, exact, ((EntityPlayer)var1).dimension)));
 	        		} else if (var2[1].equalsIgnoreCase("time")) {
 	        			if (ZombieAwareness.lastSpawnSysTime > 0) {
-	        				var1.sendChatToPlayer("last ZA spawn: " + (int)((System.currentTimeMillis() - ZombieAwareness.lastSpawnSysTime) / 1000F) + "s");
+	        				var1.sendChatToPlayer(ChatMessageComponent.func_111077_e("last ZA spawn: " + (int)((System.currentTimeMillis() - ZombieAwareness.lastSpawnSysTime) / 1000F) + "s"));
 	        			} else {
-	        				var1.sendChatToPlayer("none yet");
+	        				var1.sendChatToPlayer(ChatMessageComponent.func_111077_e("none yet"));
 	        			}
 	        		} else if (var2[1].equalsIgnoreCase("PFQueue")) {
 	        			if (var2[2].equalsIgnoreCase("lastpf")) {
-	        				var1.sendChatToPlayer("last PF Time: " + ((System.currentTimeMillis() - PFQueue.lastSuccessPFTime) / 1000F));
+	        				var1.sendChatToPlayer(ChatMessageComponent.func_111077_e("last PF Time: " + ((System.currentTimeMillis() - PFQueue.lastSuccessPFTime) / 1000F)));
 	        				//var1.sendChatToPlayer(var2[2] + " set to: " + c_CoroAIUtil.getPrivateValueBoth(PFQueue.class, PFQueue.instance, var2[2], var2[2]));
 	        			} if (var2[2].equalsIgnoreCase("stats")) {
-	        				var1.sendChatToPlayer("PFQueue Stats");
-	        				var1.sendChatToPlayer("-------------");
-	        				var1.sendChatToPlayer(PFQueue.lastQueueSize + " - " + "PF queue size");
-	        				var1.sendChatToPlayer(PFQueue.lastChunkCacheCount + " - " + "Cached chunks");
-	        				var1.sendChatToPlayer(PFQueue.statsPerSecondPath + " - " + "Pathfinds / 10 sec");
-	        				var1.sendChatToPlayer(PFQueue.statsPerSecondPathSkipped + " - " + "Old PF Skips / 10 sec");
-	        				var1.sendChatToPlayer(PFQueue.statsPerSecondNodeMaxIter + " - " + "Big PF Skips / 10 sec");
-	        				var1.sendChatToPlayer(PFQueue.statsPerSecondNode + " - " + "Nodes ran / 10 sec");
+	        				var1.sendChatToPlayer(ChatMessageComponent.func_111077_e("PFQueue Stats"));
+	        				var1.sendChatToPlayer(ChatMessageComponent.func_111077_e("-------------"));
+	        				var1.sendChatToPlayer(ChatMessageComponent.func_111077_e(PFQueue.lastQueueSize + " - " + "PF queue size"));
+	        				var1.sendChatToPlayer(ChatMessageComponent.func_111077_e(PFQueue.lastChunkCacheCount + " - " + "Cached chunks"));
+	        				var1.sendChatToPlayer(ChatMessageComponent.func_111077_e(PFQueue.statsPerSecondPath + " - " + "Pathfinds / 10 sec"));
+	        				var1.sendChatToPlayer(ChatMessageComponent.func_111077_e(PFQueue.statsPerSecondPathSkipped + " - " + "Old PF Skips / 10 sec"));
+	        				var1.sendChatToPlayer(ChatMessageComponent.func_111077_e(PFQueue.statsPerSecondNodeMaxIter + " - " + "Big PF Skips / 10 sec"));
+	        				var1.sendChatToPlayer(ChatMessageComponent.func_111077_e(PFQueue.statsPerSecondNode + " - " + "Nodes ran / 10 sec"));
 	        					        				
 	        				
 	        				
 	        			} else {
 	        				//var1.sendChatToPlayer("Last chunk cache count: " + PFQueue.lastChunkCacheCount);
-		        			var1.sendChatToPlayer(var2[2] + " set to: " + c_CoroAIUtil.getPrivateValueBoth(PFQueue.class, PFQueue.instance, var2[2], var2[2]));
+		        			var1.sendChatToPlayer(ChatMessageComponent.func_111077_e(var2[2] + " set to: " + c_CoroAIUtil.getPrivateValueBoth(PFQueue.class, PFQueue.instance, var2[2], var2[2])));
 	        			}
 	        		} else {
-	        			var1.sendChatToPlayer(var2[1] + " set to: " + c_CoroAIUtil.getPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1]));
+	        			var1.sendChatToPlayer(ChatMessageComponent.func_111077_e(var2[1] + " set to: " + c_CoroAIUtil.getPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1])));
 	        		}
 	        	} else if (var2[0].equalsIgnoreCase("kill")) {
 	        		boolean exact = false;
 	        		int dim = ((EntityPlayer)var1).dimension;
         			//if (var2.length > 2) exact = var2[2].equals("exact");
 	        		if (var2.length > 2) dim = Integer.valueOf(var2[1]);
-	        		var1.sendChatToPlayer(var2[1] + " count killed: " + getEntityCount(var2[1], true, exact, dim));
+	        		var1.sendChatToPlayer(ChatMessageComponent.func_111077_e(var2[1] + " count killed: " + getEntityCount(var2[1], true, exact, dim)));
 	        	} else if (var2[0].equalsIgnoreCase("list")) {
 	        		String param = null;
 	        		int dim = ((EntityPlayer)var1).dimension;
@@ -107,12 +110,12 @@ public class CommandZA extends CommandBase {
 	        		if (var2.length > 2) param = var2[2];
 	        		HashMap<String, Integer> entNames = listEntities(param, dim);
 	                
-	        		var1.sendChatToPlayer("List for dimension id: " + dim);
+	        		var1.sendChatToPlayer(ChatMessageComponent.func_111077_e("List for dimension id: " + dim));
 	        		
 	                Iterator it = entNames.entrySet().iterator();
 	                while (it.hasNext()) {
 	                    Map.Entry pairs = (Map.Entry)it.next();
-	                    var1.sendChatToPlayer(pairs.getKey() + " = " + pairs.getValue());
+	                    var1.sendChatToPlayer(ChatMessageComponent.func_111077_e(pairs.getKey() + " = " + pairs.getValue()));
 	                    //System.out.println(pairs.getKey() + " = " + pairs.getValue());
 	                    it.remove();
 	                }

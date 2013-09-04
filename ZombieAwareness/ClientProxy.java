@@ -1,25 +1,8 @@
 package ZombieAwareness;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.entity.RenderZombie;
-import net.minecraft.entity.Entity;
 import net.minecraft.src.ModLoader;
-import net.minecraft.world.World;
-import net.minecraft.world.storage.WorldInfo;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-
-import cpw.mods.fml.client.FMLClientHandler;
-import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.client.registry.RenderingRegistry;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)

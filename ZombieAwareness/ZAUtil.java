@@ -5,19 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-import ZombieAwareness.config.ZAConfig;
-import ZombieAwareness.config.ZAConfigFeatures;
-import ZombieAwareness.config.ZAConfigPlayerLists;
-import ZombieAwareness.config.ZAConfigSpawning;
-
-import cpw.mods.fml.common.ObfuscationReflectionHelper;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.monster.EntityCreeper;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.monster.EntitySkeleton;
 import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.entity.monster.EntityZombie;
@@ -32,7 +25,10 @@ import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import CoroAI.PFQueue;
 import CoroAI.c_CoroAIUtil;
-import CoroAI.entity.c_EnhAI;
+import ZombieAwareness.config.ZAConfig;
+import ZombieAwareness.config.ZAConfigFeatures;
+import ZombieAwareness.config.ZAConfigPlayerLists;
+import ZombieAwareness.config.ZAConfigSpawning;
 
 public class ZAUtil {
 	
@@ -82,17 +78,17 @@ public class ZAUtil {
 		int lastHealth = lastHealths.containsKey(player.username) ? lastHealths.get(player.username) : 0;
 		Long lastBleedTime = lastBleedTimes.containsKey(player.username) ? lastBleedTimes.get(player.username) : 0;
 		
-        if(player.getHealth() != lastHealth) {
-            if(player.getHealth() < lastHealth) {
+        if((int)player.func_110143_aJ() != lastHealth) {
+            if(player.func_110143_aJ() < lastHealth) {
                 spawnScent(player);
             }
 
-            lastHealth = player.getHealth();
+            lastHealth = (int) player.func_110143_aJ();
         }
         
         lastHealths.put(player.username, lastHealth);
 
-        if(player.getHealth() < 12 && lastBleedTime < System.currentTimeMillis()) {
+        if(player.func_110143_aJ() < 12 && lastBleedTime < System.currentTimeMillis()) {
             lastBleedTime = System.currentTimeMillis() + 30000L;
             lastBleedTimes.put(player.username, lastBleedTime);
             spawnScent(player);
@@ -104,7 +100,7 @@ public class ZAUtil {
     public static void moveHelper(EntityLiving ent) {
     	
     	//TEMP!
-    	//Float.valueOf(c_CoroAIUtil.getPrivateValueBoth(EntityLiving.class, (EntityLiving)ent, c_CoroAIUtil.refl_obf_Item_moveSpeed, c_CoroAIUtil.refl_mcp_Item_moveSpeed).toString());
+    	//Float.valueOf(c_CoroAIUtil.getPrivateValueBoth(EntityLivingBase.class, (EntityLivingBase)ent, c_CoroAIUtil.refl_obf_Item_moveSpeed, c_CoroAIUtil.refl_mcp_Item_moveSpeed).toString());
     	
     	if (ZAConfig.zombieRandSpeedBoost > 0 && ent instanceof EntityZombie && !EntityList.getEntityString(ent).contains("BrainyZombie")) {
 	    	float moveSpeed = c_CoroAIUtil.getMoveSpeed(ent);
@@ -112,10 +108,12 @@ public class ZAUtil {
 	    	if (moveSpeed == 0.23F) {
 	    		float newSpeed = moveSpeed + (ent.worldObj.rand.nextInt(ZAConfig.zombieRandSpeedBoost) / 70F);
 	    		
-	    		//ObfuscationReflectionHelper.setPrivateValue(EntityLiving.class, ent, c_CoroAIUtil.refl_obf_Item_moveSpeed, newSpeed);
-	    		c_CoroAIUtil.setMoveSpeed(ent, newSpeed);
-	    		//c_CoroAIUtil.setPrivateValueBoth(EntityLiving.class, ent, c_CoroAIUtil.refl_obf_Item_moveSpeed, c_CoroAIUtil.refl_mcp_Item_moveSpeed, newSpeed);
-	    		//c_CoroAIUtil.setPrivateValueBoth(EntityLiving.class, (EntityLiving)ent, ObfuscationReflectionHelper.remapFieldNames("EntityLiving", c_CoroAIUtil.refl_obf_Item_moveSpeed), c_CoroAIUtil.refl_mcp_Item_moveSpeed, newSpeed);
+	    		//new attribute adding code needed here, checks for existing attribute, if it doesnt have it adds one with a random speed buff
+	    		
+	    		//ObfuscationReflectionHelper.setPrivateValue(EntityLivingBase.class, ent, c_CoroAIUtil.refl_obf_Item_moveSpeed, newSpeed);
+	    		//c_CoroAIUtil.setMoveSpeed(ent, newSpeed);
+	    		//c_CoroAIUtil.setPrivateValueBoth(EntityLivingBase.class, ent, c_CoroAIUtil.refl_obf_Item_moveSpeed, c_CoroAIUtil.refl_mcp_Item_moveSpeed, newSpeed);
+	    		//c_CoroAIUtil.setPrivateValueBoth(EntityLivingBase.class, (EntityLivingBase)ent, ObfuscationReflectionHelper.remapFieldNames("EntityLivingBase", c_CoroAIUtil.refl_obf_Item_moveSpeed), c_CoroAIUtil.refl_mcp_Item_moveSpeed, newSpeed);
 	    	}
 	    	
 	    	//force fixing ai speed sets
@@ -180,14 +178,14 @@ public class ZAUtil {
 		}
     }
     
-    public static void huntTarget(EntityLiving ent, EntityLiving targ, int pri) {
+    public static void huntTarget(EntityLivingBase ent, EntityLivingBase targ, int pri) {
 		PFQueue.getPath(ent, targ, ZAConfig.maxPFRange, pri, ZombieAwareness.instance);
 		//System.out.println("huntTarget call: " + ent + " -> " + targ);
-		ent.setAttackTarget(targ);
+		if (ent instanceof EntityLiving) ((EntityLiving)ent).setAttackTarget(targ);
 		//setState(EnumActState.FIGHTING);
 	}
 	
-	public static void huntTarget(EntityLiving ent, EntityLiving targ) {
+	public static void huntTarget(EntityLivingBase ent, EntityLivingBase targ) {
 		huntTarget(ent, targ, 0);
 	}
     
@@ -196,7 +194,7 @@ public class ZAUtil {
 	}
 	
     public static boolean isEnemy(Entity ent, Entity targ, boolean omniTarget) {
-    	if (targ instanceof EntityLiving) {
+    	if (targ instanceof EntityLivingBase) {
 			if (targ instanceof EntityPlayer) {
 				if (!((EntityPlayer) targ).capabilities.isCreativeMode) {
 					if (!omniTarget) {
@@ -266,14 +264,15 @@ public class ZAUtil {
 	    	
 	    customMobTick(ent);
     	
-    	moveHelper(ent);
+	    //System.out.println("ZA MOVEHELPER OFF");
+    	//moveHelper(ent);
     }
     
-    public static void customMobTick(EntityLiving ent) {
+    public static void customMobTick(EntityLivingBase ent) {
     	if (ent instanceof EntitySpider) {
     		if (ent.riddenByEntity != null && ent.riddenByEntity instanceof EntitySkeleton) {
     			//setAge(ent, 0);
-    			//setAge((EntityLiving)ent.riddenByEntity, 0);
+    			//setAge((EntityLivingBase)ent.riddenByEntity, 0);
     			
     			if (ent.worldObj.rand.nextInt(100) == 0) {
     				spawnWaypoint(ent);
@@ -282,19 +281,19 @@ public class ZAUtil {
     	}
     }
     
-    public static void setAge(EntityLiving ent, int age) {
+    public static void setAge(EntityLivingBase ent, int age) {
     	try {
-    		setPrivateValue(EntityLiving.class, ent, "bC", age);
+    		setPrivateValue(EntityLivingBase.class, ent, "bC", age);
     	} catch (Exception ex) {
     		try {
-    			setPrivateValue(EntityLiving.class, ent, "entityAge", age);
+    			setPrivateValue(EntityLivingBase.class, ent, "entityAge", age);
     		} catch (Exception ex2) {
     			ex2.printStackTrace();
     		}
     	}
     }
     
-    public static boolean ai_FindLightSource(EntityLiving ent) {
+    public static boolean ai_FindLightSource(EntityLivingBase ent) {
     	
     	if (ent.worldObj.isDaytime()) return false;
     	
@@ -318,7 +317,7 @@ public class ZAUtil {
 		    		int id = ent.worldObj.getBlockId(rX, rY, rZ);
 		    		
 		    		if (lightValue > 4) {
-		    			if ((ent.getDistanceToEntity(entP) > 64 && ent.worldObj.rand.nextInt(20) == 0) || ent.worldObj.rayTraceBlocks(ent.worldObj.getWorldVec3Pool().getVecFromPool(ent.posX, ent.posY + (double)ent.getEyeHeight(), ent.posZ), ent.worldObj.getWorldVec3Pool().getVecFromPool(rX, rY, rZ)) == null) {
+		    			if ((ent.getDistanceToEntity(entP) > 64 && ent.worldObj.rand.nextInt(20) == 0) || ent.worldObj.clip(ent.worldObj.getWorldVec3Pool().getVecFromPool(ent.posX, ent.posY + (double)ent.getEyeHeight(), ent.posZ), ent.worldObj.getWorldVec3Pool().getVecFromPool(rX, rY, rZ)) == null) {
 		    				if (PFQueue.getPath(ent, rX, rY, rZ, 128F, 0, ZombieAwareness.instance)) {
 			    				if (debug) System.out.println("pathing to lightsource");
 			    			}
@@ -353,11 +352,11 @@ public class ZAUtil {
     	return false;
     }
     
-    public static boolean ai_FindSense(EntityLiving ent) {
+    public static boolean ai_FindSense(EntityLivingBase ent) {
     	return ai_FindSense(ent, true);
     }
     
-    public static boolean ai_FindSense(EntityLiving ent, boolean includeWaypoints) {
+    public static boolean ai_FindSense(EntityLivingBase ent, boolean includeWaypoints) {
     	
         Entity var3 = getScent(ent);
 
@@ -394,7 +393,7 @@ public class ZAUtil {
 	            Entity entity1 = (Entity)list.get(j);
 	            if(isEnemy(ent, entity1, omnipotent))
 	            {
-	            	if (omnipotent || (ZAConfig.seeThroughWalls || ((EntityLiving) entity1).canEntityBeSeen(ent))) {
+	            	if (omnipotent || (ZAConfig.seeThroughWalls || ((EntityLivingBase) entity1).canEntityBeSeen(ent))) {
 	            		if (sanityCheck(ent, entity1)/* && entity1 instanceof EntityPlayer*/) {
 	            			float dist = ent.getDistanceToEntity(entity1);
 	            			if (dist < closest) {
@@ -411,7 +410,7 @@ public class ZAUtil {
 	            }
 	        }
 	        if (clEnt != null) {
-	        	huntTarget(ent, (EntityLiving)clEnt);
+	        	huntTarget(ent, (EntityLivingBase)clEnt);
 	        	return true;
 	        }
 	        /*if (!found) {
@@ -631,7 +630,7 @@ public class ZAUtil {
         //System.out.println(var1.getRange());
     }
     
-    public static void spawnNewMobSurface(EntityLiving var0) {
+    public static void spawnNewMobSurface(EntityLivingBase var0) {
         
         int range = 256;
         int minDist = 50;
@@ -839,13 +838,13 @@ public class ZAUtil {
         }
     }
     
-    public static Vec3 findLitBlock(EntityLiving ent, int yOffset, float factor, boolean noYaw) {
+    public static Vec3 findLitBlock(EntityLivingBase ent, int yOffset, float factor, boolean noYaw) {
     	
     	//temp test override
     	//ent = FMLClientHandler.instance().getClient().thePlayer;
     	
     	try {
-	    	EntityLiving entityliving = ent;
+	    	EntityLivingBase entityliving = ent;
 	    	boolean foundLit = false;
 	    	Vec3 foundVec = null;
 	    	int tryPhase = 1;
@@ -875,7 +874,7 @@ public class ZAUtil {
 		        int lightLevel = ent.worldObj.getBlockLightValue((int)vec3d1.xCoord, (int)vec3d1.yCoord, (int)vec3d1.zCoord);
 		        if (lightLevel > 4) {
 		        	//System.out.println("test light check: " + lightLevel + " - phase: " + tryPhase + " - dist check: " + ent.getDistance(vec3d1.xCoord, vec3d1.yCoord, vec3d1.zCoord));
-		        	MovingObjectPosition movingobjectposition = entityliving.worldObj.rayTraceBlocks_do(Vec3.createVectorHelper(ent.posX, ent.posY+1, ent.posZ), vec3d1, true);
+		        	MovingObjectPosition movingobjectposition = entityliving.worldObj.clip(Vec3.createVectorHelper(ent.posX, ent.posY+1, ent.posZ), vec3d1, true);
 		        	
 		        	//if (movingobjectposition == null || (movingobjectposition.blockX == (int)vec3d1.xCoord && movingobjectposition.blockY == (int)vec3d1.yCoord && movingobjectposition.blockZ == (int)vec3d1.zCoord)) {
 			        	//System.out.println("test 2 light check: " + lightLevel + " - " + tryPhase);
@@ -898,11 +897,11 @@ public class ZAUtil {
 		return null;
     }
     
-    public static MovingObjectPosition getAimBlock(EntityLiving ent, int yOffset, float dist, boolean noYaw) {
+    public static MovingObjectPosition getAimBlock(EntityLivingBase ent, int yOffset, float dist, boolean noYaw) {
     	
     	//if (true) return null;
     	try {
-	    	EntityLiving entityliving = ent;
+	    	EntityLivingBase entityliving = ent;
 	    	float f = dist;
 	        float f1 = entityliving.prevRotationPitch + (entityliving.rotationPitch - entityliving.prevRotationPitch) * f;
 	    	float f3 = entityliving.prevRotationYaw + (entityliving.rotationYaw - entityliving.prevRotationYaw) * f;
@@ -927,7 +926,7 @@ public class ZAUtil {
 	        if (lightLevel > 4) {
 	        	//System.out.println("test light check: " + lightLevel);
 	        }
-	        MovingObjectPosition movingobjectposition = entityliving.worldObj.rayTraceBlocks_do(vec3d, vec3d1, true);
+	        MovingObjectPosition movingobjectposition = entityliving.worldObj.clip(vec3d, vec3d1, true);
 	
 	        int id = -1;
 	        

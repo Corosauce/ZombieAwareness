@@ -1,12 +1,12 @@
 package ZombieAwareness;
 
 import net.minecraft.block.Block;
-import net.minecraft.client.renderer.RenderEngine;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 import org.lwjgl.opengl.GL11;
@@ -27,7 +27,7 @@ public class RenderScent extends Render {
 
         //System.out.println("2");
         if (((EntityScent)var1).type == 0) {
-        	renderImage(var1, var2, var4, var6, var8, var9, "/coro/za/blood.png");
+        	renderImage(var1, var2, var4, var6, var8, var9);
             //renderImage(var1, var2, var4, var6, var8, var9, "/misc/shadow.png");
         } else {
             
@@ -36,9 +36,15 @@ public class RenderScent extends Render {
         //}
     }
 
+	@Override
+	protected ResourceLocation func_110775_a(Entity entity) {
+		return new ResourceLocation(ZombieAwareness.modID + ":textures/entities/blood.png");
+	}
+
     @Override
     public void doRender(Entity var1, double var2, double var4, double var6, float var8, float var9) {
-    	
+    	//call texture set
+    	func_110777_b(var1);
     	//if (!ZAConfig.client_renderBlood) return;
     	
         //if (((EntityScent)var1).type == 0) {
@@ -57,12 +63,12 @@ public class RenderScent extends Render {
         GL11.glPopMatrix();
     }
 
-    private void renderImage(Entity var1, double var2, double var4, double var6, float var8, float var9, String img) {
+    private void renderImage(Entity var1, double var2, double var4, double var6, float var8, float var9) {
         GL11.glEnable(3042 /*GL_BLEND*/);
         GL11.glBlendFunc(770, 771);
         
-        RenderEngine var10 = this.renderManager.renderEngine;
-        this.loadTexture(img);
+        //RenderEngine var10 = this.renderManager.renderEngine;
+        //this.loadTexture(img);
         //var10.bindTexture(var10.getTexture(img));
         World var11 = this.getWorldFromRenderManager();
         GL11.glDepthMask(false);
