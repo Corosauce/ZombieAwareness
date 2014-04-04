@@ -37,14 +37,18 @@ public class RenderScent extends Render {
     }
 
 	@Override
-	protected ResourceLocation func_110775_a(Entity entity) {
+
+	/**
+	 * Returns the location of an entity's texture. Doesn't seem to be called unless you call Render.bindEntityTexture.
+	 */
+	protected ResourceLocation getEntityTexture(Entity entity) {
 		return new ResourceLocation(ZombieAwareness.modID + ":textures/entities/blood.png");
 	}
 
     @Override
     public void doRender(Entity var1, double var2, double var4, double var6, float var8, float var9) {
     	//call texture set
-    	func_110777_b(var1);
+    	bindEntityTexture(var1);
     	//if (!ZAConfig.client_renderBlood) return;
     	
         //if (((EntityScent)var1).type == 0) {

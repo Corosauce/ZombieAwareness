@@ -23,8 +23,8 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import CoroAI.PFQueue;
-import CoroAI.c_CoroAIUtil;
+import CoroUtil.OldUtil;
+import CoroUtil.pathfinding.PFQueue;
 import ZombieAwareness.config.ZAConfig;
 import ZombieAwareness.config.ZAConfigFeatures;
 import ZombieAwareness.config.ZAConfigPlayerLists;
@@ -78,17 +78,17 @@ public class ZAUtil {
 		int lastHealth = lastHealths.containsKey(player.username) ? lastHealths.get(player.username) : 0;
 		Long lastBleedTime = lastBleedTimes.containsKey(player.username) ? lastBleedTimes.get(player.username) : 0;
 		
-        if((int)player.func_110143_aJ() != lastHealth) {
-            if(player.func_110143_aJ() < lastHealth) {
+        if((int)player.getHealth() != lastHealth) {
+            if(player.getHealth() < lastHealth) {
                 spawnScent(player);
             }
 
-            lastHealth = (int) player.func_110143_aJ();
+            lastHealth = (int) player.getHealth();
         }
         
         lastHealths.put(player.username, lastHealth);
 
-        if(player.func_110143_aJ() < 12 && lastBleedTime < System.currentTimeMillis()) {
+        if(player.getHealth() < 12 && lastBleedTime < System.currentTimeMillis()) {
             lastBleedTime = System.currentTimeMillis() + 30000L;
             lastBleedTimes.put(player.username, lastBleedTime);
             spawnScent(player);
@@ -103,7 +103,7 @@ public class ZAUtil {
     	//Float.valueOf(c_CoroAIUtil.getPrivateValueBoth(EntityLivingBase.class, (EntityLivingBase)ent, c_CoroAIUtil.refl_obf_Item_moveSpeed, c_CoroAIUtil.refl_mcp_Item_moveSpeed).toString());
     	
     	if (ZAConfig.zombieRandSpeedBoost > 0 && ent instanceof EntityZombie && !EntityList.getEntityString(ent).contains("BrainyZombie")) {
-	    	float moveSpeed = c_CoroAIUtil.getMoveSpeed(ent);
+	    	float moveSpeed = OldUtil.getMoveSpeed(ent);
 	    	
 	    	if (moveSpeed == 0.23F) {
 	    		float newSpeed = moveSpeed + (ent.worldObj.rand.nextInt(ZAConfig.zombieRandSpeedBoost) / 70F);
@@ -469,7 +469,7 @@ public class ZAUtil {
 		}
     	
         //TEEEEEMMMMMMMMPPPPPPPPP
-        if (!ZAConfigFeatures.awareness_Scent/* || traceCount >= maxTraces*/) {
+        if (!ZAConfigFeatures.awareness_Sound/* || traceCount >= maxTraces*/) {
             return;
         }
 
@@ -640,7 +640,7 @@ public class ZAUtil {
 	        int tryZ = (int)var0.posZ - (range/2) + (rand.nextInt(range));
 	        int tryY = var0.worldObj.getHeightValue(tryX, tryZ);
 	
-	        if (var0.getDistance(tryX, tryY, tryZ) < minDist || !canSpawnMob(var0.worldObj, tryX, tryY, tryZ)) {
+	        if (var0.getDistance(tryX, tryY, tryZ) < minDist || !canSpawnMob(var0.worldObj, tryX, tryY, tryZ) || var0.worldObj.getBlockLightValue(tryX, tryY, tryZ) >= 6) {
 	            continue;
 	        }
 	

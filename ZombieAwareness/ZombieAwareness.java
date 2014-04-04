@@ -20,12 +20,12 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.src.ModLoader;
 import net.minecraft.world.World;
 import net.minecraftforge.common.Configuration;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
-import CoroAI.IPFCallback;
-import CoroAI.PFCallbackItem;
-import CoroAI.c_CoroAIUtil;
-import CoroAI.componentAI.ICoroAI;
-import CoroAI.entity.c_EnhAI;
+import CoroUtil.OldUtil;
+import CoroUtil.componentAI.ICoroAI;
+import CoroUtil.pathfinding.IPFCallback;
+import CoroUtil.pathfinding.PFCallbackItem;
 import ZombieAwareness.config.ZAConfig;
 import ZombieAwareness.config.ZAConfigFeatures;
 import ZombieAwareness.config.ZAConfigPlayerLists;
@@ -41,7 +41,7 @@ import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 
 @NetworkMod(clientSideRequired = false, serverSideRequired = false)
-@Mod(modid = "ZAMod", name="Zombie Awareness", version="v1.9")
+@Mod(modid = "ZAMod", name="Zombie Awareness", version="v1.91")
 public class ZombieAwareness
     implements Runnable, IPFCallback {
 	
@@ -137,6 +137,8 @@ public class ZombieAwareness
     	
     	proxy.init(this);
     	
+    	//restartApplication();
+    	
         //ModLoader.setInGUIHook(this, true, false);
         //ModLoader.setInGameHook(this, true, false);
     }
@@ -153,7 +155,7 @@ public class ZombieAwareness
                 if(mc == null) {
                     Thread.sleep(1000L);
                 } else {
-                    if(mc.worldServerForDimension(0) == null) {
+                    if(DimensionManager.getWorld(0) == null) {
                         Thread.sleep(1000L);
                     } else {
                         if (lastWorld != worldRef) {
@@ -163,7 +165,7 @@ public class ZombieAwareness
                             if (worldRef != null) {
                             	worldRef.addWorldAccess(new ZAWorldAccess(worldRef));
                             }*/
-                            worldRef = mc.worldServerForDimension(0);
+                            worldRef = DimensionManager.getWorld(0);
                             
                             //worldRef.addWorldAccess(new ZAWorldAccess(worldRef));
                             ZAUtil.traceCount = 0;
@@ -172,7 +174,7 @@ public class ZombieAwareness
                             //getFXLayers();
                         }
 
-                        worldRef = mc.worldServerForDimension(0);
+                        worldRef = DimensionManager.getWorld(0);
                         
                         //player = mc.thePlayer;
                         Thread.sleep(1000L);
@@ -255,7 +257,7 @@ public class ZombieAwareness
 	        	for (int i = 0; i < world.loadedEntityList.size(); i++) {
 	        		Entity ent = (Entity)world.loadedEntityList.get(i);
 	        		
-	        		if (ent instanceof EntityMob && !(ent instanceof c_EnhAI) && !(ent instanceof ICoroAI) && (
+	        		if (ent instanceof EntityMob && !(ent instanceof ICoroAI) && (
 	        				(ZAConfigPlayerLists.blacklistUsedAITick && (EntityList.getEntityString(ent) == null || (!ZAConfigPlayerLists.blacklistAITick.toLowerCase().contains(EntityList.getEntityString(ent).toLowerCase())))) || 
 	        						(!ZAConfigPlayerLists.blacklistUsedAITick && (!(ent instanceof EntityEnderman) && !(ent instanceof EntityWolf) && !(ent instanceof EntityCreeper) && !(ent instanceof EntityPigZombie)))
 	        						)) {
@@ -379,7 +381,7 @@ public class ZombieAwareness
 					item.speed = 1F;
 				}*/
 				
-				if (!item.ent.isDead && c_CoroAIUtil.chunkExists(item.ent.worldObj, (int)item.ent.posX / 16, (int)item.ent.posZ / 16)) item.ent.getNavigator().setPath(item.pe, item.speed);
+				if (!item.ent.isDead && OldUtil.chunkExists(item.ent.worldObj, (int)item.ent.posX / 16, (int)item.ent.posZ / 16)) item.ent.getNavigator().setPath(item.pe, item.speed);
 			}
 		} catch (Exception ex) {
 			System.out.println("Crash in ZA Callback Item manager");
