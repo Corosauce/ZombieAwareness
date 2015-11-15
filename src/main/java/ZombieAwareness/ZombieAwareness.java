@@ -6,6 +6,7 @@ import java.util.Random;
 
 import modconfig.ConfigMod;
 import net.minecraft.block.Block;
+import net.minecraft.command.ServerCommandManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
@@ -16,34 +17,32 @@ import net.minecraft.entity.monster.EntityPigZombie;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.src.ModLoader;
 import net.minecraft.world.World;
-import net.minecraftforge.common.Configuration;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.config.Configuration;
 import CoroUtil.OldUtil;
 import CoroUtil.componentAI.ICoroAI;
 import CoroUtil.pathfinding.IPFCallback;
 import CoroUtil.pathfinding.PFCallbackItem;
+import CoroUtil.util.CoroUtilBlock;
+import CoroUtil.util.CoroUtilEntity;
 import ZombieAwareness.config.ZAConfig;
 import ZombieAwareness.config.ZAConfigFeatures;
 import ZombieAwareness.config.ZAConfigPlayerLists;
 import ZombieAwareness.config.ZAConfigSpawning;
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.Mod.Init;
-import cpw.mods.fml.common.Mod.PreInit;
 import cpw.mods.fml.common.SidedProxy;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.network.NetworkMod;
-import cpw.mods.fml.common.registry.TickRegistry;
+import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.relauncher.Side;
 
-@NetworkMod(clientSideRequired = false, serverSideRequired = false)
-@Mod(modid = "ZAMod", name="Zombie Awareness", version="v1.91")
-public class ZombieAwareness
-    implements Runnable, IPFCallback {
+@Mod(modid = "ZAMod", name="Zombie Awareness", version="v1.9.5")
+public class ZombieAwareness implements IPFCallback {
 	
 	@Mod.Instance( value = "ZAMod" )
 	public static ZombieAwareness instance;
@@ -53,7 +52,7 @@ public class ZombieAwareness
     public static MinecraftServer mc;
     public static World worldRef;
     public static EntityPlayer player;
-    public static World lastWorld;
+    //public static World lastWorld;
     public static boolean ingui;
     
     public static boolean openChat = false;
@@ -79,13 +78,17 @@ public class ZombieAwareness
     @SidedProxy(clientSide = "ZombieAwareness.ClientProxy", serverSide = "ZombieAwareness.CommonProxy")
     public static CommonProxy proxy;
 
-    @PreInit
+    @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
+    	ZAConfigFeatures configMain = new ZAConfigFeatures();
     	ConfigMod.addConfigFile(event, "zaconfig", new ZAConfig());
-    	ConfigMod.addConfigFile(event, "zaconfigfeatures", new ZAConfigFeatures());
+    	ConfigMod.addConfigFile(event, "zaconfigfeatures", configMain);
     	ConfigMod.addConfigFile(event, "zaconfigplayerlists", new ZAConfigPlayerLists());
     	ConfigMod.addConfigFile(event, "zaconfigspawning", new ZAConfigSpawning());
+    	
+    	//sync to forge values
+    	configMain.hookUpdatedValues();
     	/*preInitConfig = new Configuration(event.getSuggestedConfigurationFile());
 
         try
@@ -124,15 +127,12 @@ public class ZombieAwareness
         }*/
     }
     
-    @Init
+    @Mod.EventHandler
     public void load(FMLInitializationEvent event)
     {
     	
-    	mc = ModLoader.getMinecraftServerInstance();
-    	
-    	(new Thread(this)).start();
-    	
     	MinecraftForge.EVENT_BUS.register(new ZAEventHandler());
+    	FMLCommonHandler.instance().bus().register(new ZAEventHandlerFML());
     	
     	
     	proxy.init(this);
@@ -143,54 +143,14 @@ public class ZombieAwareness
         //ModLoader.setInGameHook(this, true, false);
     }
     
-    //public HashMap<World, Boolean> worldsAddedTo;
-
-    public void run() {
-        try {
-            while(true) {
-                if(mc == null) {
-                    mc = ModLoader.getMinecraftServerInstance();
-                }
-
-                if(mc == null) {
-                    Thread.sleep(1000L);
-                } else {
-                    if(DimensionManager.getWorld(0) == null) {
-                        Thread.sleep(1000L);
-                    } else {
-                        if (lastWorld != worldRef) {
-                            //worldSaver = null;
-                            lastWorld = worldRef;
-                            /*worldRef = mc.worldServerForDimension(127);
-                            if (worldRef != null) {
-                            	worldRef.addWorldAccess(new ZAWorldAccess(worldRef));
-                            }*/
-                            worldRef = DimensionManager.getWorld(0);
-                            
-                            //worldRef.addWorldAccess(new ZAWorldAccess(worldRef));
-                            ZAUtil.traceCount = 0;
-                            //System.out.println("add world access");
-                            //iMan = null; //auto resets in zcgamesp when ready
-                            //getFXLayers();
-                        }
-
-                        worldRef = DimensionManager.getWorld(0);
-                        
-                        //player = mc.thePlayer;
-                        Thread.sleep(1000L);
-                    }
-                }
-            }
-        } catch(Throwable throwable) {
-            throwable.printStackTrace();
-        }
+    @Mod.EventHandler
+    public void serverStarting(FMLServerStartingEvent event) {
+    	((ServerCommandManager)FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager()).registerCommand(new CommandZA());
     }
-
-    //public static mod_ZombieAwareness i = new mod_ZombieAwareness();
     
     public ZombieAwareness() {
     	int hm = 0;
-    	TickRegistry.registerTickHandler(new ServerTickHandler(this), Side.SERVER);
+    	//TickRegistry.registerTickHandler(new ServerTickHandler(this), Side.SERVER);
     }
     
     public void onTick(MinecraftServer var1) {
@@ -219,7 +179,7 @@ public class ZombieAwareness
                 	tryTropicraft = false;
                 }
         	}
-                
+            
             worldTemp = mc.worldServerForDimension(0);
             if (worldTemp != null) {
             	worldTick(worldTemp);
@@ -258,7 +218,8 @@ public class ZombieAwareness
 	        		Entity ent = (Entity)world.loadedEntityList.get(i);
 	        		
 	        		if (ent instanceof EntityMob && !(ent instanceof ICoroAI) && (
-	        				(ZAConfigPlayerLists.blacklistUsedAITick && (EntityList.getEntityString(ent) == null || (!ZAConfigPlayerLists.blacklistAITick.toLowerCase().contains(EntityList.getEntityString(ent).toLowerCase())))) || 
+	        				(ZAConfigPlayerLists.blacklistUsedAITick && (EntityList.getEntityString(ent) == null || ((!ZAConfigPlayerLists.forceListUsedAITickAsWhitelist && !ZAConfigPlayerLists.blacklistAITick.toLowerCase().contains(EntityList.getEntityString(ent).toLowerCase())) || (ZAConfigPlayerLists.forceListUsedAITickAsWhitelist && ZAConfigPlayerLists.blacklistAITick.toLowerCase().contains(EntityList.getEntityString(ent).toLowerCase())))
+	        						)) || 
 	        						(!ZAConfigPlayerLists.blacklistUsedAITick && (!(ent instanceof EntityEnderman) && !(ent instanceof EntityWolf) && !(ent instanceof EntityCreeper) && !(ent instanceof EntityPigZombie)))
 	        						)) {
 	        			
@@ -288,13 +249,13 @@ public class ZombieAwareness
 		    						if (ZAConfig.debugConsoleSpawns) dbg("Spawned new surface zombie at: " + ent.posX + ", " + ent.posY + ", " + ent.posZ);
 	        					} else if (ZAConfigFeatures.extraSpawningCave && lastZombieCount < ZAConfigSpawning.extraSpawningMaxCount) {
 	        						EntityPlayer closestPlayer = ent.worldObj.getClosestVulnerablePlayerToEntity(ent, ZAConfigSpawning.extraSpawningDistMax);
-		        					if (closestPlayer != null && ZAConfigPlayerLists.whitelistExtraSpawning.contains(closestPlayer.username) 
+		        					if (closestPlayer != null && (!ZAConfigPlayerLists.whiteListUsedExtraSpawning || ZAConfigPlayerLists.whitelistExtraSpawning.contains(CoroUtilEntity.getName(closestPlayer))) 
 		        							&& closestPlayer.getDistanceSqToEntity(ent) > ZAConfigSpawning.extraSpawningDistMin
 		        							&& !ent.worldObj.canBlockSeeTheSky((int)ent.posX, (int)ent.posY, (int)ent.posZ) && ent.worldObj.getBlockLightValue((int)ent.posX, (int)ent.posY, (int)ent.posZ) < 5) {
 		        						
-		        						int id = ent.worldObj.getBlockId((int)ent.posX, (int)(ent.boundingBox.minY - 0.5D), (int)ent.posZ);
+		        						Block id = ent.worldObj.getBlock((int)ent.posX, (int)(ent.boundingBox.minY - 0.5D), (int)ent.posZ);
 		        						
-		        						if (id != 0 && id != Block.grass.blockID) {
+		        						if (!CoroUtilBlock.isAir(id) && id != Blocks.grass) {
 			        						EntityZombie entZ = new EntityZombie(ent.worldObj);
 				    						entZ.setPosition(ent.posX, ent.posY, ent.posZ);
 				    						ent.worldObj.spawnEntityInWorld(entZ);

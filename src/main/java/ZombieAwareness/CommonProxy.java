@@ -9,7 +9,6 @@ import cpw.mods.fml.common.registry.EntityRegistry;
 
 public class CommonProxy implements IGuiHandler
 {
-    public World mainWorld;
     private int entityId = 0;
 
     public ZombieAwareness mod;

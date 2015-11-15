@@ -1,13 +1,11 @@
 package ZombieAwareness;
 
+import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import ZombieAwareness.config.ZAConfig;
-
-import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
-
 import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
 
 public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
@@ -17,11 +15,10 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     public int strength;
     public int age;
 
-
     public EntityScent(World var1) {
         super(var1);
         this.isImmuneToFire = true;
-        this.setSize(0.1F, 0.1F);
+        this.setSize(0.0F, 0.0F);
         this.strength = 100;
         this.age = 0;
         if (!var1.isRemote) {
@@ -47,6 +44,12 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
 
     public boolean isInRangeToRenderDist(double var1) {
         return true;
+    }
+    
+    @Override
+    public boolean isInRangeToRender3d(double p_145770_1_, double p_145770_3_,
+    		double p_145770_5_) {
+    	return true;
     }
 
     public void entityInit() {}
@@ -102,13 +105,13 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     }
 
 	@Override
-	public void writeSpawnData(ByteArrayDataOutput data) {
+	public void writeSpawnData(ByteBuf data) {
 		data.writeInt(this.type);
 		data.writeInt(this.age);		
 	}
 
 	@Override
-	public void readSpawnData(ByteArrayDataInput data) {
+	public void readSpawnData(ByteBuf data) {
 		
 		//for easy cleaning purposes
 		if (!worldObj.isRemote) this.setDead();

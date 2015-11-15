@@ -1,6 +1,5 @@
 package ZombieAwareness;
 
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
@@ -16,8 +15,7 @@ import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.pathfinding.PathEntity;
-import net.minecraft.src.ModLoader;
-import net.minecraft.util.EnumMovingObjectType;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
@@ -25,6 +23,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import CoroUtil.OldUtil;
 import CoroUtil.pathfinding.PFQueue;
+import CoroUtil.util.CoroUtilBlock;
+import CoroUtil.util.CoroUtilEntity;
 import ZombieAwareness.config.ZAConfig;
 import ZombieAwareness.config.ZAConfigFeatures;
 import ZombieAwareness.config.ZAConfigPlayerLists;
@@ -60,7 +60,7 @@ public class ZAUtil {
 			}
 		}
 		
-		if (ZombieAwareness.lastZombieCount < ZAConfigSpawning.extraSpawningMaxCount && ZAConfigPlayerLists.whitelistExtraSpawning.contains(player.username)) {
+		if (ZombieAwareness.lastZombieCount < ZAConfigSpawning.extraSpawningMaxCount && !ZAConfigPlayerLists.whiteListUsedExtraSpawning || ZAConfigPlayerLists.whitelistExtraSpawning.contains(CoroUtilEntity.getName(player))) {
 			if (ZAConfigFeatures.extraSpawningSurface) {
 				 if (!player.worldObj.isDaytime()) {
 					 if (rand.nextInt(Math.max(1, ZAConfigSpawning.extraSpawningRandomPool)) == 0) {
@@ -75,8 +75,8 @@ public class ZAUtil {
 			}
 		}
 		
-		int lastHealth = lastHealths.containsKey(player.username) ? lastHealths.get(player.username) : 0;
-		Long lastBleedTime = lastBleedTimes.containsKey(player.username) ? lastBleedTimes.get(player.username) : 0;
+		int lastHealth = lastHealths.containsKey(CoroUtilEntity.getName(player)) ? lastHealths.get(CoroUtilEntity.getName(player)) : 0;
+		Long lastBleedTime = lastBleedTimes.containsKey(CoroUtilEntity.getName(player)) ? lastBleedTimes.get(CoroUtilEntity.getName(player)) : 0;
 		
         if((int)player.getHealth() != lastHealth) {
             if(player.getHealth() < lastHealth) {
@@ -86,11 +86,11 @@ public class ZAUtil {
             lastHealth = (int) player.getHealth();
         }
         
-        lastHealths.put(player.username, lastHealth);
+        lastHealths.put(CoroUtilEntity.getName(player), lastHealth);
 
-        if(player.getHealth() < 12 && lastBleedTime < System.currentTimeMillis()) {
+        if(player.getHealth() / player.getMaxHealth() < 0.6F && lastBleedTime < System.currentTimeMillis()) {
             lastBleedTime = System.currentTimeMillis() + 30000L;
-            lastBleedTimes.put(player.username, lastBleedTime);
+            lastBleedTimes.put(CoroUtilEntity.getName(player), lastBleedTime);
             spawnScent(player);
         }
         
@@ -200,8 +200,8 @@ public class ZAUtil {
 					if (!omniTarget) {
 						return true;
 					} else if (ZAConfigPlayerLists.whiteListUsedOmnipotent) {
-						if (ZAConfigPlayerLists.whitelistOmnipotentTargettedPlayers.contains(((EntityPlayer) targ).username)) {
-							if (ZAConfig.debugConsoleOmnipotent) ZombieAwareness.dbg(((EntityPlayer) targ).username + " targetting omnipotently by " + ent);
+						if (ZAConfigPlayerLists.whitelistOmnipotentTargettedPlayers.contains(CoroUtilEntity.getName(((EntityPlayer) targ)))) {
+							if (ZAConfig.debugConsoleOmnipotent) ZombieAwareness.dbg(CoroUtilEntity.getName((EntityPlayer) targ) + " targetting omnipotently by " + ent);
 							return true;
 						}
 					} else {
@@ -283,13 +283,9 @@ public class ZAUtil {
     
     public static void setAge(EntityLivingBase ent, int age) {
     	try {
-    		setPrivateValue(EntityLivingBase.class, ent, "bC", age);
+    		OldUtil.setPrivateValueBoth(EntityLivingBase.class, ent, "field_70708_bq", "entityAge", age);
     	} catch (Exception ex) {
-    		try {
-    			setPrivateValue(EntityLivingBase.class, ent, "entityAge", age);
-    		} catch (Exception ex2) {
-    			ex2.printStackTrace();
-    		}
+    		ex.printStackTrace();
     	}
     }
     
@@ -314,10 +310,10 @@ public class ZAUtil {
 		    		int rZ = (int)entP.posZ + (rand.nextInt(size) - (size/2));
 		    		
 		    		int lightValue = entP.worldObj.getBlockLightValue(rX, rY, rZ);
-		    		int id = ent.worldObj.getBlockId(rX, rY, rZ);
+		    		Block id = ent.worldObj.getBlock(rX, rY, rZ);
 		    		
 		    		if (lightValue > 4) {
-		    			if ((ent.getDistanceToEntity(entP) > 64 && ent.worldObj.rand.nextInt(20) == 0) || ent.worldObj.clip(ent.worldObj.getWorldVec3Pool().getVecFromPool(ent.posX, ent.posY + (double)ent.getEyeHeight(), ent.posZ), ent.worldObj.getWorldVec3Pool().getVecFromPool(rX, rY, rZ)) == null) {
+		    			if ((ent.getDistanceToEntity(entP) > 64 && ent.worldObj.rand.nextInt(20) == 0) || ent.worldObj.rayTraceBlocks(Vec3.createVectorHelper(ent.posX, ent.posY + (double)ent.getEyeHeight(), ent.posZ), Vec3.createVectorHelper(rX, rY, rZ)) == null) {
 		    				if (PFQueue.getPath(ent, rX, rY, rZ, 128F, 0, ZombieAwareness.instance)) {
 			    				if (debug) System.out.println("pathing to lightsource");
 			    			}
@@ -497,6 +493,10 @@ public class ZAUtil {
         if((var8 || var6 != null) && var7 > 15) {
             EntityScent var9 = new EntityScent(world);
 
+            if (!canSpawnScentHere(world, Vec3.createVectorHelper((double)var1, (double)var2, (double)var3))) {
+	    		return;
+	    	}
+            
             if(var7 < 25) {
                 var9.setStrength(ZAConfig.soundStrength);
             }
@@ -555,11 +555,15 @@ public class ZAUtil {
     	
     	if (event.entity.worldObj.provider.dimensionId != 0 && event.entity.worldObj.provider.dimensionId != -127) return;
     	
-    	if (event.entityPlayer == null || (ZAConfigPlayerLists.whiteListUsedSenses && !ZAConfigPlayerLists.whitelistSenses.contains(event.entityPlayer.username))) return;
+    	if (event.entityPlayer == null || (ZAConfigPlayerLists.whiteListUsedSenses && !ZAConfigPlayerLists.whitelistSenses.contains(CoroUtilEntity.getName(event.entityPlayer)))) return;
     	
     	//if (traceCount < maxTraces * 0.75) {
 	    	if (!event.entity.worldObj.isRemote && event.entity.worldObj.rand.nextInt(chance) == 0) {
 		    	EntityScent var9 = new EntityScent(event.entity.worldObj);
+		    	
+		    	if (!canSpawnScentHere(event.entity.worldObj, Vec3.createVectorHelper((double)event.entityPlayer.posX, (double)event.entityPlayer.posY, (double)event.entityPlayer.posZ))) {
+		    		return;
+		    	}
 		    	
 		    	int var7;
 		
@@ -593,11 +597,16 @@ public class ZAUtil {
 			var9.setStrength(strength);
 			var9.type = 1;
 			
-			int size = 10;
+			int size = ZAConfig.soundScentSpawnPosRandom;
 			int randX = var9.worldObj.rand.nextInt(size);
 			int randZ = var9.worldObj.rand.nextInt(size);
 			
             var9.setPosition((double)x + (-(size/2) + randX), (double)y, (double)z + (-(size/2) + randZ));
+            
+            if (!canSpawnScentHere(world, Vec3.createVectorHelper((double)x + (-(size/2) + randX), (double)y, (double)z + (-(size/2) + randZ)))) {
+	    		return null;
+	    	}
+            
             world.spawnEntityInWorld(var9);
             return var9;
 		//}
@@ -619,6 +628,11 @@ public class ZAUtil {
         }*/
         //System.out.println(height);
         EntityScent var1 = new EntityScent(var0.worldObj);
+        
+        if (!canSpawnScentHere(var0.worldObj, Vec3.createVectorHelper(var0.posX, height, var0.posZ))) {
+    		return;
+    	}
+        
         var1.setPosition(var0.posX, height, var0.posZ);
         var1.setStrength(ZAConfig.scentStrength);
         var1.type = 0;
@@ -633,14 +647,15 @@ public class ZAUtil {
     public static void spawnNewMobSurface(EntityLivingBase var0) {
         
         int range = 256;
-        int minDist = 50;
+        int minDist = ZAConfigSpawning.extraSpawningDistMin;
+        int maxDist = ZAConfigSpawning.extraSpawningDistMax;
         
         for (int tries = 0; tries < 5; tries++) {
 	        int tryX = (int)var0.posX - (range/2) + (rand.nextInt(range));
 	        int tryZ = (int)var0.posZ - (range/2) + (rand.nextInt(range));
 	        int tryY = var0.worldObj.getHeightValue(tryX, tryZ);
 	
-	        if (var0.getDistance(tryX, tryY, tryZ) < minDist || !canSpawnMob(var0.worldObj, tryX, tryY, tryZ) || var0.worldObj.getBlockLightValue(tryX, tryY, tryZ) >= 6) {
+	        if (var0.getDistance(tryX, tryY, tryZ) < minDist || var0.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(var0.worldObj, tryX, tryY, tryZ) || var0.worldObj.getBlockLightValue(tryX, tryY, tryZ) >= 6) {
 	            continue;
 	        }
 	
@@ -680,12 +695,12 @@ public class ZAUtil {
     }
     
     public static boolean canSpawnMob(World world, int x, int y, int z) {
-        int id = world.getBlockId(x-1,y,z);//Block.pressurePlatePlanks.blockID;
+        Block id = world.getBlock(x-1,y,z);//Block.pressurePlatePlanks.blockID;
 
         /*if (id == Block.grass.blockID || id == Block.stone.blockID || id == Block.tallGrass.blockID || id == Block.grass.blockID || id == Block.sand.blockID) {
             return true;
         }*/
-        if (id != 0 && Block.blocksList[id].blockMaterial == Material.leaves) {
+        if (!CoroUtilBlock.isAir(id) && id.getMaterial() == Material.leaves) {
         	return false;
         }
         return true;
@@ -712,6 +727,11 @@ public class ZAUtil {
         }*/
         //System.out.println(height);
         EntityScent var1 = new EntityScent(var0.worldObj);
+        
+        if (!canSpawnScentHere(var0.worldObj, Vec3.createVectorHelper(tryX, tryY, tryZ))) {
+    		return;
+    	}
+        
         var1.setPosition(tryX, tryY, tryZ);
         var1.setStrength(60);
         var1.type = 2;
@@ -723,119 +743,11 @@ public class ZAUtil {
     }
 
     public static boolean canSpawnTrace(World world, int x, int y, int z) {
-        int id = Block.pressurePlatePlanks.blockID;
 
-        if (world.getBlockId(x-1,y,z) == id) {
+        if (world.getBlock(x-1,y,z).getMaterial() == Material.circuits) {
             return false;
         }
         return true;
-    }
-    
-    public static void setPrivateValueBoth(Class var0, Object var1, String obf, String mcp, Object var3)
-    {
-        try
-        {
-            try
-            {
-                ModLoader.setPrivateValue(var0, var1, obf, var3);
-            }
-            catch (Exception ex)
-            {
-                ModLoader.setPrivateValue(var0, var1, mcp, var3);
-            }
-        }
-        catch (Exception ex)
-        {
-            ex.printStackTrace();
-        }
-    }
-
-    public static Object getPrivateValueBoth(Class var0, Object var1, String obf, String mcp)
-    {
-        try
-        {
-            try
-            {
-                return getPrivateValue(var0, var1, obf);
-            }
-            catch (Exception ex)
-            {
-                return getPrivateValue(var0, var1, mcp);
-            }
-        }
-        catch (Exception ex)
-        {
-            ex.printStackTrace();
-        }
-
-        return null;
-    }
-
-    public static Object getPrivateValue(Class var0, Object var1, String var2) throws IllegalArgumentException, SecurityException, NoSuchFieldException
-    {
-        try
-        {
-            Field var3 = var0.getDeclaredField(var2);
-            var3.setAccessible(true);
-            return var3.get(var1);
-        }
-        catch (IllegalAccessException var4)
-        {
-            ModLoader.throwException("An impossible error has occured!", var4);
-            return null;
-        }
-    }
-
-    static Field field_modifiers = null;
-
-    public static void setPrivateValue(Class var0, Object var1, int var2, Object var3) throws IllegalArgumentException, SecurityException, NoSuchFieldException
-    {
-        try
-        {
-            Field var4 = var0.getDeclaredFields()[var2];
-            var4.setAccessible(true);
-            int var5 = field_modifiers.getInt(var4);
-
-            if ((var5 & 16) != 0)
-            {
-                field_modifiers.setInt(var4, var5 & -17);
-            }
-
-            var4.set(var1, var3);
-        }
-        catch (IllegalAccessException var6)
-        {
-            //logger.throwing("ModLoader", "setPrivateValue", var6);
-            //throwException("An impossible error has occured!", var6);
-        }
-    }
-
-    public static void setPrivateValue(Class var0, Object var1, String var2, Object var3) throws IllegalArgumentException, SecurityException, NoSuchFieldException
-    {
-        try
-        {
-            if (field_modifiers == null)
-            {
-                field_modifiers = Field.class.getDeclaredField("modifiers");
-                field_modifiers.setAccessible(true);
-            }
-
-            Field var4 = var0.getDeclaredField(var2);
-            int var5 = field_modifiers.getInt(var4);
-
-            if ((var5 & 16) != 0)
-            {
-                field_modifiers.setInt(var4, var5 & -17);
-            }
-
-            var4.setAccessible(true);
-            var4.set(var1, var3);
-        }
-        catch (IllegalAccessException var6)
-        {
-            //logger.throwing("ModLoader", "setPrivateValue", var6);
-            //throwException("An impossible error has occured!", var6);
-        }
     }
     
     public static Vec3 findLitBlock(EntityLivingBase ent, int yOffset, float factor, boolean noYaw) {
@@ -874,7 +786,7 @@ public class ZAUtil {
 		        int lightLevel = ent.worldObj.getBlockLightValue((int)vec3d1.xCoord, (int)vec3d1.yCoord, (int)vec3d1.zCoord);
 		        if (lightLevel > 4) {
 		        	//System.out.println("test light check: " + lightLevel + " - phase: " + tryPhase + " - dist check: " + ent.getDistance(vec3d1.xCoord, vec3d1.yCoord, vec3d1.zCoord));
-		        	MovingObjectPosition movingobjectposition = entityliving.worldObj.clip(Vec3.createVectorHelper(ent.posX, ent.posY+1, ent.posZ), vec3d1, true);
+		        	MovingObjectPosition movingobjectposition = entityliving.worldObj.rayTraceBlocks(Vec3.createVectorHelper(ent.posX, ent.posY+1, ent.posZ), vec3d1, true);
 		        	
 		        	//if (movingobjectposition == null || (movingobjectposition.blockX == (int)vec3d1.xCoord && movingobjectposition.blockY == (int)vec3d1.yCoord && movingobjectposition.blockZ == (int)vec3d1.zCoord)) {
 			        	//System.out.println("test 2 light check: " + lightLevel + " - " + tryPhase);
@@ -926,17 +838,12 @@ public class ZAUtil {
 	        if (lightLevel > 4) {
 	        	//System.out.println("test light check: " + lightLevel);
 	        }
-	        MovingObjectPosition movingobjectposition = entityliving.worldObj.clip(vec3d, vec3d1, true);
+	        MovingObjectPosition movingobjectposition = entityliving.worldObj.rayTraceBlocks(vec3d, vec3d1, true);
 	
 	        int id = -1;
 	        
 	        if(movingobjectposition == null) {
 	            return null;
-	        }
-	        
-	        if(movingobjectposition.typeOfHit == EnumMovingObjectType.TILE) {
-	        	//id = worldObj.getBlockId(movingobjectposition.blockX, movingobjectposition.blockY, movingobjectposition.blockZ);
-		    	//System.out.println(movingobjectposition.blockX + " - " + movingobjectposition.blockY + " - " + movingobjectposition.blockZ);
 	        }
 	        
 	        return movingobjectposition;
@@ -963,7 +870,7 @@ public class ZAUtil {
         for (int i = 0; i < world.playerEntities.size(); ++i)
         {
             EntityPlayer entityplayer1 = (EntityPlayer)world.playerEntities.get(i);
-            if (!ZAConfigPlayerLists.whiteListUsedSenses || ZAConfigPlayerLists.whitelistSenses.contains(entityplayer1.username)) {
+            if (!ZAConfigPlayerLists.whiteListUsedSenses || ZAConfigPlayerLists.whitelistSenses.contains(CoroUtilEntity.getName(entityplayer1))) {
             	double d5 = entityplayer1.getDistanceSq(par1, par3, par5);
 
                 if ((par7 < 0.0D || d5 < par7 * par7) && (d4 == -1.0D || d5 < d4))
@@ -975,5 +882,27 @@ public class ZAUtil {
         }
 
         return entityplayer;
+    }
+
+    public static boolean canSpawnScentHere(World parWorld, Vec3 parPos) {
+
+    	if (ZAConfig.extraScentCutoffRange == -1) return true;
+    	
+    	AxisAlignedBB aabb = AxisAlignedBB.getBoundingBox(parPos.xCoord, parPos.yCoord, parPos.zCoord, parPos.xCoord + 1, parPos.yCoord + 1, parPos.zCoord + 1);
+    	aabb = aabb.expand(ZAConfig.extraScentCutoffRange, ZAConfig.extraScentCutoffRange, ZAConfig.extraScentCutoffRange);
+    	
+    	List list = parWorld.getEntitiesWithinAABB(EntityScent.class, aabb);
+    	
+    	if (list.size() > 0) {
+    		//System.out.println("returning false");
+    		return false;
+    	}
+    	
+        /*for(int j = 0; j < list.size(); j++)
+        {
+            Entity entity1 = (Entity)list.get(j);
+        }*/
+    	
+    	return true;
     }
 }

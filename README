@@ -1,3 +1,5 @@
 Zombie Awareness
 
 A mod that adds various new types of awareness to zombies and other mobs, also adds extra spawning if enable, all highly configurable
+
+Requires https://github.com/Corosauce/CoroUtil to build as well as at least forge 1180
