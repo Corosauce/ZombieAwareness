@@ -470,7 +470,7 @@ public class ZAUtil {
             return;
         }
 
-        if (!canSpawnTrace(world, (int)var1, (int)var2, (int)var3)) {
+        if (!canSpawnTrace(world, MathHelper.floor_double(var1), MathHelper.floor_double(var2), MathHelper.floor_double(var3))) {
             return;
         }
 
@@ -619,7 +619,7 @@ public class ZAUtil {
             return;
         }
 
-        if (!canSpawnTrace(var0.worldObj, (int)var0.posX, (int)var0.posY, (int)var0.posZ)) {
+        if (!canSpawnTrace(var0.worldObj, MathHelper.floor_double(var0.posX), MathHelper.floor_double(var0.posY), MathHelper.floor_double(var0.posZ))) {
             return;
         }
 
@@ -652,8 +652,8 @@ public class ZAUtil {
         int maxDist = ZAConfigSpawning.extraSpawningDistMax;
         
         for (int tries = 0; tries < 5; tries++) {
-	        int tryX = (int)var0.posX - (range/2) + (rand.nextInt(range));
-	        int tryZ = (int)var0.posZ - (range/2) + (rand.nextInt(range));
+	        int tryX = MathHelper.floor_double(var0.posX) - (range/2) + (rand.nextInt(range));
+	        int tryZ = MathHelper.floor_double(var0.posZ) - (range/2) + (rand.nextInt(range));
 	        int tryY = var0.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 	
 	        if (var0.getDistance(tryX, tryY, tryZ) < minDist || var0.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(var0.worldObj, tryX, tryY, tryZ) || var0.worldObj.getLight(new BlockPos(tryX, tryY, tryZ)) >= 6) {
@@ -677,8 +677,8 @@ public class ZAUtil {
         int range = 256;
         
         for (int tries = 0; tries < 5; tries++) {
-	        int tryX = (int)var0.posX - (range/2) + (rand.nextInt(range));
-	        int tryZ = (int)var0.posZ - (range/2) + (rand.nextInt(range));
+	        int tryX = MathHelper.floor_double(var0.posX) - (range/2) + (rand.nextInt(range));
+	        int tryZ = MathHelper.floor_double(var0.posZ) - (range/2) + (rand.nextInt(range));
 	        int tryY = var0.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 	
 	        if (!canSpawnTrace(var0.worldObj, tryX, tryY, tryZ)) {
@@ -714,8 +714,8 @@ public class ZAUtil {
         
         int range = 256;
         
-        int tryX = (int)var0.posX - (range/2) + (rand.nextInt(range));
-        int tryZ = (int)var0.posZ - (range/2) + (rand.nextInt(range));
+        int tryX = MathHelper.floor_double(var0.posX) - (range/2) + (rand.nextInt(range));
+        int tryZ = MathHelper.floor_double(var0.posZ) - (range/2) + (rand.nextInt(range));
         int tryY = var0.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 
         if (!canSpawnTrace(var0.worldObj, tryX, tryY, tryZ)) {

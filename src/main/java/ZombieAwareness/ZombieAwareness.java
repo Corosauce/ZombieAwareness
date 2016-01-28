@@ -342,7 +342,7 @@ public class ZombieAwareness implements IPFCallback {
 					item.speed = 1F;
 				}*/
 				
-				if (!item.ent.isDead && OldUtil.chunkExists(item.ent.worldObj, (int)item.ent.posX / 16, (int)item.ent.posZ / 16)) item.ent.getNavigator().setPath(item.pe, item.speed);
+				if (!item.ent.isDead && OldUtil.chunkExists(item.ent.worldObj, MathHelper.floor_double(item.ent.posX) / 16, MathHelper.floor_double(item.ent.posZ) / 16)) item.ent.getNavigator().setPath(item.pe, item.speed);
 			}
 		} catch (Exception ex) {
 			System.out.println("Crash in ZA Callback Item manager");
