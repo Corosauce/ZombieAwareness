@@ -19,10 +19,17 @@ import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
-import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import CoroUtil.OldUtil;
 import CoroUtil.componentAI.ICoroAI;
 import CoroUtil.pathfinding.IPFCallback;
@@ -33,13 +40,6 @@ import ZombieAwareness.config.ZAConfig;
 import ZombieAwareness.config.ZAConfigFeatures;
 import ZombieAwareness.config.ZAConfigPlayerLists;
 import ZombieAwareness.config.ZAConfigSpawning;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.SidedProxy;
-import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.event.FMLServerStartingEvent;
-import cpw.mods.fml.relauncher.Side;
 
 @Mod(modid = "ZAMod", name="Zombie Awareness", version="v1.9.5")
 public class ZombieAwareness implements IPFCallback {
@@ -231,11 +231,11 @@ public class ZombieAwareness implements IPFCallback {
 	        				//ent.motionY = 0.41999998688697815D;
 	        			}
 	        			
-	        			if ((world.provider.dimensionId == 0) && ent instanceof EntityZombie) {
+	        			if ((world.provider.getDimensionId() == 0) && ent instanceof EntityZombie) {
 	        				lastCount++;
 	        				
 	        				if (lastSpawnTime < ent.worldObj.getWorldTime() && !spawned && ent.worldObj.getClosestPlayerToEntity(ent, 32) == null && rand.nextInt(ZAConfigSpawning.maxZombiesNightBaseRarity + (lastZombieCount * 4 / (Math.max(1, ZAConfig.tickRateAILoop)))) == 0) {
-	        					if (!ent.worldObj.isDaytime() && lastZombieCount < ZAConfigSpawning.maxZombiesNight && ent.worldObj.canBlockSeeTheSky((int)ent.posX, (int)ent.posY, (int)ent.posZ) && ent.worldObj.getBlockLightValue((int)ent.posX, (int)ent.posY, (int)ent.posZ) < 5) {
+	        					if (!ent.worldObj.isDaytime() && lastZombieCount < ZAConfigSpawning.maxZombiesNight && ent.worldObj.canBlockSeeSky(new BlockPos(MathHelper.floor_double(ent.posX), MathHelper.floor_double(ent.posY), MathHelper.floor_double(ent.posZ))) && ent.worldObj.getLight(new BlockPos(MathHelper.floor_double(ent.posX), MathHelper.floor_double(ent.posY), MathHelper.floor_double(ent.posZ))) < 5) {
 		    						
 	        						EntityZombie entZ = new EntityZombie(ent.worldObj);
 		    						entZ.setPosition(ent.posX, ent.posY, ent.posZ);
@@ -248,12 +248,12 @@ public class ZombieAwareness implements IPFCallback {
 		    						
 		    						if (ZAConfig.debugConsoleSpawns) dbg("Spawned new surface zombie at: " + ent.posX + ", " + ent.posY + ", " + ent.posZ);
 	        					} else if (ZAConfigFeatures.extraSpawningCave && lastZombieCount < ZAConfigSpawning.extraSpawningMaxCount) {
-	        						EntityPlayer closestPlayer = ent.worldObj.getClosestVulnerablePlayerToEntity(ent, ZAConfigSpawning.extraSpawningDistMax);
+	        						EntityPlayer closestPlayer = CoroUtilEntity.getClosestVulnerablePlayerToEntity(world, ent, ZAConfigSpawning.extraSpawningDistMax);
 		        					if (closestPlayer != null && (!ZAConfigPlayerLists.whiteListUsedExtraSpawning || ZAConfigPlayerLists.whitelistExtraSpawning.contains(CoroUtilEntity.getName(closestPlayer))) 
 		        							&& closestPlayer.getDistanceSqToEntity(ent) > ZAConfigSpawning.extraSpawningDistMin
-		        							&& !ent.worldObj.canBlockSeeTheSky((int)ent.posX, (int)ent.posY, (int)ent.posZ) && ent.worldObj.getBlockLightValue((int)ent.posX, (int)ent.posY, (int)ent.posZ) < 5) {
+		        							&& !ent.worldObj.canBlockSeeSky(new BlockPos(MathHelper.floor_double(ent.posX), MathHelper.floor_double(ent.posY), MathHelper.floor_double(ent.posZ))) && ent.worldObj.getLight(new BlockPos(MathHelper.floor_double(ent.posX), MathHelper.floor_double(ent.posY), MathHelper.floor_double(ent.posZ))) < 5) {
 		        						
-		        						Block id = ent.worldObj.getBlock((int)ent.posX, (int)(ent.boundingBox.minY - 0.5D), (int)ent.posZ);
+		        						Block id = ent.worldObj.getBlockState(new BlockPos(MathHelper.floor_double(ent.posX), MathHelper.floor_double((ent.getEntityBoundingBox().minY - 0.5D)), MathHelper.floor_double(ent.posZ))).getBlock();
 		        						
 		        						if (!CoroUtilBlock.isAir(id) && id != Blocks.grass) {
 			        						EntityZombie entZ = new EntityZombie(ent.worldObj);
@@ -283,7 +283,7 @@ public class ZombieAwareness implements IPFCallback {
 	        	
 	        	//if (lastZombieCount != lastCount) System.out.println("lastZombieCount: " + lastZombieCount);
 	        	
-	        	if (world.provider.dimensionId == 0) lastZombieCount = lastCount;
+	        	if (world.provider.getDimensionId() == 0) lastZombieCount = lastCount;
     		}
     	}
     	

@@ -16,6 +16,7 @@ import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.pathfinding.PathEntity;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
@@ -305,15 +306,15 @@ public class ZAUtil {
         			
         			size = 32 * (i+1);
         			
-		    		int rX = (int)entP.posX + (rand.nextInt(size) - (size/2));
-		    		int rY = (int)entP.posY + (rand.nextInt(size/2) - (size/4));
-		    		int rZ = (int)entP.posZ + (rand.nextInt(size) - (size/2));
+		    		int rX = MathHelper.floor_double(entP.posX + (rand.nextInt(size) - (size/2)));
+		    		int rY = MathHelper.floor_double(entP.posY + (rand.nextInt(size/2) - (size/4)));
+		    		int rZ = MathHelper.floor_double(entP.posZ + (rand.nextInt(size) - (size/2)));
 		    		
-		    		int lightValue = entP.worldObj.getBlockLightValue(rX, rY, rZ);
-		    		Block id = ent.worldObj.getBlock(rX, rY, rZ);
+		    		int lightValue = entP.worldObj.getLight(new BlockPos(rX, rY, rZ));
+		    		//Block id = ent.worldObj.getBlock(rX, rY, rZ);
 		    		
 		    		if (lightValue > 4) {
-		    			if ((ent.getDistanceToEntity(entP) > 64 && ent.worldObj.rand.nextInt(20) == 0) || ent.worldObj.rayTraceBlocks(Vec3.createVectorHelper(ent.posX, ent.posY + (double)ent.getEyeHeight(), ent.posZ), Vec3.createVectorHelper(rX, rY, rZ)) == null) {
+		    			if ((ent.getDistanceToEntity(entP) > 64 && ent.worldObj.rand.nextInt(20) == 0) || ent.worldObj.rayTraceBlocks(new Vec3(ent.posX, ent.posY + (double)ent.getEyeHeight(), ent.posZ), new Vec3(rX, rY, rZ)) == null) {
 		    				if (PFQueue.getPath(ent, rX, rY, rZ, 128F, 0, ZombieAwareness.instance)) {
 			    				if (debug) System.out.println("pathing to lightsource");
 			    			}
@@ -383,7 +384,7 @@ public class ZAUtil {
 			boolean found = false;
 			Entity clEnt = null;
 			float closest = 9999F;
-	    	List list = ent.worldObj.getEntitiesWithinAABBExcludingEntity(ent, ent.boundingBox.expand(huntRange, huntRange/2, huntRange));
+	    	List list = ent.worldObj.getEntitiesWithinAABBExcludingEntity(ent, ent.getEntityBoundingBox().expand(huntRange, huntRange/2, huntRange));
 	        for(int j = 0; j < list.size(); j++)
 	        {
 	            Entity entity1 = (Entity)list.get(j);
@@ -425,7 +426,7 @@ public class ZAUtil {
     }
     
     public static Entity getScent(Entity var0) {
-        List var1 = var0.worldObj.getEntitiesWithinAABBExcludingEntity(var0, var0.boundingBox.expand((double)ZAConfig.maxPFRangeSense, (double)ZAConfig.maxPFRangeSense, (double)ZAConfig.maxPFRangeSense));
+        List var1 = var0.worldObj.getEntitiesWithinAABBExcludingEntity(var0, var0.getEntityBoundingBox().expand((double)ZAConfig.maxPFRangeSense, (double)ZAConfig.maxPFRangeSense, (double)ZAConfig.maxPFRangeSense));
         Entity var2 = null;
         Entity var3 = null;
         Object var4 = null;
@@ -456,7 +457,7 @@ public class ZAUtil {
     	
     	if (world.isRemote || var0 == null) return;
     	
-    	if (world.provider.dimensionId != 0 && world.provider.dimensionId != -127) return;
+    	if (world.provider.getDimensionId() != 0 && world.provider.getDimensionId() != -127) return;
 
     	//System.out.println("Derb: " + var0 + " - TC: " + traceCount);
     	
@@ -493,7 +494,7 @@ public class ZAUtil {
         if((var8 || var6 != null) && var7 > 15) {
             EntityScent var9 = new EntityScent(world);
 
-            if (!canSpawnScentHere(world, Vec3.createVectorHelper((double)var1, (double)var2, (double)var3))) {
+            if (!canSpawnScentHere(world, new Vec3((double)var1, (double)var2, (double)var3))) {
 	    		return;
 	    	}
             
@@ -553,7 +554,7 @@ public class ZAUtil {
     
     public static void blockEvent(PlayerEvent event, int chance) {
     	
-    	if (event.entity.worldObj.provider.dimensionId != 0 && event.entity.worldObj.provider.dimensionId != -127) return;
+    	if (event.entity.worldObj.provider.getDimensionId() != 0 && event.entity.worldObj.provider.getDimensionId() != -127) return;
     	
     	if (event.entityPlayer == null || (ZAConfigPlayerLists.whiteListUsedSenses && !ZAConfigPlayerLists.whitelistSenses.contains(CoroUtilEntity.getName(event.entityPlayer)))) return;
     	
@@ -561,7 +562,7 @@ public class ZAUtil {
 	    	if (!event.entity.worldObj.isRemote && event.entity.worldObj.rand.nextInt(chance) == 0) {
 		    	EntityScent var9 = new EntityScent(event.entity.worldObj);
 		    	
-		    	if (!canSpawnScentHere(event.entity.worldObj, Vec3.createVectorHelper((double)event.entityPlayer.posX, (double)event.entityPlayer.posY, (double)event.entityPlayer.posZ))) {
+		    	if (!canSpawnScentHere(event.entity.worldObj, new Vec3((double)event.entityPlayer.posX, (double)event.entityPlayer.posY, (double)event.entityPlayer.posZ))) {
 		    		return;
 		    	}
 		    	
@@ -603,7 +604,7 @@ public class ZAUtil {
 			
             var9.setPosition((double)x + (-(size/2) + randX), (double)y, (double)z + (-(size/2) + randZ));
             
-            if (!canSpawnScentHere(world, Vec3.createVectorHelper((double)x + (-(size/2) + randX), (double)y, (double)z + (-(size/2) + randZ)))) {
+            if (!canSpawnScentHere(world, new Vec3((double)x + (-(size/2) + randX), (double)y, (double)z + (-(size/2) + randZ)))) {
 	    		return null;
 	    	}
             
@@ -622,14 +623,14 @@ public class ZAUtil {
             return;
         }
 
-        double height = var0.posY - (double)var0.yOffset + 0.0D;
+        double height = var0.posY/* - (double)var0.yOffset*/ + 0.0D;
         /*if (var0 instanceof EntityPlayer) {
           height -= 1.0D;
         }*/
         //System.out.println(height);
         EntityScent var1 = new EntityScent(var0.worldObj);
         
-        if (!canSpawnScentHere(var0.worldObj, Vec3.createVectorHelper(var0.posX, height, var0.posZ))) {
+        if (!canSpawnScentHere(var0.worldObj, new Vec3(var0.posX, height, var0.posZ))) {
     		return;
     	}
         
@@ -653,9 +654,9 @@ public class ZAUtil {
         for (int tries = 0; tries < 5; tries++) {
 	        int tryX = (int)var0.posX - (range/2) + (rand.nextInt(range));
 	        int tryZ = (int)var0.posZ - (range/2) + (rand.nextInt(range));
-	        int tryY = var0.worldObj.getHeightValue(tryX, tryZ);
+	        int tryY = var0.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 	
-	        if (var0.getDistance(tryX, tryY, tryZ) < minDist || var0.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(var0.worldObj, tryX, tryY, tryZ) || var0.worldObj.getBlockLightValue(tryX, tryY, tryZ) >= 6) {
+	        if (var0.getDistance(tryX, tryY, tryZ) < minDist || var0.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(var0.worldObj, tryX, tryY, tryZ) || var0.worldObj.getLight(new BlockPos(tryX, tryY, tryZ)) >= 6) {
 	            continue;
 	        }
 	
@@ -678,7 +679,7 @@ public class ZAUtil {
         for (int tries = 0; tries < 5; tries++) {
 	        int tryX = (int)var0.posX - (range/2) + (rand.nextInt(range));
 	        int tryZ = (int)var0.posZ - (range/2) + (rand.nextInt(range));
-	        int tryY = var0.worldObj.getHeightValue(tryX, tryZ);
+	        int tryY = var0.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 	
 	        if (!canSpawnTrace(var0.worldObj, tryX, tryY, tryZ)) {
 	            continue;
@@ -695,7 +696,7 @@ public class ZAUtil {
     }
     
     public static boolean canSpawnMob(World world, int x, int y, int z) {
-        Block id = world.getBlock(x-1,y,z);//Block.pressurePlatePlanks.blockID;
+        Block id = world.getBlockState(new BlockPos(x-1,y,z)).getBlock();//Block.pressurePlatePlanks.blockID;
 
         /*if (id == Block.grass.blockID || id == Block.stone.blockID || id == Block.tallGrass.blockID || id == Block.grass.blockID || id == Block.sand.blockID) {
             return true;
@@ -715,20 +716,20 @@ public class ZAUtil {
         
         int tryX = (int)var0.posX - (range/2) + (rand.nextInt(range));
         int tryZ = (int)var0.posZ - (range/2) + (rand.nextInt(range));
-        int tryY = var0.worldObj.getHeightValue(tryX, tryZ);
+        int tryY = var0.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 
         if (!canSpawnTrace(var0.worldObj, tryX, tryY, tryZ)) {
             return;
         }
 
-        double height = var0.posY - (double)var0.yOffset + 0.0D;
+        double height = var0.posY - /*(double)var0.yOffset*/ + 0.0D;
         /*if (var0 instanceof EntityPlayer) {
           height -= 1.0D;
         }*/
         //System.out.println(height);
         EntityScent var1 = new EntityScent(var0.worldObj);
         
-        if (!canSpawnScentHere(var0.worldObj, Vec3.createVectorHelper(tryX, tryY, tryZ))) {
+        if (!canSpawnScentHere(var0.worldObj, new Vec3(tryX, tryY, tryZ))) {
     		return;
     	}
         
@@ -744,7 +745,7 @@ public class ZAUtil {
 
     public static boolean canSpawnTrace(World world, int x, int y, int z) {
 
-        if (world.getBlock(x-1,y,z).getMaterial() == Material.circuits) {
+        if (world.getBlockState(new BlockPos(x-1,y,z)).getBlock().getMaterial() == Material.circuits) {
             return false;
         }
         return true;
@@ -770,9 +771,9 @@ public class ZAUtil {
 		        //int i = (int)Math.floor((double)(f3 / 90F) + 0.5D);
 		        //f3 = (float)i * 90F;
 		        double d = entityliving.prevPosX + (entityliving.posX - entityliving.prevPosX) * (double)f;
-		        double d1 = ((entityliving.prevPosY + (entityliving.posY - entityliving.prevPosY) * (double)f + 1.62D)) - (double)entityliving.yOffset + yOffset + randY;
+		        double d1 = ((entityliving.prevPosY + (entityliving.posY - entityliving.prevPosY) * (double)f + 1.62D))/* - (double)entityliving.yOffset*/ + yOffset + randY;
 		        double d2 = entityliving.prevPosZ + (entityliving.posZ - entityliving.prevPosZ) * (double)f;
-		        Vec3 vec3d = Vec3.createVectorHelper(d, d1, d2);
+		        Vec3 vec3d = new Vec3(d, d1, d2);
 		        float f4 = MathHelper.cos(-f3 * 0.01745329F - 3.141593F);
 		        float f5 = MathHelper.sin(-f3 * 0.01745329F - 3.141593F);
 		        float f6 = -MathHelper.cos(-f1 * 0.01745329F - 0.7853982F);
@@ -783,10 +784,10 @@ public class ZAUtil {
 		        //entityliving.info = f3;
 		        double d3 = 2.0D;
 		        Vec3 vec3d1 = vec3d.addVector((double)f8 * d3, (double)f9 * d3, (double)f10 * d3);              // \/ water collide check
-		        int lightLevel = ent.worldObj.getBlockLightValue((int)vec3d1.xCoord, (int)vec3d1.yCoord, (int)vec3d1.zCoord);
+		        int lightLevel = ent.worldObj.getLight(new BlockPos(MathHelper.floor_double(vec3d1.xCoord), MathHelper.floor_double(vec3d1.yCoord), MathHelper.floor_double(vec3d1.zCoord)));
 		        if (lightLevel > 4) {
 		        	//System.out.println("test light check: " + lightLevel + " - phase: " + tryPhase + " - dist check: " + ent.getDistance(vec3d1.xCoord, vec3d1.yCoord, vec3d1.zCoord));
-		        	MovingObjectPosition movingobjectposition = entityliving.worldObj.rayTraceBlocks(Vec3.createVectorHelper(ent.posX, ent.posY+1, ent.posZ), vec3d1, true);
+		        	MovingObjectPosition movingobjectposition = entityliving.worldObj.rayTraceBlocks(new Vec3(ent.posX, ent.posY+1, ent.posZ), vec3d1, true);
 		        	
 		        	//if (movingobjectposition == null || (movingobjectposition.blockX == (int)vec3d1.xCoord && movingobjectposition.blockY == (int)vec3d1.yCoord && movingobjectposition.blockZ == (int)vec3d1.zCoord)) {
 			        	//System.out.println("test 2 light check: " + lightLevel + " - " + tryPhase);
@@ -821,9 +822,9 @@ public class ZAUtil {
 	        //int i = (int)Math.floor((double)(f3 / 90F) + 0.5D);
 	        //f3 = (float)i * 90F;
 	        double d = entityliving.prevPosX + (entityliving.posX - entityliving.prevPosX) * (double)f;
-	        double d1 = ((entityliving.prevPosY + (entityliving.posY - entityliving.prevPosY) * (double)f + 1.6200000000000001D)) - (double)entityliving.yOffset + yOffset;
+	        double d1 = ((entityliving.prevPosY + (entityliving.posY - entityliving.prevPosY) * (double)f + 1.6200000000000001D))/* - (double)entityliving.yOffset*/ + yOffset;
 	        double d2 = entityliving.prevPosZ + (entityliving.posZ - entityliving.prevPosZ) * (double)f;
-	        Vec3 vec3d = Vec3.createVectorHelper(d, d1, d2);
+	        Vec3 vec3d = new Vec3(d, d1, d2);
 	        float f4 = MathHelper.cos(-f3 * 0.01745329F - 3.141593F);
 	        float f5 = MathHelper.sin(-f3 * 0.01745329F - 3.141593F);
 	        float f6 = -MathHelper.cos(-f1 * 0.01745329F - 0.7853982F);
@@ -834,7 +835,7 @@ public class ZAUtil {
 	        //entityliving.info = f3;
 	        double d3 = 2.0D;
 	        Vec3 vec3d1 = vec3d.addVector((double)f8 * d3, (double)f9 * d3, (double)f10 * d3);              // \/ water collide check
-	        int lightLevel = ent.worldObj.getBlockLightValue((int)vec3d1.xCoord, (int)vec3d1.yCoord, (int)vec3d1.zCoord);
+	        int lightLevel = ent.worldObj.getLight(new BlockPos(MathHelper.floor_double(vec3d1.xCoord), MathHelper.floor_double(vec3d1.yCoord), MathHelper.floor_double(vec3d1.zCoord)));
 	        if (lightLevel > 4) {
 	        	//System.out.println("test light check: " + lightLevel);
 	        }
@@ -888,7 +889,7 @@ public class ZAUtil {
 
     	if (ZAConfig.extraScentCutoffRange == -1) return true;
     	
-    	AxisAlignedBB aabb = AxisAlignedBB.getBoundingBox(parPos.xCoord, parPos.yCoord, parPos.zCoord, parPos.xCoord + 1, parPos.yCoord + 1, parPos.zCoord + 1);
+    	AxisAlignedBB aabb = new AxisAlignedBB(parPos.xCoord, parPos.yCoord, parPos.zCoord, parPos.xCoord + 1, parPos.yCoord + 1, parPos.zCoord + 1);
     	aabb = aabb.expand(ZAConfig.extraScentCutoffRange, ZAConfig.extraScentCutoffRange, ZAConfig.extraScentCutoffRange);
     	
     	List list = parWorld.getEntitiesWithinAABB(EntityScent.class, aabb);

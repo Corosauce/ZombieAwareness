@@ -1,17 +1,9 @@
 package ZombieAwareness;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraftforge.common.DimensionManager;
 import CoroUtil.OldUtil;
 import CoroUtil.pathfinding.PFQueue;
 import CoroUtil.util.CoroUtil;
