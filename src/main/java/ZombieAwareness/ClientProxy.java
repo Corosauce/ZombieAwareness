@@ -18,7 +18,7 @@ public class ClientProxy extends CommonProxy
         super.init(pMod);
         
         
-        RenderingRegistry.registerEntityRenderingHandler(EntityScent.class, new RenderScent());
+        //RenderingRegistry.registerEntityRenderingHandler(EntityScent.class, new RenderScent());
         
         
     }
