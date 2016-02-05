@@ -3,6 +3,7 @@ package ZombieAwareness;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.Render;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
@@ -22,6 +23,10 @@ public class RenderScent extends Render {
     public static float caughtOffset = 0.8F;
     public static int stringColor = 8947848;
 
+    protected RenderScent(RenderManager renderManager) {
+		super(renderManager);
+		// TODO Auto-generated constructor stub
+	}
 
     public void doRenderNode(Entity var1, double var2, double var4, double var6, float var8, float var9) {
         //System.out.println("1");
@@ -61,7 +66,7 @@ public class RenderScent extends Render {
         	this.doRenderNode(var1, var2, var4, var6, var8, var9);
         }
         if (ZAConfig.client_debugRenderSounds && ((EntityScent)var1).type != 0) {
-        	renderOffsetAABB(var1.boundingBox, var2 - var1.lastTickPosX, var4 - var1.lastTickPosY, var6 - var1.lastTickPosZ, ((EntityScent)var1).type == 1, ((EntityScent)var1).getRange());
+        	renderOffsetAABB(var1.getEntityBoundingBox(), var2 - var1.lastTickPosX, var4 - var1.lastTickPosY, var6 - var1.lastTickPosZ, ((EntityScent)var1).type == 1, ((EntityScent)var1).getRange());
         }
         shadowSize = 0.0F;
         //
@@ -79,7 +84,7 @@ public class RenderScent extends Render {
         GL11.glDepthMask(false);
         float var12 = this.shadowSize;
         double var13 = var1.lastTickPosX + (var1.posX - var1.lastTickPosX) * (double)var9;
-        double var15 = var1.lastTickPosY + (var1.posY - var1.lastTickPosY) * (double)var9 + (double)var1.getShadowSize();
+        double var15 = var1.lastTickPosY + (var1.posY - var1.lastTickPosY) * (double)var9/* + (double)var1.getShadowSize()*/;
         double var17 = var1.lastTickPosZ + (var1.posZ - var1.lastTickPosZ) * (double)var9;
         int var19 = MathHelper.floor_double(var13 - (double)var12);
         int var20 = MathHelper.floor_double(var13 + (double)var12);
@@ -90,8 +95,9 @@ public class RenderScent extends Render {
         double var25 = var2 - var13;
         double var27 = var4 - var15;
         double var29 = var6 - var17;
-        Tessellator var31 = Tessellator.instance;
-        var31.startDrawingQuads();
+        Tessellator var31 = Tessellator.getInstance();
+        //TODO: 1.8
+        /*var31.startDrawingQuads();
         double str = (double)(((double)((EntityScent)var1).strength)/100.0D);
 
         //System.out.println("hmmm? - " + var1 + " - " + str);
@@ -107,7 +113,7 @@ public class RenderScent extends Render {
                     }
                 }
             }
-        }
+        }*/
 
         var31.draw();
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
@@ -120,10 +126,11 @@ public class RenderScent extends Render {
     }
 
     private void renderImageOnBlock(Block var1, double var2, double var4, double var6, int var8, int var9, int var10, float var11, float var12, double var13, double var15, double var17, double transparency) {
-        Tessellator var19 = Tessellator.instance;
+        Tessellator var19 = Tessellator.getInstance();
 
         //System.out.println("3");
-        if(var1.renderAsNormalBlock()) {
+        //TODO: 1.8
+        /*if(var1.renderAsNormalBlock()) {
             double var20 = transparency;//((double)var11 - (var4 - ((double)var9 + var15)) / 2.0D) * 0.5D * (double)this.getWorldFromRenderManager().getLightBrightness(var8, var9, var10);
 
             //System.out.println("4");
@@ -149,12 +156,12 @@ public class RenderScent extends Render {
             var19.addVertexWithUV(var24, var26, var30, (double)var33, (double)var35);
             var19.addVertexWithUV(var24, var26, var28, (double)var33, (double)var34);
             //}
-        }
+        }*/
     }
 
     public static void renderOffsetAABB(AxisAlignedBB var0, double var1, double var3, double var5, boolean var7, float size) {
         GL11.glDisable(3553 /*GL_TEXTURE_2D*/);
-        Tessellator var8 = Tessellator.instance;
+        Tessellator var8 = Tessellator.getInstance();
 
         if(var7) {
             GL11.glColor4f(0.0F, 0.0F, 1.0F, 1.0F);
@@ -168,7 +175,8 @@ public class RenderScent extends Render {
         
         //GL11.glScalef(size, size, size);
         
-        var8.startDrawingQuads();
+        //TODO: 1.8
+        /*var8.startDrawingQuads();
         var8.setTranslation(var1, var3, var5);
         var8.setNormal(0.0F, 0.0F, -1.0F);
         var8.addVertex(var0.minX, var0.maxY, var0.minZ);
@@ -201,7 +209,7 @@ public class RenderScent extends Render {
         var8.addVertex(var0.maxX, var0.maxY, var0.maxZ);
         var8.addVertex(var0.maxX, var0.minY, var0.maxZ);
         var8.setTranslation(0.0D, 0.0D, 0.0D);
-        var8.draw();
+        var8.draw();*/
         GL11.glEnable(3553 /*GL_TEXTURE_2D*/);
     }
 

@@ -7,6 +7,7 @@ import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
@@ -23,9 +24,10 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import CoroUtil.OldUtil;
-import CoroUtil.pathfinding.PFQueue;
+//import CoroUtil.pathfinding.PFQueue;
 import CoroUtil.util.CoroUtilBlock;
 import CoroUtil.util.CoroUtilEntity;
+import CoroUtil.util.CoroUtilPath;
 import ZombieAwareness.config.ZAConfig;
 import ZombieAwareness.config.ZAConfigFeatures;
 import ZombieAwareness.config.ZAConfigPlayerLists;
@@ -51,7 +53,7 @@ public class ZAUtil {
     //public static HashMap<String, Long> lastSoundTimes;
     //public static HashMap<String, Integer> lastMultiplies;
     
-    public static boolean debug = false;
+    public static boolean debug = true;
 	
 	public static void playerTick(EntityPlayer player) {
     	
@@ -180,7 +182,13 @@ public class ZAUtil {
     }
     
     public static void huntTarget(EntityLivingBase ent, EntityLivingBase targ, int pri) {
-		PFQueue.getPath(ent, targ, ZAConfig.maxPFRange, pri, ZombieAwareness.instance);
+		//PFQueue.getPath(ent, targ, ZAConfig.maxPFRange, pri, ZombieAwareness.instance);
+    	//1.8 change from pfqueue to longdistance mini pather
+		if (ent instanceof EntityCreature) {
+        	CoroUtilPath.tryMoveToEntityLivingLongDist((EntityCreature)ent, targ, 1);
+        } else {
+        	System.out.println("trying to pathfind a non entity creature, what?!");
+        }
 		//System.out.println("huntTarget call: " + ent + " -> " + targ);
 		if (ent instanceof EntityLiving) ((EntityLiving)ent).setAttackTarget(targ);
 		//setState(EnumActState.FIGHTING);
@@ -227,7 +235,7 @@ public class ZAUtil {
     		//if (!(ent instanceof EntityCreeper)) {
     	
     	//A more performance friendly omnipotence, only runs it when no target, but still allows for smaller ranged retargetting
-    	if (ent.worldObj.getWorldTime() % 40 == 0) {
+    	if (ent.worldObj.getTotalWorldTime() % 40 == 0) {
 	    	if (ZAConfig.omnipotent && ent.getAttackTarget() == null) {
 	    		ai_FindTarget(ent, true);
 	    	} else {
@@ -235,7 +243,8 @@ public class ZAUtil {
 	    	}
     	}
     	
-		if (PFQueue.instance == null) {
+    	//1.8: turned off for switch to other pathfinder
+		/*if (PFQueue.instance == null) {
     		new PFQueue(ent.worldObj);
     	}
 		long time = 0;
@@ -245,8 +254,10 @@ public class ZAUtil {
 			}
 		} catch (Exception ex) {
 			
-		}
-		if (ent.getAttackTarget() == null && (/*ent.worldObj.rand.nextInt(5) == 0 && */time < System.currentTimeMillis() && ent.getNavigator().noPath())) {
+		}*/
+    	
+    	//1.8: this code used to depend on pfdelays, lets just stagger it by 5 seconds now
+		if (ent.getAttackTarget() == null && (ent.worldObj.getTotalWorldTime() % 20 == 0 && ent.getNavigator().noPath())) {
 			//Find player made senses
 			if (!ZAConfig.awareness_Light_OnlyZombies || (ent instanceof EntityZombie)) {
 				if (!ZAConfigFeatures.awareness_Light || !ai_FindLightSource(ent)) {
@@ -310,14 +321,22 @@ public class ZAUtil {
 		    		int rY = MathHelper.floor_double(entP.posY + (rand.nextInt(size/2) - (size/4)));
 		    		int rZ = MathHelper.floor_double(entP.posZ + (rand.nextInt(size) - (size/2)));
 		    		
-		    		int lightValue = entP.worldObj.getLight(new BlockPos(rX, rY, rZ));
+		    		int lightValue = entP.worldObj.getLightFromNeighbors(new BlockPos(rX, rY, rZ));
 		    		//Block id = ent.worldObj.getBlock(rX, rY, rZ);
 		    		
 		    		if (lightValue > 4) {
 		    			if ((ent.getDistanceToEntity(entP) > 64 && ent.worldObj.rand.nextInt(20) == 0) || ent.worldObj.rayTraceBlocks(new Vec3(ent.posX, ent.posY + (double)ent.getEyeHeight(), ent.posZ), new Vec3(rX, rY, rZ)) == null) {
-		    				if (PFQueue.getPath(ent, rX, rY, rZ, 128F, 0, ZombieAwareness.instance)) {
+		    				/*if (PFQueue.getPath(ent, rX, rY, rZ, 128F, 0, ZombieAwareness.instance)) {
 			    				if (debug) System.out.println("pathing to lightsource");
-			    			}
+			    			}*/
+		    				//1.8 change from pfqueue to longdistance mini pather
+		    				if (ent instanceof EntityCreature) {
+		                    	if (CoroUtilPath.tryMoveToXYZLongDist((EntityCreature)ent, rX, rY, rZ, 1)) {
+		                    		if (debug) System.out.println("pathing to lightsource");
+		                    	}
+		                    } else {
+		                    	System.out.println("trying to pathfind a non entity creature, what?!");
+		                    }
 			    			return true;
 	    				}
 		    		}
@@ -364,7 +383,16 @@ public class ZAUtil {
         		//TEMP OFF
             	//setAge(ent, curAge/2);
             	//ent.entityAge = 0;
-                PFQueue.getPath(ent, var3, 64F, 0, ZombieAwareness.instance/*ent.getDistanceToEntity(var3) + 32F*/);
+        		
+                //PFQueue.getPath(ent, var3, 64F, 0, ZombieAwareness.instance/*ent.getDistanceToEntity(var3) + 32F*/);
+        		//1.8 change from pfqueue to longdistance mini pather
+                if (ent instanceof EntityCreature) {
+                	CoroUtilPath.tryMoveToEntityLivingLongDist((EntityCreature)ent, var3, 1);
+                } else {
+                	System.out.println("trying to pathfind a non entity creature, what?!");
+                }
+                
+                
                 //PFQueue.getPath(ent, mc.thePlayer, maxPFRange);
                 //if (debug) System.out.println("ai_FindSense call, type: " + ((EntityScent)var3).type + " - " + ent + " -> ");
                 return true;
@@ -656,7 +684,7 @@ public class ZAUtil {
 	        int tryZ = MathHelper.floor_double(var0.posZ) - (range/2) + (rand.nextInt(range));
 	        int tryY = var0.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 	
-	        if (var0.getDistance(tryX, tryY, tryZ) < minDist || var0.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(var0.worldObj, tryX, tryY, tryZ) || var0.worldObj.getLight(new BlockPos(tryX, tryY, tryZ)) >= 6) {
+	        if (var0.getDistance(tryX, tryY, tryZ) < minDist || var0.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(var0.worldObj, tryX, tryY, tryZ) || var0.worldObj.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
 	            continue;
 	        }
 	
@@ -784,7 +812,7 @@ public class ZAUtil {
 		        //entityliving.info = f3;
 		        double d3 = 2.0D;
 		        Vec3 vec3d1 = vec3d.addVector((double)f8 * d3, (double)f9 * d3, (double)f10 * d3);              // \/ water collide check
-		        int lightLevel = ent.worldObj.getLight(new BlockPos(MathHelper.floor_double(vec3d1.xCoord), MathHelper.floor_double(vec3d1.yCoord), MathHelper.floor_double(vec3d1.zCoord)));
+		        int lightLevel = ent.worldObj.getLightFromNeighbors(new BlockPos(MathHelper.floor_double(vec3d1.xCoord), MathHelper.floor_double(vec3d1.yCoord), MathHelper.floor_double(vec3d1.zCoord)));
 		        if (lightLevel > 4) {
 		        	//System.out.println("test light check: " + lightLevel + " - phase: " + tryPhase + " - dist check: " + ent.getDistance(vec3d1.xCoord, vec3d1.yCoord, vec3d1.zCoord));
 		        	MovingObjectPosition movingobjectposition = entityliving.worldObj.rayTraceBlocks(new Vec3(ent.posX, ent.posY+1, ent.posZ), vec3d1, true);
@@ -835,7 +863,7 @@ public class ZAUtil {
 	        //entityliving.info = f3;
 	        double d3 = 2.0D;
 	        Vec3 vec3d1 = vec3d.addVector((double)f8 * d3, (double)f9 * d3, (double)f10 * d3);              // \/ water collide check
-	        int lightLevel = ent.worldObj.getLight(new BlockPos(MathHelper.floor_double(vec3d1.xCoord), MathHelper.floor_double(vec3d1.yCoord), MathHelper.floor_double(vec3d1.zCoord)));
+	        int lightLevel = ent.worldObj.getLightFromNeighbors(new BlockPos(MathHelper.floor_double(vec3d1.xCoord), MathHelper.floor_double(vec3d1.yCoord), MathHelper.floor_double(vec3d1.zCoord)));
 	        if (lightLevel > 4) {
 	        	//System.out.println("test light check: " + lightLevel);
 	        }

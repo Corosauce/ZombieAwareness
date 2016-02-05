@@ -3,6 +3,7 @@ package ZombieAwareness;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import ZombieAwareness.config.ZAConfig;
@@ -88,6 +89,21 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
         
         if(!worldObj.isRemote && (this.strength <= 0 || age > 1200)) {
         	this.setDead();
+        }
+        
+        boolean scentDebug = false;
+        if (scentDebug) {
+	        if (worldObj.isRemote) {
+	        	if (worldObj.getTotalWorldTime() % 5 == 0) {
+	        		for (int i = 0; i < strength / 10; i++) {
+	        			double range = 1D;
+	        			double x = posX - worldObj.rand.nextDouble() / 2 + worldObj.rand.nextDouble();
+	        			double y = posY - worldObj.rand.nextDouble() / 2 + worldObj.rand.nextDouble();
+	        			double z = posZ - worldObj.rand.nextDouble() / 2 + worldObj.rand.nextDouble();
+	        			worldObj.spawnParticle(EnumParticleTypes.REDSTONE, x, y, z, 0, 0, 0);
+	        		}
+	        	}
+	        }
         }
     }
 
