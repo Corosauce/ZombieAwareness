@@ -41,7 +41,7 @@ import ZombieAwareness.config.ZAConfigFeatures;
 import ZombieAwareness.config.ZAConfigPlayerLists;
 import ZombieAwareness.config.ZAConfigSpawning;
 
-@Mod(modid = "ZAMod", name="Zombie Awareness", version="v1.9.5")
+@Mod(modid = "ZAMod", name="Zombie Awareness", version="v1.9.7")
 public class ZombieAwareness implements IPFCallback {
 	
 	@Mod.Instance( value = "ZAMod" )

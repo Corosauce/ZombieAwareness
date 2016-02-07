@@ -53,7 +53,7 @@ public class ZAUtil {
     //public static HashMap<String, Long> lastSoundTimes;
     //public static HashMap<String, Integer> lastMultiplies;
     
-    public static boolean debug = true;
+    public static boolean debug = false;
 	
 	public static void playerTick(EntityPlayer player) {
     	
