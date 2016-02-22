@@ -71,6 +71,8 @@ public class CommandZA extends CommandBase {
 	        			} else {
 	        				CoroUtil.sendPlayerMsg((EntityPlayerMP) var1, "none yet");
 	        			}
+	        		} else if (var2[1].equalsIgnoreCase("counts")) {
+	        			CoroUtil.sendPlayerMsg((EntityPlayerMP) var1, "surface: " + ZombieAwareness.lastMobsCountSurface + ", caves: " + ZombieAwareness.lastMobsCountCaves);
 	        		} else {
 	        			CoroUtil.sendPlayerMsg((EntityPlayerMP) var1, var2[1] + " set to: " + OldUtil.getPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1]));
 	        		}

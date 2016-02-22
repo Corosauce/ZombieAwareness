@@ -6,19 +6,23 @@ import java.util.Random;
 
 import modconfig.ConfigMod;
 import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
 import net.minecraft.command.ServerCommandManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.entity.monster.EntityEnderman;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.monster.EntityPigZombie;
 import net.minecraft.entity.monster.EntityZombie;
+import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
@@ -62,6 +66,8 @@ public class ZombieAwareness implements IPFCallback {
     public static boolean tryTropicraft = true;
     
     public static int lastZombieCount;
+    public static int lastMobsCountSurface;
+    public static int lastMobsCountCaves;
     public static long lastSpawnTime;
     public static long lastSpawnSysTime;
     
@@ -200,7 +206,9 @@ public class ZombieAwareness implements IPFCallback {
     		
     		manageCallbackQueue();
     		
-    		int lastCount = 0;
+    		int lastCountZombies = 0;
+    		int lastCountMobsSurface = 0;
+    		int lastCountMobsCaves = 0;
     		
     		boolean spawned = false;
     		
@@ -231,49 +239,63 @@ public class ZombieAwareness implements IPFCallback {
 	        				//ent.motionY = 0.41999998688697815D;
 	        			}
 	        			
-	        			if ((world.provider.dimensionId == 0) && ent instanceof EntityZombie) {
-	        				lastCount++;
+	        			if ((world.provider.dimensionId == 0) && ent instanceof IMob) {
 	        				
-	        				if (lastSpawnTime < ent.worldObj.getWorldTime() && !spawned && ent.worldObj.getClosestPlayerToEntity(ent, 32) == null && rand.nextInt(ZAConfigSpawning.maxZombiesNightBaseRarity + (lastZombieCount * 4 / (Math.max(1, ZAConfig.tickRateAILoop)))) == 0) {
-	        					if (!ent.worldObj.isDaytime() && lastZombieCount < ZAConfigSpawning.maxZombiesNight && ent.worldObj.canBlockSeeTheSky((int)ent.posX, (int)ent.posY, (int)ent.posZ) && ent.worldObj.getBlockLightValue((int)ent.posX, (int)ent.posY, (int)ent.posZ) < 5) {
-		    						
-	        						EntityZombie entZ = new EntityZombie(ent.worldObj);
-		    						entZ.setPosition(ent.posX, ent.posY, ent.posZ);
-		    						ent.worldObj.spawnEntityInWorld(entZ);
-		    						//lastZombieCount = ++lastCount;
-		    						
-		    						spawned = true;
-		    						lastSpawnTime = ZAConfigSpawning.zombieSpawnTickDelay + ent.worldObj.getWorldTime();
-		    						lastSpawnSysTime = System.currentTimeMillis();
-		    						
-		    						if (ZAConfig.debugConsoleSpawns) dbg("Spawned new surface zombie at: " + ent.posX + ", " + ent.posY + ", " + ent.posZ);
-	        					} else if (ZAConfigFeatures.extraSpawningCave && lastZombieCount < ZAConfigSpawning.extraSpawningMaxCount) {
-	        						EntityPlayer closestPlayer = ent.worldObj.getClosestVulnerablePlayerToEntity(ent, ZAConfigSpawning.extraSpawningDistMax);
-		        					if (closestPlayer != null && (!ZAConfigPlayerLists.whiteListUsedExtraSpawning || ZAConfigPlayerLists.whitelistExtraSpawning.contains(CoroUtilEntity.getName(closestPlayer))) 
-		        							&& closestPlayer.getDistanceSqToEntity(ent) > ZAConfigSpawning.extraSpawningDistMin
-		        							&& !ent.worldObj.canBlockSeeTheSky((int)ent.posX, (int)ent.posY, (int)ent.posZ) && ent.worldObj.getBlockLightValue((int)ent.posX, (int)ent.posY, (int)ent.posZ) < 5) {
-		        						
-		        						Block id = ent.worldObj.getBlock((int)ent.posX, (int)(ent.boundingBox.minY - 0.5D), (int)ent.posZ);
-		        						
-		        						if (!CoroUtilBlock.isAir(id) && id != Blocks.grass) {
-			        						EntityZombie entZ = new EntityZombie(ent.worldObj);
-				    						entZ.setPosition(ent.posX, ent.posY, ent.posZ);
-				    						ent.worldObj.spawnEntityInWorld(entZ);
-				    						
-				    						if (ZAConfigSpawning.extraSpawningAutoTarget) entZ.setAttackTarget(closestPlayer);
-				    						
-				    						//lastZombieCount = ++lastCount;
-				    						
-				    						spawned = true;
-				    						lastSpawnTime = ZAConfigSpawning.zombieSpawnTickDelay + ent.worldObj.getWorldTime();
-				    						lastSpawnSysTime = System.currentTimeMillis();
-			        						
-			        						if (ZAConfig.debugConsoleSpawns) dbg("Spawned new cave zombie at: " + ent.posX + ", " + ent.posY + ", " + ent.posZ);
-		        						}
-		        					}
-		        				}
+	        				int x = MathHelper.floor_double(ent.posX);
+	        				int y = MathHelper.floor_double(ent.posY);
+	        				int z = MathHelper.floor_double(ent.posZ);
+	        				
+	        				//not subtracting 0.5 incase of slab
+	        				if (ZAUtil.isInDarkCave(world, x, (int)(ent.boundingBox.minY - 0.3D), z, false)) {
+	        					lastCountMobsCaves++;
+	        				} else {
+	        					lastCountMobsSurface++;
 	        				}
 	        				
+	        				if (ent instanceof EntityZombie) {
+	        					lastCountZombies++;
+		        				if (lastSpawnTime < ent.worldObj.getWorldTime() && !spawned && ent.worldObj.getClosestPlayerToEntity(ent, 32) == null && rand.nextInt(ZAConfigSpawning.maxZombiesNightBaseRarity + (lastZombieCount * 4 / (Math.max(1, ZAConfig.tickRateAILoop)))) == 0) {
+		        					if (!ent.worldObj.isDaytime() && lastZombieCount < ZAConfigSpawning.maxZombiesNight && ent.worldObj.canBlockSeeTheSky((int)x, (int)y, (int)z) && ent.worldObj.getBlockLightValue((int)x, (int)y, (int)z) < 5) {
+			    						
+		        						EntityZombie entZ = new EntityZombie(ent.worldObj);
+			    						entZ.setPosition(ent.posX, ent.posY, ent.posZ);
+			    						entZ.onSpawnWithEgg((IEntityLivingData)null);
+			    						ent.worldObj.spawnEntityInWorld(entZ);
+			    						//lastZombieCount = ++lastCount;
+			    						
+			    						spawned = true;
+			    						lastSpawnTime = ZAConfigSpawning.zombieSpawnTickDelay + ent.worldObj.getWorldTime();
+			    						lastSpawnSysTime = System.currentTimeMillis();
+			    						
+			    						if (ZAConfig.debugConsoleSpawns) dbg("Spawned new surface zombie at: " + ent.posX + ", " + ent.posY + ", " + ent.posZ);
+		        					} else if (ZAConfigFeatures.extraSpawningCave && lastZombieCount < ZAConfigSpawning.maxZombiesNight/*lastZombieCountCaves < ZAConfigSpawning.extraSpawningCavesMaxCount*/) {
+		        						EntityPlayer closestPlayer = ent.worldObj.getClosestVulnerablePlayerToEntity(ent, ZAConfigSpawning.extraSpawningDistMax);
+			        					if (closestPlayer != null && (!ZAConfigPlayerLists.whiteListUsedExtraSpawning || ZAConfigPlayerLists.whitelistExtraSpawning.contains(CoroUtilEntity.getName(closestPlayer))) 
+			        							&& closestPlayer.getDistanceSqToEntity(ent) > ZAConfigSpawning.extraSpawningDistMin
+			        							&& !ent.worldObj.canBlockSeeTheSky((int)x, (int)y, (int)z) && ent.worldObj.getBlockLightValue((int)x, (int)y, (int)z) < 5) {
+			        						
+			        						Block id = ent.worldObj.getBlock((int)x, (int)(ent.boundingBox.minY - 0.5D), (int)z);
+			        						
+			        						if (!CoroUtilBlock.isAir(id) && (id != Blocks.grass || id.getMaterial() == Material.grass)) {
+				        						EntityZombie entZ = new EntityZombie(ent.worldObj);
+					    						entZ.setPosition(ent.posX, ent.posY, ent.posZ);
+					    						entZ.onSpawnWithEgg((IEntityLivingData)null);
+					    						ent.worldObj.spawnEntityInWorld(entZ);
+					    						
+					    						if (ZAConfigSpawning.extraSpawningAutoTarget) entZ.setAttackTarget(closestPlayer);
+					    						
+					    						//lastZombieCount = ++lastCount;
+					    						
+					    						spawned = true;
+					    						lastSpawnTime = ZAConfigSpawning.zombieSpawnTickDelay + ent.worldObj.getWorldTime();
+					    						lastSpawnSysTime = System.currentTimeMillis();
+				        						
+				        						if (ZAConfig.debugConsoleSpawns) dbg("Spawned new cave zombie at: " + ent.posX + ", " + ent.posY + ", " + ent.posZ);
+			        						}
+			        					}
+			        				}
+		        				}
+	        				}
 	        				
 	        			}
 	        		}
@@ -283,7 +305,11 @@ public class ZombieAwareness implements IPFCallback {
 	        	
 	        	//if (lastZombieCount != lastCount) System.out.println("lastZombieCount: " + lastZombieCount);
 	        	
-	        	if (world.provider.dimensionId == 0) lastZombieCount = lastCount;
+	        	if (world.provider.dimensionId == 0) {
+	        		lastZombieCount = lastCountZombies;
+	        		lastMobsCountSurface = lastCountMobsSurface;
+	        		lastMobsCountCaves = lastCountMobsCaves;
+	        	}
     		}
     	}
     	

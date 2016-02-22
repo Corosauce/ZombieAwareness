@@ -4,12 +4,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+import cpw.mods.fml.common.eventhandler.Event.Result;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.monster.EntitySkeleton;
 import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.entity.monster.EntityZombie;
@@ -20,6 +23,9 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
+import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import CoroUtil.OldUtil;
 import CoroUtil.pathfinding.PFQueue;
@@ -60,18 +66,26 @@ public class ZAUtil {
 			}
 		}
 		
-		if (ZombieAwareness.lastZombieCount < ZAConfigSpawning.extraSpawningMaxCount && !ZAConfigPlayerLists.whiteListUsedExtraSpawning || ZAConfigPlayerLists.whitelistExtraSpawning.contains(CoroUtilEntity.getName(player))) {
+		if (!ZAConfigPlayerLists.whiteListUsedExtraSpawning || ZAConfigPlayerLists.whitelistExtraSpawning.contains(CoroUtilEntity.getName(player))) {
 			if (ZAConfigFeatures.extraSpawningSurface) {
-				 if (!player.worldObj.isDaytime()) {
-					 if (rand.nextInt(Math.max(1, ZAConfigSpawning.extraSpawningRandomPool)) == 0) {
-						 spawnNewMobSurface(player);
-					 }
-				 }
+				if (!player.worldObj.isDaytime()) {
+					if (ZombieAwareness.lastMobsCountSurface < ZAConfigSpawning.extraSpawningSurfaceMaxCount) {
+						if (ZAConfigSpawning.extraSpawningRandomPool <= 0 || rand.nextInt(ZAConfigSpawning.extraSpawningRandomPool) == 0) {
+							spawnNewMobSurface(player);
+						}
+					}
+				}
 			}
 			
 			if (ZAConfigFeatures.extraSpawningCave) {
 				//we need existing zombies for this, caves always have something, for now depend on existing ones, do better cave spawning with hostile worlds tech
 				//code in ZombieAwareness class
+				
+				if (ZombieAwareness.lastMobsCountCaves < ZAConfigSpawning.extraSpawningCavesMaxCount) {
+					if (ZAConfigSpawning.extraSpawningCavesRandomPool <= 0 || rand.nextInt(ZAConfigSpawning.extraSpawningCavesRandomPool) == 0) {
+						spawnNewMobCave(player);
+					}
+				}
 			}
 		}
 		
@@ -644,26 +658,31 @@ public class ZAUtil {
         //System.out.println(var1.getRange());
     }
     
-    public static void spawnNewMobSurface(EntityLivingBase var0) {
+    public static void spawnNewMobSurface(EntityPlayer player) {
         
-        int range = 256;
+        
         int minDist = ZAConfigSpawning.extraSpawningDistMin;
         int maxDist = ZAConfigSpawning.extraSpawningDistMax;
+        int range = maxDist * 2;
         
         for (int tries = 0; tries < 5; tries++) {
-	        int tryX = (int)var0.posX - (range/2) + (rand.nextInt(range));
-	        int tryZ = (int)var0.posZ - (range/2) + (rand.nextInt(range));
-	        int tryY = var0.worldObj.getHeightValue(tryX, tryZ);
+	        int tryX = (int)player.posX - (range/2) + (rand.nextInt(range));
+	        int tryZ = (int)player.posZ - (range/2) + (rand.nextInt(range));
+	        int tryY = player.worldObj.getHeightValue(tryX, tryZ);
 	
-	        if (var0.getDistance(tryX, tryY, tryZ) < minDist || var0.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(var0.worldObj, tryX, tryY, tryZ) || var0.worldObj.getBlockLightValue(tryX, tryY, tryZ) >= 6) {
+	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(player.worldObj, tryX, tryY, tryZ) || player.worldObj.getBlockLightValue(tryX, tryY, tryZ) >= 6) {
 	            continue;
 	        }
 	
-	        EntityZombie entZ = new EntityZombie(var0.worldObj);
+	        /*EntityZombie entZ = new EntityZombie(player.worldObj);
 			entZ.setPosition(tryX, tryY, tryZ);
-			var0.worldObj.spawnEntityInWorld(entZ);
+			entZ.onSpawnWithEgg((IEntityLivingData)null);
+			player.worldObj.spawnEntityInWorld(entZ);*/
 			
-			if (ZAConfigSpawning.extraSpawningAutoTarget) entZ.setAttackTarget(var0);
+			WorldServer world = (WorldServer) player.worldObj;
+			spawnMobsAllowed(player, world, tryX, tryY, tryZ);
+			
+			//if (ZAConfigSpawning.extraSpawningAutoTarget) entZ.setAttackTarget(player);
 			
 	        if (ZAConfig.debugConsoleSpawns) ZombieAwareness.dbg("spawnNewMobSurface: " + tryX + ", " + tryY + ", " + tryZ);
 	        
@@ -671,31 +690,117 @@ public class ZAUtil {
         }
     }
     
-    public static void spawnNewMobCave(Entity var0) {
+    public static void spawnNewMobCave(EntityPlayer player) {
         
-        int range = 256;
+        int minDist = ZAConfigSpawning.extraSpawningCavesDistMin;
+        int maxDist = ZAConfigSpawning.extraSpawningCavesDistMax;
+        int range = maxDist * 2;
         
-        for (int tries = 0; tries < 5; tries++) {
-	        int tryX = (int)var0.posX - (range/2) + (rand.nextInt(range));
-	        int tryZ = (int)var0.posZ - (range/2) + (rand.nextInt(range));
-	        int tryY = var0.worldObj.getHeightValue(tryX, tryZ);
-	
-	        if (!canSpawnTrace(var0.worldObj, tryX, tryY, tryZ)) {
+        //System.out.println("try");
+        
+        for (int tries = 0; tries < ZAConfigSpawning.extraSpawningCavesTryCount; tries++) {
+	        int tryX = (int)player.posX - (range/2) + (rand.nextInt(range));
+	        int tryY = (int)player.posY - (range/2) + (rand.nextInt(range));
+	        int tryZ = (int)player.posZ - (range/2) + (rand.nextInt(range));
+	        
+	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist
+	        		|| !isInDarkCave(player.worldObj, tryX, tryY, tryZ, true)) {
 	            continue;
 	        }
 	
-	        EntityZombie entZ = new EntityZombie(var0.worldObj);
-			entZ.setPosition(var0.posX, var0.posY, var0.posZ);
-			var0.worldObj.spawnEntityInWorld(entZ);
+	        int randSize = player.worldObj.rand.nextInt(ZAConfigSpawning.extraSpawningCavesMaxGroupSize) + 1;
+	        WorldServer world = (WorldServer) player.worldObj;
+	        for (int i = 0; i < randSize; i++) {
+	        	spawnMobsAllowed(player, world, tryX, tryY, tryZ);
+	        }
 			
-	        if (ZAConfig.debugConsoleSpawns) ZombieAwareness.dbg("spawnNewMobCave: " + var0.posX + ", " + var0.posY + ", " + var0.posZ);
-	        
+			
+			
 	        return;
         }
     }
     
+    public static void spawnMobsAllowed(EntityPlayer player, WorldServer world, int tryX, int tryY, int tryZ) {
+    	if (!ZAConfigSpawning.extraSpawningUseNaturalSpawnList) {
+	        EntityZombie entZ = new EntityZombie(world);
+			entZ.setPosition(tryX + 0.5F, tryY + 1.1F, tryZ + 0.5F);
+			entZ.onSpawnWithEgg((IEntityLivingData)null);
+			world.spawnEntityInWorld(entZ);
+			
+			if (ZAConfigSpawning.extraSpawningAutoTarget) entZ.setAttackTarget(player);
+			
+			if (ZAConfig.debugConsoleSpawns) {
+	        	ZombieAwareness.dbg("spawnNewMobCave: " + tryX + ", " + tryY + ", " + tryZ);
+	        }
+    	} else {
+    		//WorldServer world = (WorldServer) player.worldObj;
+    		BiomeGenBase.SpawnListEntry spawnlistentry = world.spawnRandomCreature(EnumCreatureType.monster, tryX, tryY, tryZ);
+    		
+    		EntityLiving entityliving;
+
+            try
+            {
+                entityliving = (EntityLiving)spawnlistentry.entityClass.getConstructor(new Class[] {World.class}).newInstance(new Object[] {world});
+                entityliving.setLocationAndAngles(tryX + 0.5F, tryY + 1.1F, tryZ + 0.5F, world.rand.nextFloat() * 360.0F, 0.0F);
+
+                Result canSpawn = ForgeEventFactory.canEntitySpawn(entityliving, world, tryX + 0.5F, tryY + 1.1F, tryZ + 0.5F);
+                if (canSpawn == Result.ALLOW || (canSpawn == Result.DEFAULT && entityliving.getCanSpawnHere()))
+                {
+                    world.spawnEntityInWorld(entityliving);
+                    if (!ForgeEventFactory.doSpecialSpawn(entityliving, world, tryX + 0.5F, tryY + 1.1F, tryZ + 0.5F))
+                    {
+                        entityliving.onSpawnWithEgg((IEntityLivingData) null);
+                    }
+                    if (ZAConfig.debugConsoleSpawns) {
+    		        	ZombieAwareness.dbg("spawnNewMobCave: " + tryX + ", " + tryY + ", " + tryZ + ", name: " + entityliving.toString());
+    		        }
+                    
+                    if (ZAConfigSpawning.extraSpawningAutoTarget) entityliving.setAttackTarget(player);
+                    
+                }
+            }
+            catch (Exception exception)
+            {
+                exception.printStackTrace();
+            }
+
+            
+    	}
+    }
+    
+    /**
+     * Method is far from perfect, but should work well enough without intensive processing to verify
+     * coords fed in should be solid block with air above it (2 blocks of vertical space, 1 width of size)
+     * 
+     * @param x
+     * @param y
+     * @param z
+     * @return
+     */
+    public static boolean isInDarkCave(World world, int x, int y, int z, boolean checkSpaceToSpawn) {
+    	Block block = world.getBlock(x, y, z);
+    	if (!world.canBlockSeeTheSky(x, y, z) && world.getBlockLightValue(x, y, z) < 5) {
+    		if (!CoroUtilBlock.isAir(block) && block.getMaterial() == Material.rock/*(block != Blocks.grass || block.getMaterial() != Material.grass)*/) {
+    		
+    			if (!checkSpaceToSpawn) {
+    				return true;
+    			} else {
+    				Block blockAir1 = world.getBlock(x, y+1, z);
+    				if (CoroUtilBlock.isAir(blockAir1)) {
+    					Block blockAir2 = world.getBlock(x, y+2, z);
+    					if (CoroUtilBlock.isAir(blockAir2)) {
+    						return true;
+    					}
+    				}
+    				
+    			}
+    		}
+    	}
+    	return false;
+    }
+    
     public static boolean canSpawnMob(World world, int x, int y, int z) {
-        Block id = world.getBlock(x-1,y,z);//Block.pressurePlatePlanks.blockID;
+        Block id = world.getBlock(x,y,z);//Block.pressurePlatePlanks.blockID;
 
         /*if (id == Block.grass.blockID || id == Block.stone.blockID || id == Block.tallGrass.blockID || id == Block.grass.blockID || id == Block.sand.blockID) {
             return true;
