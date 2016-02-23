@@ -260,6 +260,7 @@ public class ZombieAwareness implements IPFCallback {
 		        						EntityZombie entZ = new EntityZombie(ent.worldObj);
 			    						entZ.setPosition(ent.posX, ent.posY, ent.posZ);
 			    						entZ.onSpawnWithEgg((IEntityLivingData)null);
+			    						ZAUtil.giveRandomSpeedBoost(entZ);
 			    						ent.worldObj.spawnEntityInWorld(entZ);
 			    						//lastZombieCount = ++lastCount;
 			    						
@@ -280,6 +281,7 @@ public class ZombieAwareness implements IPFCallback {
 				        						EntityZombie entZ = new EntityZombie(ent.worldObj);
 					    						entZ.setPosition(ent.posX, ent.posY, ent.posZ);
 					    						entZ.onSpawnWithEgg((IEntityLivingData)null);
+					    						ZAUtil.giveRandomSpeedBoost(entZ);
 					    						ent.worldObj.spawnEntityInWorld(entZ);
 					    						
 					    						if (ZAConfigSpawning.extraSpawningAutoTarget) entZ.setAttackTarget(closestPlayer);

@@ -22,11 +22,14 @@ public class ZAConfigSpawning implements IConfigCategory {
 	@ConfigComment("The max count of zombies active in loaded chunks for extra surface spawning")
 	public static int extraSpawningSurfaceMaxCount = 50;
 	@ConfigComment("Odds to 1 of spawning extra random zombies")
-	public static int extraSpawningRandomPool = 100;
+	public static int extraSpawningSurfaceRandomPool = 100;
 	@ConfigComment("Min distance required from closest player to spawn extra random position zombie")
 	public static int extraSpawningDistMin = 50;
 	@ConfigComment("Max distance required from closest player to spawn extra random position zombie")
 	public static int extraSpawningDistMax = 100;
+	
+	@ConfigComment("Max amount of zombies that can spawn together on surface")
+	public static int extraSpawningSurfaceMaxGroupSize = 3;
 	
 	//cave spawns configs
 	@ConfigComment("The max count of zombies active in loaded chunks for extra cave spawning")
@@ -38,7 +41,7 @@ public class ZAConfigSpawning implements IConfigCategory {
 	@ConfigComment("Max distance required from closest player to spawn extra random position zombie")
 	public static int extraSpawningCavesDistMax = 100;
 	
-	@ConfigComment("Max amount of zombies that can spawn in the same spot in a cave")
+	@ConfigComment("Max amount of zombies that can spawn together in a cave")
 	public static int extraSpawningCavesMaxGroupSize = 5;
 	
 	@ConfigComment("How intensively it tries to spawn mobs in caves")

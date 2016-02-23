@@ -3,21 +3,21 @@ package ZombieAwareness;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
-import cpw.mods.fml.common.eventhandler.Event.Result;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.entity.IEntityLivingData;
+import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.monster.EntitySkeleton;
 import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.pathfinding.PathEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
@@ -35,6 +35,7 @@ import ZombieAwareness.config.ZAConfig;
 import ZombieAwareness.config.ZAConfigFeatures;
 import ZombieAwareness.config.ZAConfigPlayerLists;
 import ZombieAwareness.config.ZAConfigSpawning;
+import cpw.mods.fml.common.eventhandler.Event.Result;
 
 public class ZAUtil {
 	
@@ -70,7 +71,7 @@ public class ZAUtil {
 			if (ZAConfigFeatures.extraSpawningSurface) {
 				if (!player.worldObj.isDaytime()) {
 					if (ZombieAwareness.lastMobsCountSurface < ZAConfigSpawning.extraSpawningSurfaceMaxCount) {
-						if (ZAConfigSpawning.extraSpawningRandomPool <= 0 || rand.nextInt(ZAConfigSpawning.extraSpawningRandomPool) == 0) {
+						if (ZAConfigSpawning.extraSpawningSurfaceRandomPool <= 0 || rand.nextInt(ZAConfigSpawning.extraSpawningSurfaceRandomPool) == 0) {
 							spawnNewMobSurface(player);
 						}
 					}
@@ -110,8 +111,18 @@ public class ZAUtil {
         
         
     }
+	
+	public static void giveRandomSpeedBoost(EntityLiving ent) {
+		
+		if (ZAConfig.zombieRandSpeedBoost > 0) {
+			double randBoost = ent.worldObj.rand.nextDouble() * ZAConfig.zombieRandSpeedBoost;
+			AttributeModifier speedBoostModifier = new AttributeModifier(UUID.fromString("B9766B59-9566-4402-BC1F-2EE2A276D836"), "ZA speed boost", randBoost, 1);
+			ent.getEntityAttribute(SharedMonsterAttributes.movementSpeed).applyModifier(speedBoostModifier);
+		}
+		
+	}
     
-    public static void moveHelper(EntityLiving ent) {
+    /*public static void moveHelper(EntityLiving ent) {
     	
     	//TEMP!
     	//Float.valueOf(c_CoroAIUtil.getPrivateValueBoth(EntityLivingBase.class, (EntityLivingBase)ent, c_CoroAIUtil.refl_obf_Item_moveSpeed, c_CoroAIUtil.refl_mcp_Item_moveSpeed).toString());
@@ -190,7 +201,7 @@ public class ZAUtil {
 				
 			//}
 		}
-    }
+    }*/
     
     public static void huntTarget(EntityLivingBase ent, EntityLivingBase targ, int pri) {
 		PFQueue.getPath(ent, targ, ZAConfig.maxPFRange, pri, ZombieAwareness.instance);
@@ -678,9 +689,12 @@ public class ZAUtil {
 			entZ.setPosition(tryX, tryY, tryZ);
 			entZ.onSpawnWithEgg((IEntityLivingData)null);
 			player.worldObj.spawnEntityInWorld(entZ);*/
-			
+
+			int randSize = player.worldObj.rand.nextInt(ZAConfigSpawning.extraSpawningSurfaceMaxGroupSize) + 1;
 			WorldServer world = (WorldServer) player.worldObj;
-			spawnMobsAllowed(player, world, tryX, tryY, tryZ);
+	        for (int i = 0; i < randSize; i++) {
+	        	spawnMobsAllowed(player, world, tryX, tryY, tryZ);
+	        }
 			
 			//if (ZAConfigSpawning.extraSpawningAutoTarget) entZ.setAttackTarget(player);
 			
@@ -725,12 +739,13 @@ public class ZAUtil {
 	        EntityZombie entZ = new EntityZombie(world);
 			entZ.setPosition(tryX + 0.5F, tryY + 1.1F, tryZ + 0.5F);
 			entZ.onSpawnWithEgg((IEntityLivingData)null);
+			giveRandomSpeedBoost(entZ);
 			world.spawnEntityInWorld(entZ);
 			
 			if (ZAConfigSpawning.extraSpawningAutoTarget) entZ.setAttackTarget(player);
 			
 			if (ZAConfig.debugConsoleSpawns) {
-	        	ZombieAwareness.dbg("spawnNewMobCave: " + tryX + ", " + tryY + ", " + tryZ);
+	        	ZombieAwareness.dbg("spawnNewMob: " + tryX + ", " + tryY + ", " + tryZ);
 	        }
     	} else {
     		//WorldServer world = (WorldServer) player.worldObj;
@@ -751,8 +766,9 @@ public class ZAUtil {
                     {
                         entityliving.onSpawnWithEgg((IEntityLivingData) null);
                     }
+                    giveRandomSpeedBoost(entityliving);
                     if (ZAConfig.debugConsoleSpawns) {
-    		        	ZombieAwareness.dbg("spawnNewMobCave: " + tryX + ", " + tryY + ", " + tryZ + ", name: " + entityliving.toString());
+    		        	ZombieAwareness.dbg("spawnNewMob: " + tryX + ", " + tryY + ", " + tryZ + ", name: " + entityliving.toString());
     		        }
                     
                     if (ZAConfigSpawning.extraSpawningAutoTarget) entityliving.setAttackTarget(player);
