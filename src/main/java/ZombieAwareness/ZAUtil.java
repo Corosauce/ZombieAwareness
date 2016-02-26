@@ -915,6 +915,8 @@ public class ZAUtil {
 
     public static boolean canSpawnScentHere(World parWorld, Vec3 parPos) {
 
+    	if (!ZAConfigFeatures.awareness_Sound) return false;
+    	
     	if (ZAConfig.extraScentCutoffRange == -1) return true;
     	
     	AxisAlignedBB aabb = new AxisAlignedBB(parPos.xCoord, parPos.yCoord, parPos.zCoord, parPos.xCoord + 1, parPos.yCoord + 1, parPos.zCoord + 1);
