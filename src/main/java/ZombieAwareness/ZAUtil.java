@@ -1006,6 +1006,8 @@ public class ZAUtil {
     }
 
     public static boolean canSpawnScentHere(World parWorld, Vec3 parPos) {
+    	
+    	if (!ZAConfigFeatures.awareness_Sound) return false;
 
     	if (ZAConfig.extraScentCutoffRange == -1) return true;
     	
