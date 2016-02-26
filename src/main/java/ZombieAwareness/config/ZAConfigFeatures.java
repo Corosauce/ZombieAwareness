@@ -19,7 +19,7 @@ public class ZAConfigFeatures implements IConfigCategory {
 	@ConfigComment("Pistons cause sound sense sources attracting monsters")
 	public static boolean noisyPistons = true;
 	@ConfigComment("Causes monsters to horde up and wander the surface together to random points")
-	public static boolean wanderingHordes = true;
+	public static boolean wanderingHordes = false;
 	@ConfigComment("Spawn extra zombies randomly on the surface at night if dark and away from player until Spawning.extraSpawningMaxCount is reached")
 	public static boolean extraSpawningSurface = false;
 	@ConfigComment("Spawn extra zombies in caves where other zombies already are if dark and away from player until Spawning.extraSpawningMaxCount is reached")
