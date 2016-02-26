@@ -45,7 +45,7 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.relauncher.Side;
 
-@Mod(modid = "ZAMod", name="Zombie Awareness", version="v1.9.5")
+@Mod(modid = "ZAMod", name="Zombie Awareness", version="v1.10")
 public class ZombieAwareness implements IPFCallback {
 	
 	@Mod.Instance( value = "ZAMod" )
