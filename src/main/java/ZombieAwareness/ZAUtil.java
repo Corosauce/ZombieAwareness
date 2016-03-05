@@ -1,5 +1,6 @@
 package ZombieAwareness;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
@@ -8,6 +9,7 @@ import java.util.UUID;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.EnumCreatureType;
@@ -17,6 +19,7 @@ import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.monster.EntitySkeleton;
 import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.entity.monster.EntityZombie;
+import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
@@ -718,7 +721,7 @@ public class ZAUtil {
 	        int tryZ = (int)player.posZ - (range/2) + (rand.nextInt(range));
 	        
 	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist
-	        		|| !isInDarkCave(player.worldObj, tryX, tryY, tryZ, true)) {
+	        		|| (ZAConfigSpawning.extraSpawningMode != 1 && !isInDarkCave(player.worldObj, tryX, tryY, tryZ, true))) {
 	            continue;
 	        }
 	
@@ -735,9 +738,9 @@ public class ZAUtil {
     }
     
     public static void spawnMobsAllowed(EntityPlayer player, WorldServer world, int tryX, int tryY, int tryZ) {
-    	if (!ZAConfigSpawning.extraSpawningUseNaturalSpawnList) {
+    	if (ZAConfigSpawning.extraSpawningMode == 0) {
 	        EntityZombie entZ = new EntityZombie(world);
-			entZ.setPosition(tryX + 0.5F, tryY + 1.1F, tryZ + 0.5F);
+			entZ.setLocationAndAngles(tryX + 0.5F, tryY + 1.1F, tryZ + 0.5F, world.rand.nextFloat() * 360.0F, 0.0F);
 			entZ.onSpawnWithEgg((IEntityLivingData)null);
 			giveRandomSpeedBoost(entZ);
 			world.spawnEntityInWorld(entZ);
@@ -747,7 +750,7 @@ public class ZAUtil {
 			if (ZAConfig.debugConsoleSpawns) {
 	        	ZombieAwareness.dbg("spawnNewMob: " + tryX + ", " + tryY + ", " + tryZ);
 	        }
-    	} else {
+    	} else if (ZAConfigSpawning.extraSpawningMode == 1) {
     		//WorldServer world = (WorldServer) player.worldObj;
     		BiomeGenBase.SpawnListEntry spawnlistentry = world.spawnRandomCreature(EnumCreatureType.monster, tryX, tryY, tryZ);
     		
@@ -781,6 +784,31 @@ public class ZAUtil {
             }
 
             
+    	} else if (ZAConfigSpawning.extraSpawningMode == 2) {
+    		List<Class> spawnables = getSpawnableEntities();
+            
+            if (spawnables.size() == 0) return;
+            
+            try {
+	        	int randSpawn = rand.nextInt(spawnables.size());
+		        Class classToSpawn = spawnables.get(randSpawn);
+	        	
+	        	EntityCreature ent = (EntityCreature)classToSpawn.getConstructor(new Class[] {World.class}).newInstance(new Object[] {player.worldObj});
+	        	
+	        	ent.setLocationAndAngles(tryX + 0.5F, tryY + 1.1F, tryZ + 0.5F, world.rand.nextFloat() * 360.0F, 0.0F);
+				ent.onSpawnWithEgg((IEntityLivingData)null);
+				player.worldObj.spawnEntityInWorld(ent);
+				
+				if (ZAConfig.debugConsoleSpawns) {
+		        	ZombieAwareness.dbg("spawnNewMob: " + tryX + ", " + tryY + ", " + tryZ + ", name: " + ent.toString());
+		        }
+				
+				if (ZAConfigSpawning.extraSpawningAutoTarget) ent.setAttackTarget(player);
+			} catch (Exception e) {
+				System.out.println("ZA extra spawning: error spawning entity: ");
+				e.printStackTrace();
+			}
+            
     	}
     }
     
@@ -795,7 +823,7 @@ public class ZAUtil {
      */
     public static boolean isInDarkCave(World world, int x, int y, int z, boolean checkSpaceToSpawn) {
     	Block block = world.getBlock(x, y, z);
-    	if (!world.canBlockSeeTheSky(x, y, z) && world.getBlockLightValue(x, y, z) < 5) {
+    	if (!world.canBlockSeeTheSky(x, y, z) && isValidLightLevel(world, x, y, z)/*world.getBlockLightValue(x, y, z) < 5*/) {
     		if (!CoroUtilBlock.isAir(block) && block.getMaterial() == Material.rock/*(block != Blocks.grass || block.getMaterial() != Material.grass)*/) {
     		
     			if (!checkSpaceToSpawn) {
@@ -825,6 +853,35 @@ public class ZAUtil {
         	return false;
         }
         return true;
+    }
+    
+    /**
+     * Checks to make sure the light is not too bright where the mob is spawning
+     */
+    public static boolean isValidLightLevel(World world, int x, int y, int z)
+    {
+        int i = x;//MathHelper.floor_double(this.posX);
+        int j = y;//MathHelper.floor_double(this.boundingBox.minY);
+        int k = z;//MathHelper.floor_double(this.posZ);
+
+        /*if (world.getSavedLightValue(EnumSkyBlock.Sky, i, j, k) > this.rand.nextInt(32))
+        {
+            return false;
+        }
+        else
+        {*/
+            int l = world.getBlockLightValue(i, j, k);
+
+            if (world.isThundering())
+            {
+                int i1 = world.skylightSubtracted;
+                world.skylightSubtracted = 10;
+                l = world.getBlockLightValue(i, j, k);
+                world.skylightSubtracted = i1;
+            }
+
+            return l <= 0 && 0.5F - world.getLightBrightness(x, y, z) >= 0.0F;//world.rand.nextInt(8);
+        //}
     }
     
     public static void spawnWaypoint(Entity var0) {
@@ -1028,4 +1085,31 @@ public class ZAUtil {
     	
     	return true;
     }
+    
+    public static List<Class> getSpawnableEntities() {
+		try {
+			List<Class> listSpawns = new ArrayList<Class>();
+			String[] spawnArray = ZAConfigSpawning.extraSpawningList.split(",");
+			if (spawnArray != null) {
+				for (String entry : spawnArray) {
+					try {
+						Class clazz = Class.forName(entry.trim());
+						if (!EntityCreature.class.isAssignableFrom(clazz) || !IMob.class.isAssignableFrom(clazz)) {
+							System.out.println("ZA extra spawning: class not compatible, must extend EntityCreature and IMob, problem string: " + entry);
+						} else {
+							listSpawns.add(clazz);
+						}
+					} catch (ClassNotFoundException e) {
+						System.out.println("ZA extra spawning: unable to find class for string: " + entry);
+					}
+				}
+			}
+			return listSpawns;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		List<Class> listDefault = new ArrayList<Class>();
+		listDefault.add(EntityZombie.class);
+		return listDefault;
+	}
 }
