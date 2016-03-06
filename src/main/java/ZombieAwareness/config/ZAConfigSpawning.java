@@ -47,6 +47,9 @@ public class ZAConfigSpawning implements IConfigCategory {
 	@ConfigComment("How intensively it tries to spawn mobs in caves")
 	public static int extraSpawningCavesTryCount = 15;
 	
+	@ConfigComment("Use if issues with extra spawning spawning mobs where they shouldnt be")
+	public static boolean extraSpawningCavesOnlyOnStone = false;
+	
 	//@ConfigComment("Instead of just zombies, use the list of mobs minecraft tries to normally spawn with, could include monsters from mods")
 	@ConfigComment("Modes: 0 = zombies only, 1 = use hostile mob list built into mc that other mods also use, 2 = use extraSpawningList config")
 	public static int extraSpawningMode = 0;

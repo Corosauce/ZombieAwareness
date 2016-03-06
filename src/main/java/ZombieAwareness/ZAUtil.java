@@ -21,6 +21,7 @@ import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
@@ -720,6 +721,12 @@ public class ZAUtil {
 	        int tryY = (int)player.posY - (range/2) + (rand.nextInt(range));
 	        int tryZ = (int)player.posZ - (range/2) + (rand.nextInt(range));
 	        
+	        Block block = player.worldObj.getBlock(tryX, tryY, tryZ);
+
+			if (ZAConfigSpawning.extraSpawningCavesOnlyOnStone) {
+				if (block != Blocks.stone) continue;
+			}
+	        
 	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist
 	        		|| (ZAConfigSpawning.extraSpawningMode != 1 && !isInDarkCave(player.worldObj, tryX, tryY, tryZ, true))) {
 	            continue;
@@ -748,7 +755,7 @@ public class ZAUtil {
 			if (ZAConfigSpawning.extraSpawningAutoTarget) entZ.setAttackTarget(player);
 			
 			if (ZAConfig.debugConsoleSpawns) {
-	        	ZombieAwareness.dbg("spawnNewMob: " + tryX + ", " + tryY + ", " + tryZ);
+	        	ZombieAwareness.dbg("spawnNewMobCaves: " + tryX + ", " + tryY + ", " + tryZ);
 	        }
     	} else if (ZAConfigSpawning.extraSpawningMode == 1) {
     		//WorldServer world = (WorldServer) player.worldObj;
@@ -771,7 +778,7 @@ public class ZAUtil {
                     }
                     giveRandomSpeedBoost(entityliving);
                     if (ZAConfig.debugConsoleSpawns) {
-    		        	ZombieAwareness.dbg("spawnNewMob: " + tryX + ", " + tryY + ", " + tryZ + ", name: " + entityliving.toString());
+    		        	ZombieAwareness.dbg("spawnNewMobCaves: " + tryX + ", " + tryY + ", " + tryZ + ", name: " + entityliving.toString());
     		        }
                     
                     if (ZAConfigSpawning.extraSpawningAutoTarget) entityliving.setAttackTarget(player);
@@ -800,9 +807,10 @@ public class ZAUtil {
 				player.worldObj.spawnEntityInWorld(ent);
 				
 				if (ZAConfig.debugConsoleSpawns) {
-		        	ZombieAwareness.dbg("spawnNewMob: " + tryX + ", " + tryY + ", " + tryZ + ", name: " + ent.toString());
+		        	ZombieAwareness.dbg("spawnNewMobCaves: " + tryX + ", " + tryY + ", " + tryZ + ", name: " + ent.toString());
 		        }
 				
+				giveRandomSpeedBoost(ent);
 				if (ZAConfigSpawning.extraSpawningAutoTarget) ent.setAttackTarget(player);
 			} catch (Exception e) {
 				System.out.println("ZA extra spawning: error spawning entity: ");
@@ -823,9 +831,9 @@ public class ZAUtil {
      */
     public static boolean isInDarkCave(World world, int x, int y, int z, boolean checkSpaceToSpawn) {
     	Block block = world.getBlock(x, y, z);
-    	if (!world.canBlockSeeTheSky(x, y, z) && isValidLightLevel(world, x, y, z)/*world.getBlockLightValue(x, y, z) < 5*/) {
+    	if (!world.canBlockSeeTheSky(x, y+1, z) && isValidLightLevel(world, x, y+1, z)/*world.getBlockLightValue(x, y, z) < 5*/) {
     		if (!CoroUtilBlock.isAir(block) && block.getMaterial() == Material.rock/*(block != Blocks.grass || block.getMaterial() != Material.grass)*/) {
-    		
+    			
     			if (!checkSpaceToSpawn) {
     				return true;
     			} else {

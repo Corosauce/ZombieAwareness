@@ -46,8 +46,8 @@ import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.relauncher.Side;
 
 //commented out for max tropiserver compatibility
-@Mod(modid = "ZAMod", name="Zombie Awareness", version="v1.10")
-//@Mod(modid = "ZAMod", name="Zombie Awareness", version="v1.9.5")
+@Mod(modid = "ZAMod", name="Zombie Awareness", version="v1.10", acceptableRemoteVersions="*")
+//@Mod(modid = "ZAMod", name="Zombie Awareness", version="v1.9.5", acceptableRemoteVersions="*")
 public class ZombieAwareness implements IPFCallback {
 	
 	@Mod.Instance( value = "ZAMod" )
