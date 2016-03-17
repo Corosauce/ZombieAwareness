@@ -1,9 +1,12 @@
 package ZombieAwareness;
 
+import net.minecraft.util.DamageSource;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.entity.player.PlayerEvent.HarvestCheck;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 
 public class ZAEventHandler {
@@ -37,5 +40,17 @@ public class ZAEventHandler {
 			
 			
 		}
+	}
+	
+	@SubscribeEvent(priority = EventPriority.HIGH)
+    public void onLivingHurt(LivingHurtEvent event) {
+		
+		//System.out.println("TODO: EXPLOSION SOUND SENSE");
+		
+		if (event.source.damageType.contains("explosion")) {
+			
+			//HOOK EXPLOSTION to create big sense, can only hook hurting ones but its a start
+		}
+		
 	}
 }

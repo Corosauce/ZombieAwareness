@@ -685,8 +685,12 @@ public class ZAUtil {
 	        int tryZ = (int)player.posZ - (range/2) + (rand.nextInt(range));
 	        int tryY = player.worldObj.getHeightValue(tryX, tryZ);
 	
-	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(player.worldObj, tryX, tryY, tryZ) || !isValidLightLevel(player.worldObj, tryX, tryY+1, tryZ)/*player.worldObj.getBlockLightValue(tryX, tryY, tryZ) >= 6*/) {
+	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(player.worldObj, tryX, tryY, tryZ)) {
 	            continue;
+	        }
+	        
+	        if (!isValidLightLevel(player.worldObj, tryX, tryY+1, tryZ)/*player.worldObj.getBlockLightValue(tryX, tryY, tryZ) >= 6*/) {
+	        	continue;
 	        }
 	
 	        /*EntityZombie entZ = new EntityZombie(player.worldObj);
@@ -887,8 +891,10 @@ public class ZAUtil {
                 l = world.getBlockLightValue(i, j, k);
                 world.skylightSubtracted = i1;
             }
+            
+            int brightestSpawnableLightLevel = 7;
 
-            return l <= 0 && 0.5F - world.getLightBrightness(x, y, z) >= 0.0F;//world.rand.nextInt(8);
+            return l <= brightestSpawnableLightLevel && 0.5F - world.getLightBrightness(x, y, z) >= 0.0F;//world.rand.nextInt(8);
         //}
     }
     
