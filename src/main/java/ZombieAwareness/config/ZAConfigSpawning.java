@@ -22,7 +22,7 @@ public class ZAConfigSpawning implements IConfigCategory {
 	@ConfigComment("The max count of zombies active in loaded chunks for extra surface spawning")
 	public static int extraSpawningSurfaceMaxCount = 50;
 	@ConfigComment("Odds to 1 of spawning extra random zombies")
-	public static int extraSpawningSurfaceRandomPool = 100;
+	public static int extraSpawningSurfaceRandomPool = 50;
 	@ConfigComment("Min distance required from closest player to spawn extra random position zombie")
 	public static int extraSpawningDistMin = 50;
 	@ConfigComment("Max distance required from closest player to spawn extra random position zombie")

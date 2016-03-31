@@ -26,6 +26,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.SpawnerAnimals;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.BiomeGenBase;
@@ -683,12 +684,15 @@ public class ZAUtil {
         for (int tries = 0; tries < 5; tries++) {
 	        int tryX = (int)player.posX - (range/2) + (rand.nextInt(range));
 	        int tryZ = (int)player.posZ - (range/2) + (rand.nextInt(range));
-	        int tryY = player.worldObj.getHeightValue(tryX, tryZ);
+	        int tryY = player.worldObj.getHeightValue(tryX, tryZ); //will return the air above the block, or tallgrass
+	        
+	        Block block = player.worldObj.getBlock(tryX, tryY, tryZ);
 	
 	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(player.worldObj, tryX, tryY, tryZ)) {
 	            continue;
 	        }
 	        
+	        //+1 for tallgrass scenarios and other weird issues....
 	        if (!isValidLightLevel(player.worldObj, tryX, tryY+1, tryZ)/*player.worldObj.getBlockLightValue(tryX, tryY, tryZ) >= 6*/) {
 	        	continue;
 	        }
@@ -706,7 +710,7 @@ public class ZAUtil {
 			
 			//if (ZAConfigSpawning.extraSpawningAutoTarget) entZ.setAttackTarget(player);
 			
-	        if (ZAConfig.debugConsoleSpawns) ZombieAwareness.dbg("spawnNewMobSurface: " + tryX + ", " + tryY + ", " + tryZ);
+	        if (ZAConfig.debugConsoleSpawns) ZombieAwareness.dbg("spawnNewMobsSurface: " + tryX + ", " + tryY + ", " + tryZ);
 	        
 	        return;
         }
@@ -731,9 +735,22 @@ public class ZAUtil {
 				if (block != Blocks.stone) continue;
 			}
 	        
-	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist
-	        		|| (ZAConfigSpawning.extraSpawningMode != 1 && !isInDarkCave(player.worldObj, tryX, tryY, tryZ, true))) {
+	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist) {
 	            continue;
+	        }
+	        
+	        /*if (!block.isAir(player.worldObj, tryX, tryY, tryZ)) {
+	        	System.out.println("!");
+	        }*/
+	        
+	        //needs solid block passed
+	        if (ZAConfigSpawning.extraSpawningMode != 1 && !isInDarkCave(player.worldObj, tryX, tryY, tryZ, true)) {
+	        	continue;
+	        }
+	        
+	        //needs air passed, so do +1
+	        if (!canSpawnMob(player.worldObj, tryX, tryY+1, tryZ)) {
+	        	continue;
 	        }
 	
 	        int randSize = player.worldObj.rand.nextInt(ZAConfigSpawning.extraSpawningCavesMaxGroupSize) + 1;
@@ -742,12 +759,42 @@ public class ZAUtil {
 	        	spawnMobsAllowed(player, world, tryX, tryY, tryZ);
 	        }
 			
-			
+	        if (ZAConfig.debugConsoleSpawns) ZombieAwareness.dbg("spawnNewMobsCave: " + tryX + ", " + tryY + ", " + tryZ);
 			
 	        return;
         }
     }
     
+    /**
+     * Feed in air block or water block, whatever we want to spawn them into, not onto
+     * 
+     * @param world
+     * @param type
+     * @param x
+     * @param y
+     * @param z
+     * @return
+     */
+    public static boolean canSpawnMobTypeHere(World world, EnumCreatureType type, int x, int y, int z) {
+    	
+    	//Block block = world.getBlock(x, y, z);
+    	
+    	if (!SpawnerAnimals.canCreatureTypeSpawnAtLocation(type, world, x, y, z)) {
+    		return false;
+    	}
+    	
+    	return true;
+    }
+    
+    /**
+     * Feed in solid block coord
+     * 
+     * @param player
+     * @param world
+     * @param tryX
+     * @param tryY
+     * @param tryZ
+     */
     public static void spawnMobsAllowed(EntityPlayer player, WorldServer world, int tryX, int tryY, int tryZ) {
     	if (ZAConfigSpawning.extraSpawningMode == 0) {
 	        EntityZombie entZ = new EntityZombie(world);
@@ -759,7 +806,7 @@ public class ZAUtil {
 			if (ZAConfigSpawning.extraSpawningAutoTarget) entZ.setAttackTarget(player);
 			
 			if (ZAConfig.debugConsoleSpawns) {
-	        	ZombieAwareness.dbg("spawnNewMobCaves: " + tryX + ", " + tryY + ", " + tryZ);
+	        	ZombieAwareness.dbg("spawnNewMob: " + tryX + ", " + tryY + ", " + tryZ);
 	        }
     	} else if (ZAConfigSpawning.extraSpawningMode == 1) {
     		//WorldServer world = (WorldServer) player.worldObj;
@@ -782,7 +829,7 @@ public class ZAUtil {
                     }
                     giveRandomSpeedBoost(entityliving);
                     if (ZAConfig.debugConsoleSpawns) {
-    		        	ZombieAwareness.dbg("spawnNewMobCaves: " + tryX + ", " + tryY + ", " + tryZ + ", name: " + entityliving.toString());
+    		        	ZombieAwareness.dbg("spawnNewMob: " + tryX + ", " + tryY + ", " + tryZ + ", name: " + entityliving.toString());
     		        }
                     
                     if (ZAConfigSpawning.extraSpawningAutoTarget) entityliving.setAttackTarget(player);
@@ -811,7 +858,7 @@ public class ZAUtil {
 				player.worldObj.spawnEntityInWorld(ent);
 				
 				if (ZAConfig.debugConsoleSpawns) {
-		        	ZombieAwareness.dbg("spawnNewMobCaves: " + tryX + ", " + tryY + ", " + tryZ + ", name: " + ent.toString());
+		        	ZombieAwareness.dbg("spawnNewMob: " + tryX + ", " + tryY + ", " + tryZ + ", name: " + ent.toString());
 		        }
 				
 				giveRandomSpeedBoost(ent);
@@ -864,6 +911,11 @@ public class ZAUtil {
         if (!CoroUtilBlock.isAir(id) && id.getMaterial() == Material.leaves) {
         	return false;
         }
+        
+        if (!canSpawnMobTypeHere(world, EnumCreatureType.monster, x, y, z)) {
+        	return false;
+        }
+        
         return true;
     }
     
