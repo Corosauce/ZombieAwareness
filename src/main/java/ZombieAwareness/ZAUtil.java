@@ -122,7 +122,9 @@ public class ZAUtil {
 		if (ZAConfig.zombieRandSpeedBoost > 0) {
 			double randBoost = ent.worldObj.rand.nextDouble() * ZAConfig.zombieRandSpeedBoost;
 			AttributeModifier speedBoostModifier = new AttributeModifier(UUID.fromString("B9766B59-9566-4402-BC1F-2EE2A276D836"), "ZA speed boost", randBoost, 1);
-			ent.getEntityAttribute(SharedMonsterAttributes.movementSpeed).applyModifier(speedBoostModifier);
+			AttributeInstance att = ent.getEntityAttribute(SharedMonsterAttributes.movementSpeed);
+			att.removeModifier(speedBoostModifier);
+			att.applyModifier(speedBoostModifier);
 		}
 		
 	}
