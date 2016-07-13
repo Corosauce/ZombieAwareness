@@ -16,6 +16,7 @@ import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.monster.EntitySkeleton;
 import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.entity.monster.EntityZombie;
@@ -122,7 +123,7 @@ public class ZAUtil {
 		if (ZAConfig.zombieRandSpeedBoost > 0) {
 			double randBoost = ent.worldObj.rand.nextDouble() * ZAConfig.zombieRandSpeedBoost;
 			AttributeModifier speedBoostModifier = new AttributeModifier(UUID.fromString("B9766B59-9566-4402-BC1F-2EE2A276D836"), "ZA speed boost", randBoost, 1);
-			AttributeInstance att = ent.getEntityAttribute(SharedMonsterAttributes.movementSpeed);
+			ModifiableAttributeInstance att = (ModifiableAttributeInstance) ent.getEntityAttribute(SharedMonsterAttributes.movementSpeed);
 			att.removeModifier(speedBoostModifier);
 			att.applyModifier(speedBoostModifier);
 		}
