@@ -682,9 +682,9 @@ public class ZAUtil {
         for (int tries = 0; tries < 5; tries++) {
 	        int tryX = (int)player.posX - (range/2) + (rand.nextInt(range));
 	        int tryZ = (int)player.posZ - (range/2) + (rand.nextInt(range));
-	        int tryY = player.worldObj.getHeightValue(tryX, tryZ);
+	        int tryY = player.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 	
-	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(player.worldObj, tryX, tryY, tryZ) || player.worldObj.getBlockLightValue(tryX, tryY, tryZ) >= 6) {
+	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(player.worldObj, tryX, tryY, tryZ) || player.worldObj.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
 	            continue;
 	        }
 	
@@ -752,7 +752,7 @@ public class ZAUtil {
 	        }
     	} else {
     		//WorldServer world = (WorldServer) player.worldObj;
-    		SpawnListEntry spawnlistentry = world.spawnRandomCreature(EnumCreatureType.MONSTER, new BlockPos(tryX, tryY, tryZ));
+    		SpawnListEntry spawnlistentry = world.getSpawnListEntryForTypeAt(EnumCreatureType.MONSTER, new BlockPos(tryX, tryY, tryZ));
     		
     		EntityLiving entityliving;
 
@@ -799,15 +799,15 @@ public class ZAUtil {
     public static boolean isInDarkCave(World world, int x, int y, int z, boolean checkSpaceToSpawn) {
     	IBlockState state = world.getBlockState(new BlockPos(x, y, z));
     	Block block = state.getBlock();
-    	if (!world.canBlockSeeTheSky(x, y, z) && world.getBlockLightValue(x, y, z) < 5) {
-    		if (!CoroUtilBlock.isAir(block) && block.getMaterial() == Material.ROCK/*(block != Blocks.grass || block.getMaterial() != Material.grass)*/) {
+    	if (!world.canSeeSky(new BlockPos(x, y, z)) && world.getLightFromNeighbors(new BlockPos(x, y, z)) < 5) {
+    		if (!CoroUtilBlock.isAir(block) && state.getMaterial() == Material.ROCK/*(block != Blocks.grass || block.getMaterial() != Material.grass)*/) {
     		
     			if (!checkSpaceToSpawn) {
     				return true;
     			} else {
-    				Block blockAir1 = world.getBlock(x, y+1, z);
+    				Block blockAir1 = world.getBlockState(new BlockPos(x, y+1, z)).getBlock();
     				if (CoroUtilBlock.isAir(blockAir1)) {
-    					Block blockAir2 = world.getBlock(x, y+2, z);
+    					Block blockAir2 = world.getBlockState(new BlockPos(x, y+2, z)).getBlock();
     					if (CoroUtilBlock.isAir(blockAir2)) {
     						return true;
     					}
@@ -909,7 +909,7 @@ public class ZAUtil {
 		        //entityliving.info = f3;
 		        double d3 = 2.0D;
 		        Vec3d vec3d1 = vec3d.addVector((double)f8 * d3, (double)f9 * d3, (double)f10 * d3);              // \/ water collide check
-		        int lightLevel = ent.worldObj.getBlockLightValue((int)vec3d1.xCoord, (int)vec3d1.yCoord, (int)vec3d1.zCoord);
+		        int lightLevel = ent.worldObj.getLightFromNeighbors(new BlockPos(vec3d1.xCoord, vec3d1.yCoord, vec3d1.zCoord));
 		        if (lightLevel > 4) {
 		        	//System.out.println("test light check: " + lightLevel + " - phase: " + tryPhase + " - dist check: " + ent.getDistance(vec3d1.xCoord, vec3d1.yCoord, vec3d1.zCoord));
 		        	RayTraceResult movingobjectposition = entityliving.worldObj.rayTraceBlocks(new Vec3d(ent.posX, ent.posY+1, ent.posZ), vec3d1, true);
@@ -960,7 +960,7 @@ public class ZAUtil {
 	        //entityliving.info = f3;
 	        double d3 = 2.0D;
 	        Vec3d vec3d1 = vec3d.addVector((double)f8 * d3, (double)f9 * d3, (double)f10 * d3);              // \/ water collide check
-	        int lightLevel = ent.worldObj.getBlockLightValue((int)vec3d1.xCoord, (int)vec3d1.yCoord, (int)vec3d1.zCoord);
+	        int lightLevel = ent.worldObj.getLightFromNeighbors(new BlockPos(vec3d1.xCoord, vec3d1.yCoord, vec3d1.zCoord));
 	        if (lightLevel > 4) {
 	        	//System.out.println("test light check: " + lightLevel);
 	        }
@@ -1016,7 +1016,7 @@ public class ZAUtil {
 
     	if (ZAConfig.extraScentCutoffRange == -1) return true;
     	
-    	AxisAlignedBB aabb = AxisAlignedBB.getBoundingBox(parPos.xCoord, parPos.yCoord, parPos.zCoord, parPos.xCoord + 1, parPos.yCoord + 1, parPos.zCoord + 1);
+    	AxisAlignedBB aabb = new AxisAlignedBB(parPos.xCoord, parPos.yCoord, parPos.zCoord, parPos.xCoord + 1, parPos.yCoord + 1, parPos.zCoord + 1);
     	aabb = aabb.expand(ZAConfig.extraScentCutoffRange, ZAConfig.extraScentCutoffRange, ZAConfig.extraScentCutoffRange);
     	
     	List list = parWorld.getEntitiesWithinAABB(EntityScent.class, aabb);

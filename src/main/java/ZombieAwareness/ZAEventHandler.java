@@ -16,7 +16,7 @@ public class ZAEventHandler {
 		
 		try {
 			if (event.getEntity() != null) {
-				ZAUtil.soundHook(event.getSound().getSoundName(), event.getEntity().worldObj, (float)event.getEntity().posX, (float)event.getEntity().posY, (float)event.getEntity().posZ, event.getVolume(), event.getPitch());
+				ZAUtil.soundHook(event.getSound().getSoundName().toString(), event.getEntity().worldObj, (float)event.getEntity().posX, (float)event.getEntity().posY, (float)event.getEntity().posZ, event.getVolume(), event.getPitch());
 			}
         } catch (Exception ex) {
         	ex.printStackTrace();

@@ -252,7 +252,7 @@ public class ZombieAwareness implements IPFCallback {
 	        				if (ent instanceof EntityZombie) {
 	        					lastCountZombies++;
 		        				if (lastSpawnTime < ent.worldObj.getWorldTime() && !spawned && ent.worldObj.getClosestPlayerToEntity(ent, 32) == null && rand.nextInt(ZAConfigSpawning.maxZombiesNightBaseRarity + (lastZombieCount * 4 / (Math.max(1, ZAConfig.tickRateAILoop)))) == 0) {
-		        					if (!ent.worldObj.isDaytime() && lastZombieCount < ZAConfigSpawning.maxZombiesNight && ent.worldObj.canBlockSeeTheSky((int)x, (int)y, (int)z) && ent.worldObj.getBlockLightValue((int)x, (int)y, (int)z) < 5) {
+		        					if (!ent.worldObj.isDaytime() && lastZombieCount < ZAConfigSpawning.maxZombiesNight && ent.worldObj.canSeeSky(new BlockPos(x, y, z)) && ent.worldObj.getLightFromNeighbors(new BlockPos(x, y, z)) < 5) {
 			    						
 		        						EntityZombie entZ = new EntityZombie(ent.worldObj);
 			    						entZ.setPosition(ent.posX, ent.posY, ent.posZ);
@@ -267,10 +267,10 @@ public class ZombieAwareness implements IPFCallback {
 			    						
 			    						if (ZAConfig.debugConsoleSpawns) dbg("Spawned new surface zombie at: " + ent.posX + ", " + ent.posY + ", " + ent.posZ);
 		        					} else if (ZAConfigFeatures.extraSpawningCave && lastZombieCount < ZAConfigSpawning.maxZombiesNight/*lastZombieCountCaves < ZAConfigSpawning.extraSpawningCavesMaxCount*/) {
-		        						EntityPlayer closestPlayer = ent.worldObj.getClosestVulnerablePlayerToEntity(ent, ZAConfigSpawning.extraSpawningDistMax);
+		        						EntityPlayer closestPlayer = ent.worldObj.getNearestAttackablePlayer(ent, ZAConfigSpawning.extraSpawningDistMax, ZAConfigSpawning.extraSpawningDistMax);
 			        					if (closestPlayer != null && (!ZAConfigPlayerLists.whiteListUsedExtraSpawning || ZAConfigPlayerLists.whitelistExtraSpawning.contains(CoroUtilEntity.getName(closestPlayer))) 
 			        							&& closestPlayer.getDistanceSqToEntity(ent) > ZAConfigSpawning.extraSpawningDistMin
-			        							&& !ent.worldObj.canBlockSeeTheSky(x, y, z) && ent.worldObj.getBlockLightValue(x, y, z) < 5) {
+			        							&& !ent.worldObj.canSeeSky(new BlockPos(x, y, z)) && ent.worldObj.getLightFromNeighbors(new BlockPos(x, y, z)) < 5) {
 			        						
 			        						//Block id = 
 			        						IBlockState state = ent.worldObj.getBlockState(new BlockPos(x, (int)(ent.getEntityBoundingBox().minY - 0.5D), z));
