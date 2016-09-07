@@ -2,10 +2,9 @@ package ZombieAwareness.config;
 
 import java.io.File;
 
-import net.minecraftforge.common.ForgeModContainer;
-
 import modconfig.ConfigComment;
 import modconfig.IConfigCategory;
+import net.minecraftforge.common.ForgeModContainer;
 
 public class ZAConfigFeatures implements IConfigCategory {
 

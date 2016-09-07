@@ -3,10 +3,9 @@ package ZombieAwareness;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import ZombieAwareness.config.ZAConfig;
-import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
 
 public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
 

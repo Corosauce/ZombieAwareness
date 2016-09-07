@@ -1,8 +1,9 @@
 package ZombieAwareness;
 
-import cpw.mods.fml.client.registry.RenderingRegistry;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraft.client.Minecraft;
+import net.minecraftforge.fml.client.registry.RenderingRegistry;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class ClientProxy extends CommonProxy
 {
@@ -18,7 +19,7 @@ public class ClientProxy extends CommonProxy
         super.init(pMod);
         
         
-        RenderingRegistry.registerEntityRenderingHandler(EntityScent.class, new RenderScent());
+        RenderingRegistry.registerEntityRenderingHandler(EntityScent.class, new RenderScent(Minecraft.getMinecraft().getRenderManager()));
         
         
     }
