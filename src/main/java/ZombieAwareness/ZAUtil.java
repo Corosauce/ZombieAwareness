@@ -42,6 +42,28 @@ import ZombieAwareness.config.ZAConfigSpawning;
 
 public class ZAUtil {
 	
+	/**
+	 * 
+	 * Default settings: 
+	 * 
+	 * - sound trigger: start at 8 range sense, increase to 32 as more are done
+	 * - scent trigger: start at 24, fade, reset fade if new blood
+	 * 
+	 * - must have sound triggers:
+	 * - block mine
+	 * - chest use
+	 * - doors
+	 * - buttons
+	 * - levers
+	 * 
+	 * - large sound triggers:
+	 * -- explosions
+	 * -- falling blocks
+	 * -- falling anvils
+	 * -- 
+	 * 
+	 */
+	
 	public static long traceCount = 0;
     //public static int lastHealth;
     //public static long lastBleedTime;
