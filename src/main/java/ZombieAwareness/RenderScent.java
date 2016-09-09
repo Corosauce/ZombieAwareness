@@ -30,12 +30,13 @@ public class RenderScent extends Render {
 
     protected RenderScent(RenderManager renderManager) {
 		super(renderManager);
+		shadowSize = 0F;
 	}
 
     public void doRenderNode(Entity var1, double var2, double var4, double var6, float var8, float var9) {
         //System.out.println("1");
 
-    	boolean TEMP = false;
+    	boolean TEMP = true;
     	
         //System.out.println("2");
         if (TEMP || ((EntityScent)var1).type == 0) {
@@ -66,7 +67,7 @@ public class RenderScent extends Render {
     	//if (!ZAConfig.client_renderBlood) return;
     	
         //if (((EntityScent)var1).type == 0) {
-        shadowSize = 1.0F;
+        
         //System.out.println("!!!!!!!!!!!!!! - " + (double)(((double)((EntityScent)var1).strength)/100.0D));
         //}
         GL11.glPushMatrix();
@@ -146,7 +147,7 @@ public class RenderScent extends Render {
         this.renderManager.renderEngine.bindTexture(TEXTURE64);
         World world = this.getWorldFromRenderManager();
         GlStateManager.depthMask(false);
-        float f = this.shadowSize;
+        double f = 0.7 + (shadowAlpha * 0.3);
 
         if (entityIn instanceof EntityLiving)
         {
@@ -191,7 +192,7 @@ public class RenderScent extends Render {
         GlStateManager.depthMask(true);
     }
 
-    private void renderBloodSingle(IBlockState state, double p_188299_2_, double p_188299_4_, double p_188299_6_, BlockPos p_188299_8_, float p_188299_9_, float p_188299_10_, double p_188299_11_, double p_188299_13_, double p_188299_15_)
+    private void renderBloodSingle(IBlockState state, double p_188299_2_, double p_188299_4_, double p_188299_6_, BlockPos p_188299_8_, float p_188299_9_, double p_188299_10_, double p_188299_11_, double p_188299_13_, double p_188299_15_)
     {
         if (state.isFullCube())
         {
