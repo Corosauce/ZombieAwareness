@@ -93,57 +93,14 @@ public class ZombieAwareness implements IPFCallback {
     	
     	//sync to forge values
     	configMain.hookUpdatedValues();
-    	/*preInitConfig = new Configuration(event.getSuggestedConfigurationFile());
-
-        try
-        {
-            preInitConfig.load();
-            
-            ZAConfig.maxPFRange = preInitConfig.get(Configuration.CATEGORY_GENERAL, "maxPFRange", 64).getInt();
-            ZAConfig.awareness_Sound = preInitConfig.get(Configuration.CATEGORY_GENERAL, "awareness_Sound", true).getBoolean(true);
-            ZAConfig.awareness_Scent = preInitConfig.get(Configuration.CATEGORY_GENERAL, "awareness_Scent", true).getBoolean(true);
-            ZAConfig.awareness_Light = preInitConfig.get(Configuration.CATEGORY_GENERAL, "awareness_Light", true).getBoolean(true);
-            ZAConfig.sightRange = preInitConfig.get(Configuration.CATEGORY_GENERAL, "sightRange", 16).getInt();
-            ZAConfig.omnipotent = preInitConfig.get(Configuration.CATEGORY_GENERAL, "omnipotent", false).getBoolean(false);
-            ZAConfig.seeThroughWalls = preInitConfig.get(Configuration.CATEGORY_GENERAL, "seeThroughWalls", false).getBoolean(false);
-            ZAConfig.scentStrength = preInitConfig.get(Configuration.CATEGORY_GENERAL, "scentStrength", 60).getInt();
-            ZAConfig.soundStrength = preInitConfig.get(Configuration.CATEGORY_GENERAL, "soundStrength", 60).getInt();
-            ZAConfig.frequentSoundThreshold = preInitConfig.get(Configuration.CATEGORY_GENERAL, "frequentSoundThreshold", 1000).getInt();
-            ZAConfig.wanderingHordes = preInitConfig.get(Configuration.CATEGORY_GENERAL, "wanderingHordes", true).getBoolean(true);
-            ZAConfig.noisyZombies = preInitConfig.get(Configuration.CATEGORY_GENERAL, "noisyZombies", true).getBoolean(true);
-            ZAConfig.noisyPistons = preInitConfig.get(Configuration.CATEGORY_GENERAL, "noisyPistons", true).getBoolean(true);
-            ZAConfig.maxZombiesNight = preInitConfig.get(Configuration.CATEGORY_GENERAL, "maxZombiesNight", 50).getInt();
-            ZAConfig.zombieSpawnTickDelay = preInitConfig.get(Configuration.CATEGORY_GENERAL, "zombieSpawnTickDelay", 5).getInt();
-            ZAConfig.zombieRandSpeedBoost = preInitConfig.get(Configuration.CATEGORY_GENERAL, "zombieRandSpeedBoost", 5).getInt();
-            //tickRateMainLoop = preInitConfig.get(Configuration.CATEGORY_GENERAL, "mainLoopTickRate", 1).getInt();
-            ZAConfig.tickRateAILoop = preInitConfig.get(Configuration.CATEGORY_GENERAL, "tickRateAILoop", 30).getInt();
-            ZAConfig.tickRatePlayerLoop = preInitConfig.get(Configuration.CATEGORY_GENERAL, "tickRatePlayerLoop", 1).getInt();
-            
-            
-        }
-        catch (Exception e)
-        {
-            FMLLog.log(Level.SEVERE, e, "Zombie Awareness has a problem loading it's configuration");
-        }
-        finally
-        {
-            preInitConfig.save();
-        }*/
     }
     
     @Mod.EventHandler
     public void load(FMLInitializationEvent event)
     {
-    	
     	MinecraftForge.EVENT_BUS.register(new ZAEventHandler());
     	
-    	
     	proxy.init(this);
-    	
-    	//restartApplication();
-    	
-        //ModLoader.setInGUIHook(this, true, false);
-        //ModLoader.setInGameHook(this, true, false);
     }
     
     @Mod.EventHandler
@@ -152,8 +109,7 @@ public class ZombieAwareness implements IPFCallback {
     }
     
     public ZombieAwareness() {
-    	int hm = 0;
-    	//TickRegistry.registerTickHandler(new ServerTickHandler(this), Side.SERVER);
+    	
     }
     
     public void onTick(MinecraftServer var1) {
@@ -161,34 +117,18 @@ public class ZombieAwareness implements IPFCallback {
     }
 
     public void onTickInGame(MinecraftServer var1) {
-    	
-    	//wanderingHordes = true;
-    	//sightRange = 16;
         
     	mc = var1;
     	
     	World worldTemp = this.worldRef;
     	
         if (worldTemp != null) {
-        	//System.out.println(worldRef.getWorldTime());
-	        //if (lastWorldTime != worldRef.getWorldTime()) {
-	        	//lastWorldTime = worldRef.getWorldTime();
-	        	
-        	if (false && tryTropicraft) {
-        		worldTemp = mc.worldServerForDimension(-127);
-                if (worldTemp != null) {
-                	worldTick(worldTemp);
-                } else {
-                	tryTropicraft = false;
-                }
-        	}
             
             worldTemp = mc.worldServerForDimension(0);
             if (worldTemp != null) {
             	worldTick(worldTemp);
             }
-	        	
-	        //}
+            
         } else {
         	worldRef = mc.worldServerForDimension(0);
         	//worldRef.addWorldAccess(new ZAWorldAccess());
@@ -212,12 +152,12 @@ public class ZombieAwareness implements IPFCallback {
     		Random rand = new Random();
     		
     		//time reset fix
-    		if (lastSpawnTime - 1000 > world.getWorldTime()) {
+    		if (lastSpawnTime - 1000 > world.getTotalWorldTime()) {
     			lastSpawnTime = 0;
     		}
     		
         	//AI Processing
-    		if (world.getWorldTime() % ZAConfig.tickRateAILoop == 0) {
+    		if (world.getTotalWorldTime() % ZAConfig.tickRateAILoop == 0) {
 	        	List ents = world.loadedEntityList;
 	        	for (int i = 0; i < world.loadedEntityList.size(); i++) {
 	        		Entity ent = (Entity)world.loadedEntityList.get(i);
@@ -251,7 +191,7 @@ public class ZombieAwareness implements IPFCallback {
 	        				
 	        				if (ent instanceof EntityZombie) {
 	        					lastCountZombies++;
-		        				if (lastSpawnTime < ent.worldObj.getWorldTime() && !spawned && ent.worldObj.getClosestPlayerToEntity(ent, 32) == null && rand.nextInt(ZAConfigSpawning.maxZombiesNightBaseRarity + (lastZombieCount * 4 / (Math.max(1, ZAConfig.tickRateAILoop)))) == 0) {
+		        				if (lastSpawnTime < ent.worldObj.getTotalWorldTime() && !spawned && ent.worldObj.getClosestPlayerToEntity(ent, 32) == null && rand.nextInt(ZAConfigSpawning.maxZombiesNightBaseRarity + (lastZombieCount * 4 / (Math.max(1, ZAConfig.tickRateAILoop)))) == 0) {
 		        					if (!ent.worldObj.isDaytime() && lastZombieCount < ZAConfigSpawning.maxZombiesNight && ent.worldObj.canSeeSky(new BlockPos(x, y, z)) && ent.worldObj.getLightFromNeighbors(new BlockPos(x, y, z)) < 5) {
 			    						
 		        						EntityZombie entZ = new EntityZombie(ent.worldObj);
@@ -262,7 +202,7 @@ public class ZombieAwareness implements IPFCallback {
 			    						//lastZombieCount = ++lastCount;
 			    						
 			    						spawned = true;
-			    						lastSpawnTime = ZAConfigSpawning.zombieSpawnTickDelay + ent.worldObj.getWorldTime();
+			    						lastSpawnTime = ZAConfigSpawning.zombieSpawnTickDelay + ent.worldObj.getTotalWorldTime();
 			    						lastSpawnSysTime = System.currentTimeMillis();
 			    						
 			    						if (ZAConfig.debugConsoleSpawns) dbg("Spawned new surface zombie at: " + ent.posX + ", " + ent.posY + ", " + ent.posZ);
@@ -287,7 +227,7 @@ public class ZombieAwareness implements IPFCallback {
 					    						//lastZombieCount = ++lastCount;
 					    						
 					    						spawned = true;
-					    						lastSpawnTime = ZAConfigSpawning.zombieSpawnTickDelay + ent.worldObj.getWorldTime();
+					    						lastSpawnTime = ZAConfigSpawning.zombieSpawnTickDelay + ent.worldObj.getTotalWorldTime();
 					    						lastSpawnSysTime = System.currentTimeMillis();
 				        						
 				        						if (ZAConfig.debugConsoleSpawns) dbg("Spawned new cave zombie at: " + ent.posX + ", " + ent.posY + ", " + ent.posZ);
@@ -316,7 +256,7 @@ public class ZombieAwareness implements IPFCallback {
     	
     	
     	//Player Processing - for blood visual
-    	if (world.getWorldTime() % ZAConfig.tickRatePlayerLoop == 0) {
+    	if (world.getTotalWorldTime() % ZAConfig.tickRatePlayerLoop == 0) {
 			for(int i = 0; i < world.playerEntities.size(); i++) {
 				EntityPlayer player = (EntityPlayer)world.playerEntities.get(i);
 				if (player != null) { 

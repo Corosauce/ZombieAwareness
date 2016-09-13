@@ -3,12 +3,14 @@ package ZombieAwareness;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import ZombieAwareness.config.ZAConfig;
 
 public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
 
+	//0 == blood node, 1 == sound node, 2 == wander node
     public int type = 0;
     public boolean isUsed = false;
     public int strength;
@@ -20,9 +22,6 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
         this.setSize(0.0F, 0.0F);
         this.strength = 100;
         this.age = 0;
-        if (!var1.isRemote) {
-        	ZAUtil.traceCount++;
-        }
         //System.out.println("new trace: " + ZAUtil.traceCount);
     }
     
@@ -34,7 +33,6 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     @Override
     public void setDead() {
         super.setDead();
-        if (!worldObj.isRemote) ZAUtil.traceCount--;
     }
 
     protected boolean canTriggerWalking() {
@@ -88,6 +86,26 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
         
         if(!worldObj.isRemote && (this.strength <= 0 || age > 1200)) {
         	this.setDead();
+        }
+        
+        boolean scentDebug = ZAConfig.client_debugSensesVisual;
+        if (scentDebug) {
+	        if (worldObj.isRemote) {
+	        	if (worldObj.getTotalWorldTime() % 5 == 0) {
+	        		for (int i = 0; i < strength / 10; i++) {
+	        			double range = 1D;
+	        			double x = posX - worldObj.rand.nextDouble() / 2 + worldObj.rand.nextDouble();
+	        			double y = posY - worldObj.rand.nextDouble() / 2 + worldObj.rand.nextDouble();
+	        			double z = posZ - worldObj.rand.nextDouble() / 2 + worldObj.rand.nextDouble();
+	        			if (type == 0) {
+	        				worldObj.spawnParticle(EnumParticleTypes.HEART, x, y, z, 0, 0, 0);
+	        			} else if (type == 1) {
+	        				worldObj.spawnParticle(EnumParticleTypes.NOTE, x, y, z, 0, 0, 0);
+	        			}
+	        			
+	        		}
+	        	}
+	        }
         }
     }
 

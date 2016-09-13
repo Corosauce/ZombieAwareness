@@ -30,13 +30,13 @@ public class RenderScent extends Render {
 
     protected RenderScent(RenderManager renderManager) {
 		super(renderManager);
-		shadowSize = 0F;
+		//shadowSize = 0F;
 	}
 
     public void doRenderNode(Entity var1, double var2, double var4, double var6, float var8, float var9) {
         //System.out.println("1");
 
-    	boolean TEMP = true;
+    	boolean TEMP = false;
     	
         //System.out.println("2");
         if (TEMP || ((EntityScent)var1).type == 0) {
@@ -74,70 +74,13 @@ public class RenderScent extends Render {
         if (ZAConfig.client_renderBlood) {
         	this.doRenderNode(var1, var2, var4, var6, var8, var9);
         }
-        if (ZAConfig.client_debugRenderSounds && ((EntityScent)var1).type != 0) {
-        	//renderOffsetAABB(var1.getEntityBoundingBox(), var2 - var1.lastTickPosX, var4 - var1.lastTickPosY, var6 - var1.lastTickPosZ, ((EntityScent)var1).type == 1, ((EntityScent)var1).getRange());
-        }
-        shadowSize = 0.0F;
+        //shadowSize = 0.0F;
         //
         GL11.glPopMatrix();
     }
 
     private World getWorldFromRenderManager() {
         return this.renderManager.worldObj;
-    }
-
-    public static void renderOffsetAABB(AxisAlignedBB var0, double var1, double var3, double var5, boolean var7, float size) {
-        GL11.glDisable(3553 /*GL_TEXTURE_2D*/);
-        Tessellator var8 = Tessellator.getInstance();
-
-        if(var7) {
-            GL11.glColor4f(0.0F, 0.0F, 1.0F, 1.0F);
-        } else {
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-        }
-
-        size /= 80;
-        
-        var0 = var0.expand(size, size, size);
-        
-        //GL11.glScalef(size, size, size);
-        
-        //TODO: 1.8
-        /*var8.startDrawingQuads();
-        var8.setTranslation(var1, var3, var5);
-        var8.setNormal(0.0F, 0.0F, -1.0F);
-        var8.addVertex(var0.minX, var0.maxY, var0.minZ);
-        var8.addVertex(var0.maxX, var0.maxY, var0.minZ);
-        var8.addVertex(var0.maxX, var0.minY, var0.minZ);
-        var8.addVertex(var0.minX, var0.minY, var0.minZ);
-        var8.setNormal(0.0F, 0.0F, 1.0F);
-        var8.addVertex(var0.minX, var0.minY, var0.maxZ);
-        var8.addVertex(var0.maxX, var0.minY, var0.maxZ);
-        var8.addVertex(var0.maxX, var0.maxY, var0.maxZ);
-        var8.addVertex(var0.minX, var0.maxY, var0.maxZ);
-        var8.setNormal(0.0F, -1.0F, 0.0F);
-        var8.addVertex(var0.minX, var0.minY, var0.minZ);
-        var8.addVertex(var0.maxX, var0.minY, var0.minZ);
-        var8.addVertex(var0.maxX, var0.minY, var0.maxZ);
-        var8.addVertex(var0.minX, var0.minY, var0.maxZ);
-        var8.setNormal(0.0F, 1.0F, 0.0F);
-        var8.addVertex(var0.minX, var0.maxY, var0.maxZ);
-        var8.addVertex(var0.maxX, var0.maxY, var0.maxZ);
-        var8.addVertex(var0.maxX, var0.maxY, var0.minZ);
-        var8.addVertex(var0.minX, var0.maxY, var0.minZ);
-        var8.setNormal(-1.0F, 0.0F, 0.0F);
-        var8.addVertex(var0.minX, var0.minY, var0.maxZ);
-        var8.addVertex(var0.minX, var0.maxY, var0.maxZ);
-        var8.addVertex(var0.minX, var0.maxY, var0.minZ);
-        var8.addVertex(var0.minX, var0.minY, var0.minZ);
-        var8.setNormal(1.0F, 0.0F, 0.0F);
-        var8.addVertex(var0.maxX, var0.minY, var0.minZ);
-        var8.addVertex(var0.maxX, var0.maxY, var0.minZ);
-        var8.addVertex(var0.maxX, var0.maxY, var0.maxZ);
-        var8.addVertex(var0.maxX, var0.minY, var0.maxZ);
-        var8.setTranslation(0.0D, 0.0D, 0.0D);
-        var8.draw();*/
-        GL11.glEnable(3553 /*GL_TEXTURE_2D*/);
     }
     
     private void renderBlood(Entity entityIn, double x, double y, double z, float shadowAlpha, float partialTicks)

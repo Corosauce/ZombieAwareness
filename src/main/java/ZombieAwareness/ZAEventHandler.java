@@ -1,5 +1,8 @@
 package ZombieAwareness;
 
+import CoroUtil.forge.CoroAIWorldAccess;
+import net.minecraft.world.World;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.entity.player.PlayerEvent.HarvestCheck;
@@ -11,12 +14,19 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 
 public class ZAEventHandler {
 	
+	public static World lastWorld = null;
+	
 	@SubscribeEvent
 	public void soundEvent(PlaySoundAtEntityEvent event) {
 		
 		try {
+			/*if (event.getSound().getSoundName().toString().contains("piston")) {
+				System.out.println(event.getSound().getSoundName().toString());
+			}*/
+			
 			if (event.getEntity() != null) {
-				ZAUtil.soundHook(event.getSound().getSoundName().toString(), event.getEntity().worldObj, (float)event.getEntity().posX, (float)event.getEntity().posY, (float)event.getEntity().posZ, event.getVolume(), event.getPitch());
+				//moved to world event listener for getting coords
+				//ZAUtil.soundHook(event.getSound().getSoundName().toString(), event.getEntity().worldObj, (float)event.getEntity().posX, (float)event.getEntity().posY, (float)event.getEntity().posZ, event.getVolume(), event.getPitch());
 			}
         } catch (Exception ex) {
         	ex.printStackTrace();
@@ -46,6 +56,17 @@ public class ZAEventHandler {
 	public void tickServer(ServerTickEvent event) {
 		
 		if (event.phase == Phase.START) {
+			
+			if (lastWorld != DimensionManager.getWorld(0)) {
+	    		lastWorld = DimensionManager.getWorld(0);
+	    		
+	    		World worlds[] = DimensionManager.getWorlds();
+	    		for (int i = 0; i < worlds.length; i++) {
+	    			World world = worlds[i];
+	    			world.addEventListener(new WorldEventListener(world.provider.getDimension()));
+	    		}
+	    	}
+			
 			//System.out.println("tick ZA");
 			ZombieAwareness.instance.onTick(FMLCommonHandler.instance().getMinecraftServerInstance());
 		}

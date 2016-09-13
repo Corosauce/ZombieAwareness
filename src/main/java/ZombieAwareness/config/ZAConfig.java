@@ -17,7 +17,7 @@ public class ZAConfig implements IConfigCategory {
 	@ConfigComment("Custom targetting sight range on top of vanilla sight based targetting")
 	public static int sightRange = 16;
 	@ConfigComment("Always target closest player [performance sensitive]")
-	public static boolean omnipotent = false;
+	public static boolean omniscient = false;
 	@ConfigComment("skips line of sight check on targetting [performance sensitive]")
 	public static boolean seeThroughWalls = false;
 	@ConfigComment("Effects how far monsters will sense scents from")
@@ -36,7 +36,7 @@ public class ZAConfig implements IConfigCategory {
 	
 	public static boolean debugConsole = false;
 	public static boolean debugConsoleSpawns = false;
-	public static boolean debugConsoleOmnipotent = false;
+	public static boolean debugConsoleOmniscient = false;
 	public static boolean debugConsoleSuperDetailed = false;
 	
 	@ConfigComment("Minimum distance required between active sense sources, prevents spamming sources [performance sensitive]")
@@ -46,7 +46,7 @@ public class ZAConfig implements IConfigCategory {
 	
 	//Client only fields
 	public static boolean client_renderBlood = true;
-	public static boolean client_debugRenderSounds = false;
+	public static boolean client_debugSensesVisual = false;
 	
 	@Override
 	public String getConfigFileName() {

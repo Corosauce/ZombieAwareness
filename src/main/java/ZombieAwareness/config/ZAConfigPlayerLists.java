@@ -8,8 +8,8 @@ import modconfig.IConfigCategory;
 public class ZAConfigPlayerLists implements IConfigCategory {
 
 	//Whitelists and blacklists
-	@ConfigComment("Uses list of people to have omnipotent targetting effect")
-	public static boolean whiteListUsedOmnipotent = false;
+	@ConfigComment("Uses list of people to have omniscient targetting effect")
+	public static boolean whiteListUsedOmniscient = false;
 	@ConfigComment("Uses list of people to have senses spawned for")
 	public static boolean whiteListUsedSenses = false;
 	@ConfigComment("Uses list of mobs to prevent enhanced AI on")
@@ -18,8 +18,8 @@ public class ZAConfigPlayerLists implements IConfigCategory {
 	public static boolean forceListUsedAITickAsWhitelist = false;
 	@ConfigComment("Uses list of people to have spawning of zombies for")
 	public static boolean whiteListUsedExtraSpawning = false;
-	@ConfigComment("List of people to have omnipotent targetting effect")
-	public static String whitelistOmnipotentTargettedPlayers = "Corosus, SomeDude";
+	@ConfigComment("List of people to have omniscient targetting effect")
+	public static String whitelistOmniscientTargettedPlayers = "Corosus, SomeDude";
 	@ConfigComment("List of people to have senses spawned for")
 	public static String whitelistSenses = "Corosus, SomeDude";
 	@ConfigComment("List of mobs to prevent enhanced AI on")
