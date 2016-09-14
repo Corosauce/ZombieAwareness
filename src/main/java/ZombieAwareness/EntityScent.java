@@ -15,6 +15,9 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     public boolean isUsed = false;
     public int strength;
     public int age;
+    
+    public long lastBuffTime = 0;
+    public float lastMultiply = 1F;
 
     public EntityScent(World var1) {
         super(var1);
