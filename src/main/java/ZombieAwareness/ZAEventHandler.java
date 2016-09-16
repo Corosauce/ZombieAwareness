@@ -35,18 +35,18 @@ public class ZAEventHandler {
 	
 	@SubscribeEvent
 	public void breakSpeed(BreakSpeed event) {
-		ZAUtil.blockEvent(event, 20);
+		ZAUtil.hookBlockEvent(event, 20);
 	}
 	
 	@SubscribeEvent
 	public void harvest(HarvestCheck event) {
-		ZAUtil.blockEvent(event, 3);
+		ZAUtil.hookBlockEvent(event, 3);
 	}
 	
 	@SubscribeEvent
 	public void interact(PlayerInteractEvent event) {
 		if (!event.getEntityLiving().worldObj.isRemote) {
-			ZAUtil.blockEvent(event, 3);
+			ZAUtil.hookBlockEvent(event, 3);
 			
 			
 		}

@@ -170,7 +170,7 @@ public class ZombieAwareness implements IPFCallback {
 	        			
 	        			//if (EntityList.getEntityString(ent) != null) System.out.println(EntityList.getEntityString(ent).toLowerCase());
 	        			
-	        			ZAUtil.aiTick((EntityLiving)ent);
+	        			ZAUtil.tickAI((EntityLiving)ent);
 	        			
 	        			if (!((EntityLiving)ent).getNavigator().noPath() && ent.onGround && ent.isCollidedHorizontally) {
 	        				//ent.motionY = 0.41999998688697815D;
@@ -260,7 +260,7 @@ public class ZombieAwareness implements IPFCallback {
 			for(int i = 0; i < world.playerEntities.size(); i++) {
 				EntityPlayer player = (EntityPlayer)world.playerEntities.get(i);
 				if (player != null) { 
-					ZAUtil.playerTick(player);
+					ZAUtil.tickPlayer(player);
 				}
 			}
     	}

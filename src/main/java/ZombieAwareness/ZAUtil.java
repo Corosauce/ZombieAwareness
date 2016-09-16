@@ -99,7 +99,7 @@ public class ZAUtil {
     	lookupSoundToStrengthMultiplier.put(SoundEvents.ENTITY_ARROW_HIT, 1.1D);
     }
 	
-	public static void playerTick(EntityPlayer player) {
+	public static void tickPlayer(EntityPlayer player) {
     	
 		if (ZAConfigFeatures.wanderingHordes) {
 			if (rand.nextInt(100) == 0) {
@@ -135,7 +135,7 @@ public class ZAUtil {
 		
         if((int)player.getHealth() != lastHealth) {
             if(player.getHealth() < lastHealth) {
-                spawnScent(player);
+                spawnSenseSmell(player);
             }
 
             lastHealth = (int) player.getHealth();
@@ -146,7 +146,7 @@ public class ZAUtil {
         if(player.getHealth() / player.getMaxHealth() < 0.6F && lastBleedTime < System.currentTimeMillis()) {
             lastBleedTime = System.currentTimeMillis() + 30000L;
             lastBleedTimes.put(CoroUtilEntity.getName(player), lastBleedTime);
-            spawnScent(player);
+            spawnSenseSmell(player);
         }
         
         
@@ -200,7 +200,7 @@ public class ZAUtil {
 		return true;
 	}
     
-    public static void aiTick(EntityLiving ent) {
+    public static void tickAI(EntityLiving ent) {
     	
     	if (ZAConfig.debugConsoleSuperDetailed) ZombieAwareness.dbg("ZA DBG: Ticking: " + ent);
     	
@@ -241,10 +241,10 @@ public class ZAUtil {
     		}
     	}
 	    	
-	    customMobTick(ent);
+	    tickCustomMob(ent);
     }
     
-    public static void customMobTick(EntityLivingBase ent) {
+    public static void tickCustomMob(EntityLivingBase ent) {
     	if (ent instanceof EntitySpider) {
     		if (ent.getPassengers().size() > 0 && ent.getPassengers().get(0) instanceof EntitySkeleton) {
     			if (ent.worldObj.rand.nextInt(100) == 0) {
@@ -298,7 +298,7 @@ public class ZAUtil {
     
     public static boolean ai_FindSense(EntityLivingBase ent, boolean includeWaypoints) {
     	
-        Entity var3 = getScent(ent);
+        Entity var3 = getSenseNearEntity(ent);
 
         if(var3 != null) {
         	if (includeWaypoints || ((EntityScent)var3).type != 2) {
@@ -360,7 +360,7 @@ public class ZAUtil {
      * @param entSource
      * @return
      */
-    public static Entity getScent(Entity entSource) {
+    public static Entity getSenseNearEntity(Entity entSource) {
         List<Entity> listEnts = entSource.worldObj.getEntitiesWithinAABBExcludingEntity(entSource, entSource.getEntityBoundingBox().expand((double)ZAConfig.maxPFRangeSense, (double)ZAConfig.maxPFRangeSense, (double)ZAConfig.maxPFRangeSense));
         
         Entity entBest = null;
@@ -385,7 +385,7 @@ public class ZAUtil {
         return entBest;
     }
 
-    public static void soundHook(SoundEvent sound, World world, double x, double y, double z, float volume, float pitch) {
+    public static void hookSoundEvent(SoundEvent sound, World world, double x, double y, double z, float volume, float pitch) {
         
     	if (world.isRemote || sound == null) return;
     	
@@ -470,7 +470,7 @@ public class ZAUtil {
             	if (ZAConfigFeatures.noisyZombies && soundName.contains("zombie.say")) {
             		if (rand.nextInt(1 + (ZombieAwareness.lastZombieCount * 8)) == 0) {
             			//if (traceCount < maxTraces / 4) {
-            				EntityScent es = spawnSoundSense(world, x, y, z, 80);
+            				EntityScent es = spawnSenseSound(world, x, y, z, 80);
             				ZombieAwareness.dbg("spawned sound sense from sound: " + soundName);
             			//}
             			//if (es != null) System.out.println("zombie: " + var0 + " - TC: " + traceCount + " - " + (es).getRange());
@@ -479,7 +479,7 @@ public class ZAUtil {
             		if(ZAConfigFeatures.noisyPistons && soundName.contains("piston")) {
             			if (rand.nextInt(20) == 0) {
 	            			//if (traceCount < maxTraces / 4) {
-		            			EntityScent es = spawnSoundSense(world, x, y, z, 400);
+		            			EntityScent es = spawnSenseSound(world, x, y, z, 400);
 		            			if (es != null) {
 		            				ZombieAwareness.dbg("spawned sound sense from sound: " + soundName + " - " + es.getRange());
 		            			}
@@ -492,7 +492,7 @@ public class ZAUtil {
         }
     }
     
-    public static void blockEvent(PlayerEvent event, int chance) {
+    public static void hookBlockEvent(PlayerEvent event, int chance) {
     	
     	if (!ZAConfigFeatures.awareness_Sound) return;
     	
@@ -538,7 +538,7 @@ public class ZAUtil {
 	    	}
     }
     
-    public static EntityScent spawnSoundSense(World world, double x, double y, double z, int strength) {
+    public static EntityScent spawnSenseSound(World world, double x, double y, double z, int strength) {
 		int size = ZAConfig.soundScentSpawnPosRandom;
 		int randX = world.rand.nextInt(size);
 		int randZ = world.rand.nextInt(size);
@@ -563,8 +563,8 @@ public class ZAUtil {
         return var9;
     }
 
-    public static void spawnScent(Entity var0) {
-        if (!ZAConfigFeatures.awareness_Scent/* || traceCount > maxTraces*/) {
+    public static void spawnSenseSmell(Entity var0) {
+        if (!ZAConfigFeatures.awareness_Scent) {
             return;
         }
 
@@ -572,12 +572,7 @@ public class ZAUtil {
             return;
         }
 
-        double height = var0.posY/* - (double)var0.yOffset*/ + 0.0D;
-        /*if (var0 instanceof EntityPlayer) {
-          height -= 1.0D;
-        }*/
-        //System.out.println(height);
-        
+        double height = var0.posY;
         
         EntityScent var1 = getSenseNodeAtPos(var0.worldObj, new Vec3d(var0.posX, height, var0.posZ), 0);
         
@@ -848,7 +843,7 @@ public class ZAUtil {
     }
 
     /**
-     * Checks if a scent of the same type is already right at this location
+     * Checks if a scent of the same type is already at this location
      * 
      * @param parWorld
      * @param parPos
