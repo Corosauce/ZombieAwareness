@@ -15,28 +15,36 @@ import ZombieAwareness.config.ZAConfigClient;
 
 public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
 
+	/**
+	 * 
+	 * age has a static max that counts down
+	 * 
+	 * peak strength is for scaling actual current strength based on age scale
+	 * 
+	 */
+	
 	//0 == blood node, 1 == sound node, 2 == wander node
     public int type = 0;
     public boolean isUsed = false;
     
-    //TODO: set to data attribute for better client syncing
-    private int strength = 0;
-    private static final DataParameter<Integer> STRENGTH = EntityDataManager.<Integer>createKey(EntityScent.class, DataSerializers.VARINT);
+    private static final DataParameter<Integer> STRENGTH_PEAK = EntityDataManager.<Integer>createKey(EntityScent.class, DataSerializers.VARINT);
     private static final DataParameter<Integer> AGE = EntityDataManager.<Integer>createKey(EntityScent.class, DataSerializers.VARINT);
-    public int age;
     
     public long lastBuffTime = 0;
     public float lastMultiply = 1F;
     
-    public static int AGE_MULTIPLIER = 10;
     public static int MAX_AGE = 30*20;
 
     public EntityScent(World var1) {
         super(var1);
         this.isImmuneToFire = true;
         this.setSize(0.0F, 0.0F);
-        this.strength = 100;
-        this.age = this.strength * AGE_MULTIPLIER;
+    }
+
+    @Override
+    protected void entityInit() {
+    	this.getDataManager().register(STRENGTH_PEAK, Integer.valueOf(0));
+    	this.getDataManager().register(AGE, Integer.valueOf(0));
     }
     
     @Override
@@ -65,50 +73,40 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     	return true;
     }
 
-    @Override
-    protected void entityInit() {
-    	this.getDataManager().register(STRENGTH, Integer.valueOf(0));
-    	this.getDataManager().register(AGE, Integer.valueOf(0));
-    }
-
     public float getRange() {
-        //return (float)this.strength / 100.0F * mod_ZombieAwareness.maxPFRange;
-        //return (float)this.strength / 100.0F * (float)mod_PathingActivated.MaxPFRange.get().intValue();
-    	
-    	if (this.type == 2) {
-    		return (float)this.strength / 100.0F * 128;
-    	} else if (this.type == 1) {
-    		return (float)this.strength / 100.0F * (float)ZAConfig.maxPFRangeSense / 2.0F;
+    	if (this.type == EnumSenseType.WAYPOINT.ordinal()) {
+    		return (float)getStrengthScaled() / 100.0F * 128;
+    	} else if (this.type == EnumSenseType.SOUND.ordinal()) {
+    		return (float)getStrengthScaled() / 100.0F * (float)ZAConfig.maxPFRangeSense / 2.0F;
     	} else {
-    		return (float)this.strength / 100.0F * (float)ZAConfig.maxPFRangeSense;
+    		return (float)getStrengthScaled() / 100.0F * (float)ZAConfig.maxPFRangeSense;
     	}
         
     }
 
-    public void setStrength(int strength) {
-        //this.age = (100 - var1) * 10;
-        /*if (age < 0) {
-          age = 0;
-        }*/
-        this.strength = strength;
-        if (this.strength > ZAConfig.senseMaxStrength) {
-        	this.strength = ZAConfig.senseMaxStrength;
+    public void setStrengthPeak(int strength) {
+    	int strTry = strength;
+        if (strTry > ZAConfig.senseMaxStrength) {
+        	strTry = ZAConfig.senseMaxStrength;
         }
-        this.setAge(strength * AGE_MULTIPLIER);
-    	//max age to 30 seconds, will cause senses to despawn before strength hits 0, should be ok
-    	
-        //System.out.println("age: " + age);
+        this.dataManager.set(STRENGTH_PEAK, strTry);
+        this.resetAge();
     }
     
-    public void setAge(int age) {
-    	this.age = age;
-    	if (this.age > MAX_AGE) {
-    		this.age = MAX_AGE;
-    	}
+    public void resetAge() {
+    	this.dataManager.set(AGE, MAX_AGE);
     }
     
-    public int getStrength() {
-    	return this.strength;
+    public int getStrengthPeak() {
+    	return this.dataManager.get(STRENGTH_PEAK);
+    }
+    
+    public int getStrengthScaled() {
+    	return (int)((double)this.dataManager.get(this.STRENGTH_PEAK) * getAgeScale());
+    }
+    
+    public double getAgeScale() {
+    	return (double)this.dataManager.get(this.AGE) / (double)MAX_AGE;
     }
 
     @Override
@@ -116,20 +114,8 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     	
     	//TODO: if raining, age smell sense much faster
     	
-        this.age--;
-        
-        this.strength--;// = /*100 - */this.age / AGE_MULTIPLIER;
-        if (this.strength > ZAConfig.senseMaxStrength) {
-        	this.strength = ZAConfig.senseMaxStrength;
-        }
-        //this.setDead();
-        if (type == 0) {
-        	//System.out.println(this.strength + " - " + worldObj.isRemote);
-        }
-        
-        /*if(!worldObj.isRemote && (this.strength <= 0 || age > 1200)) {
-        	this.setDead();
-        }*/
+    	int age = this.dataManager.get(AGE);
+    	this.dataManager.set(AGE, --age);
         
         if(!worldObj.isRemote && age <= 0) {
         	this.setDead();
@@ -139,7 +125,7 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
         if (scentDebug) {
 	        if (worldObj.isRemote) {
 	        	if (worldObj.getTotalWorldTime()/*+this.getEntityId()*/ % 5 == 0) {
-	        		for (int i = 0; i < strength / 10; i++) {
+	        		for (int i = 0; i < getStrengthScaled() / 10; i++) {
 	        			double range = 1D;
 	        			double x = posX - worldObj.rand.nextDouble() / 2 + worldObj.rand.nextDouble();
 	        			double y = posY - worldObj.rand.nextDouble() / 2 + worldObj.rand.nextDouble();
@@ -158,30 +144,25 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
 
     @Override
     public void writeEntityToNBT(NBTTagCompound var1) {
-        var1.setShort("age", (short)age);
-        var1.setShort("type", (short)type);
+        var1.setInteger("age", this.dataManager.get(AGE));
+        var1.setInteger("strengthpeak", this.dataManager.get(STRENGTH_PEAK));
+        var1.setInteger("type", type);
     }
 
     @Override
     public void readEntityFromNBT(NBTTagCompound var1) {
-    	setAge(var1.getShort("age"));
-        type = var1.getShort("type");
+    	this.dataManager.set(AGE, var1.getInteger("age"));
+    	this.dataManager.set(STRENGTH_PEAK, var1.getInteger("strengthpeak"));
+        type = var1.getInteger("type");
     }
 
 	@Override
 	public void writeSpawnData(ByteBuf data) {
-		data.writeInt(this.type);
-		data.writeInt(this.age);		
+		data.writeInt(this.type);	
 	}
 
 	@Override
 	public void readSpawnData(ByteBuf data) {
-		
-		//for easy cleaning purposes
-		if (!worldObj.isRemote) this.setDead();
-		
 		type = data.readInt();
-		setAge(data.readInt());
-		//if (type == 0) System.out.println("synced age: " + age);
 	}
 }

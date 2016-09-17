@@ -181,7 +181,7 @@ public class ZAUtil {
             if((int)player.getHealth() != lastHealth) {
                 if(player.getHealth() < lastHealth) {
                 	EntityScent scent = spawnOrBuffSenseAtPos(player.worldObj, pos, EnumSenseType.SCENT_BLOOD, ZAConfig.scentStrength);
-                	ZombieAwareness.dbg("spawned or buffed scent sense from damage: " + scent.getStrength());
+                	ZombieAwareness.dbg("spawned or buffed scent sense from damage: " + scent.getStrengthPeak());
                 }
 
                 lastHealth = (int) player.getHealth();
@@ -193,7 +193,7 @@ public class ZAUtil {
                 lastBleedTime = System.currentTimeMillis() + 30000L;
                 lastBleedTimes.put(CoroUtilEntity.getName(player), lastBleedTime);
                 EntityScent scent = spawnOrBuffSenseAtPos(player.worldObj, pos, EnumSenseType.SCENT_BLOOD, ZAConfig.scentStrength);
-                ZombieAwareness.dbg("spawned or buffed scent sense from bleeding: " + scent.getStrength());
+                ZombieAwareness.dbg("spawned or buffed scent sense from bleeding: " + scent.getStrengthPeak());
             }
         }
     }
@@ -494,7 +494,7 @@ public class ZAUtil {
         	
     		EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength);
     		
-    		ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent, sound: " + soundName + ", str: " + scent.getStrength() + ", vol: " + volume);
+    		ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent, sound: " + soundName + ", str: " + scent.getStrengthPeak() + ", vol: " + volume);
         	
         } else {
         	//previously used 128 range, lowering for sake of mob despawn concerns
@@ -509,20 +509,20 @@ public class ZAUtil {
             			
             			EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength, false);
             			
-            			ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent for noisyZombies, sound: " + soundName + ", str: " + scent.getStrength());
+            			ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent for noisyZombies, sound: " + soundName + ", str: " + scent.getStrengthPeak());
                 	}
             	} else if (ZAConfigFeatures.noisyPistons && sound == SoundEvents.BLOCK_PISTON_EXTEND) {
         			if (rand.nextInt(20) == 0) {
         				
         				EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength);
         				
-        				ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent for noisyPistons, sound: " + soundName + ", str: " + scent.getStrength());
+        				ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent for noisyPistons, sound: " + soundName + ", str: " + scent.getStrengthPeak());
         			}
             	} else if (sound == SoundEvents.ENTITY_GENERIC_EXPLODE) {
             		
             		EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength);
     				
-    				ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent for distant sounds, sound: " + soundName + ", str: " + scent.getStrength());
+    				ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent for distant sounds, sound: " + soundName + ", str: " + scent.getStrengthPeak());
             	}
             	
             }
@@ -544,7 +544,7 @@ public class ZAUtil {
 	    		
 	    		EntityScent scent = spawnOrBuffSenseAtPos(event.getEntity().worldObj, pos, EnumSenseType.SOUND, strength);
 	    		
-	    		ZombieAwareness.dbg("spawned or buffed sound sense from blockEvent: " + scent.getStrength());
+	    		ZombieAwareness.dbg("spawned or buffed sound sense from blockEvent: " + scent.getStrengthPeak());
 	    	}
     }
     
@@ -751,7 +751,7 @@ public class ZAUtil {
     		newNode = true;
     	}
 
-        var1.setStrength(60);
+        var1.setStrengthPeak(60);
         
         if (newNode) {
 	        var1.setPosition(tryX, tryY, tryZ);
@@ -855,11 +855,11 @@ public class ZAUtil {
     		sense = new EntityScent(world);
     		sense.type = type.ordinal();
 	        sense.setPosition(parPos.xCoord, parPos.yCoord, parPos.zCoord);
-    		sense.setStrength(strength);
+    		sense.setStrengthPeak(strength);
 	        world.spawnEntityInWorld(sense);
     	} else if (frequentSoundMultiply) {
     		//instead of amplifying current strength, amp the base value, but only if current strength is weaker than param
-    		float str = sense.getStrength();
+    		float str = sense.getStrengthPeak();
     		if (str < strength) {
     			str = strength;
     		}
@@ -872,7 +872,7 @@ public class ZAUtil {
 	        }
 	        
 	        sense.lastBuffTime = System.currentTimeMillis();
-	        sense.setStrength((int)str);
+	        sense.setStrengthPeak((int)str);
     	}
     	
         return sense;

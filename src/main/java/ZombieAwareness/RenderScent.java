@@ -39,7 +39,7 @@ public class RenderScent extends Render {
         if (TEMP || ((EntityScent)var1).type == 0) {
         	//renderImage(var1, var2, var4, var6, var8, var9);
             //renderImage(var1, var2, var4, var6, var8, var9, "/misc/shadow.png");
-        	float str = (float)(((float)((EntityScent)var1).getStrength())/100.0D);
+        	float str = (float)((EntityScent)var1).getAgeScale();
         	renderBlood(var1, var2, var4, var6, str, var9);
         } else {
             
@@ -67,11 +67,12 @@ public class RenderScent extends Render {
         
         //System.out.println("!!!!!!!!!!!!!! - " + (double)(((double)((EntityScent)var1).strength)/100.0D));
         //}
+    	shadowSize = 1.0F;
         GL11.glPushMatrix();
         if (ZAConfigClient.client_renderBlood) {
         	this.doRenderNode(var1, var2, var4, var6, var8, var9);
         }
-        //shadowSize = 0.0F;
+        shadowSize = 0.0F;
         //
         GL11.glPopMatrix();
     }
@@ -87,7 +88,7 @@ public class RenderScent extends Render {
         this.renderManager.renderEngine.bindTexture(TEXTURE64);
         World world = this.getWorldFromRenderManager();
         GlStateManager.depthMask(false);
-        double f = 0.7 + (shadowAlpha * 0.3);
+        double f = 0.7D + (shadowAlpha * 0.3D);
 
         if (entityIn instanceof EntityLiving)
         {
@@ -138,7 +139,7 @@ public class RenderScent extends Render {
         {
             Tessellator tessellator = Tessellator.getInstance();
             VertexBuffer vertexbuffer = tessellator.getBuffer();
-            double d0 = ((double)p_188299_9_ - (p_188299_4_ - ((double)p_188299_8_.getY() + p_188299_13_)) / 2.0D) * 1D/*0.5D*/ * (double)this.getWorldFromRenderManager().getLightBrightness(p_188299_8_);
+            double d0 = p_188299_9_;//((double)p_188299_9_ - (p_188299_4_ - ((double)p_188299_8_.getY() + p_188299_13_)) / 2.0D) * 1D/*0.5D*/ * (double)this.getWorldFromRenderManager().getLightBrightness(p_188299_8_);
 
             if (d0 >= 0.0D)
             {
