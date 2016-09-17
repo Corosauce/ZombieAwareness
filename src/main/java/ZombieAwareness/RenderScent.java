@@ -6,12 +6,10 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
-import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.util.EnumBlockRenderType;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -20,13 +18,12 @@ import net.minecraft.world.World;
 
 import org.lwjgl.opengl.GL11;
 
-import CoroUtil.util.CoroUtilBlock;
-import ZombieAwareness.config.ZAConfig;
+import ZombieAwareness.config.ZAConfigClient;
 
 public class RenderScent extends Render {
     
     public static ResourceLocation TEXTURE64 = new ResourceLocation(ZombieAwareness.modID + ":textures/entities/bloodx64.png");
-    public static ResourceLocation TEXTURE32 = new ResourceLocation(ZombieAwareness.modID + ":textures/entities/bloodx32.png");
+    //public static ResourceLocation TEXTURE32 = new ResourceLocation(ZombieAwareness.modID + ":textures/entities/bloodx32.png");
 
     protected RenderScent(RenderManager renderManager) {
 		super(renderManager);
@@ -57,7 +54,7 @@ public class RenderScent extends Render {
 	 * Returns the location of an entity's texture. Doesn't seem to be called unless you call Render.bindEntityTexture.
 	 */
 	protected ResourceLocation getEntityTexture(Entity entity) {
-		return TEXTURE32;
+		return TEXTURE64;
 	}
 
     @Override
@@ -71,7 +68,7 @@ public class RenderScent extends Render {
         //System.out.println("!!!!!!!!!!!!!! - " + (double)(((double)((EntityScent)var1).strength)/100.0D));
         //}
         GL11.glPushMatrix();
-        if (ZAConfig.client_renderBlood) {
+        if (ZAConfigClient.client_renderBlood) {
         	this.doRenderNode(var1, var2, var4, var6, var8, var9);
         }
         //shadowSize = 0.0F;

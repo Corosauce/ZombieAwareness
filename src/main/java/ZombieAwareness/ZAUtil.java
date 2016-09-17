@@ -5,11 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.WeakHashMap;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.audio.SoundRegistry;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityCreature;
 import net.minecraft.entity.EntityLiving;
@@ -23,6 +23,9 @@ import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.pathfinding.PathPoint;
+import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -31,6 +34,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome.SpawnListEntry;
 import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.eventhandler.Event.Result;
 import CoroUtil.pathfinding.PFQueue;
@@ -92,12 +96,17 @@ public class ZAUtil {
     public static List<SoundEvent> listSoundBlacklistExact = new ArrayList<SoundEvent>();
     public static List<String> listSoundBlacklistVague = new ArrayList<String>();
     
+    public static WeakHashMap<Entity, Long> lookupLastAlertTime = new WeakHashMap<Entity, Long>();
+    public static long alertDelay = 60*20;
     
     public static boolean debug = false;
     
     static {
     	
+    	//TODO: consider whitelists instead, too many things to blacklist
+    	
     	listSoundBlacklistExact.add(SoundEvents.ENTITY_ARROW_SHOOT);
+    	listSoundBlacklistExact.add(SoundRegistry.get("alert"));
     	
     	//walking
     	listSoundBlacklistVague.add(".step");
@@ -122,6 +131,12 @@ public class ZAUtil {
     	lookupSoundToStrengthMultiplier.put(SoundEvents.ENTITY_ARROW_HIT_PLAYER, 1.1D);
     	lookupSoundToStrengthMultiplier.put(SoundEvents.ENTITY_ARROW_HIT, 1.1D);
     	lookupSoundToStrengthMultiplier.put(SoundEvents.ENTITY_ZOMBIE_AMBIENT, 0.8D);
+    	
+    	//make distant triggers
+    	lookupSoundToStrengthMultiplier.put(SoundEvents.BLOCK_CHEST_CLOSE, 1.3D);
+    	lookupSoundToStrengthMultiplier.put(SoundEvents.BLOCK_WOODEN_DOOR_CLOSE, 1.3D);
+    	lookupSoundToStrengthMultiplier.put(SoundEvents.BLOCK_IRON_DOOR_CLOSE, 1.3D);
+    	lookupSoundToStrengthMultiplier.put(SoundEvents.BLOCK_WOODEN_TRAPDOOR_CLOSE, 1.3D);
     	
     }
 	
@@ -255,22 +270,35 @@ public class ZAUtil {
 		} catch (Exception ex) {
 			
 		}
+		
+		EntityScent senseTracked = null;
+		
 		if (ent.getAttackTarget() == null && (/*ent.worldObj.rand.nextInt(5) == 0 && */time < System.currentTimeMillis() && ent.getNavigator().noPath())) {
 			//Find player made senses
 			if (!ZAConfig.awareness_Light_OnlyZombies || (ent instanceof EntityZombie)) {
 				if (!ZAConfigFeatures.awareness_Light || !ai_FindLightSource(ent)) {
     				//TEMP CODE, THREAD ME SO I CAN SCAN FOR BLOCKS FASTER!!! - ended up designing with minimal scanning, this works ok for now
 					if (ent.worldObj.rand.nextInt(3) == 0) {
-						ai_FindSense(ent, true);
+						senseTracked = ai_FindSense(ent, true);
 					}
 	    			
     			}
     		} else {
-    			if (ai_FindSense(ent)) {
-    				
-    			}
+    			senseTracked = ai_FindSense(ent);
     		}
     	}
+		
+		if (senseTracked != null && ent.getNavigator().getPath() != null) {
+			PathPoint pathTo = ent.getNavigator().getPath().getFinalPathPoint();
+			if (pathTo != null) {
+				EntityPlayer player = getClosestPlayer(ent.worldObj, pathTo.xCoord, pathTo.yCoord, pathTo.zCoord, 4);
+				if (player != null) {
+					tryPlayAlertSound(ent, new Vec3d(ent.posX, ent.posY, ent.posZ));
+				}
+				
+			}
+			
+		}
 	    	
 	    tickCustomMob(ent);
     }
@@ -325,24 +353,24 @@ public class ZAUtil {
     	return false;
     }
     
-    public static boolean ai_FindSense(EntityLivingBase ent) {
+    public static EntityScent ai_FindSense(EntityLivingBase ent) {
     	return ai_FindSense(ent, true);
     }
     
-    public static boolean ai_FindSense(EntityLivingBase ent, boolean includeWaypoints) {
+    public static EntityScent ai_FindSense(EntityLivingBase ent, boolean includeWaypoints) {
     	
-        Entity var3 = getSenseNearEntity(ent);
+    	EntityScent var3 = getSenseNearEntity(ent);
 
         if(var3 != null) {
-        	if (includeWaypoints || ((EntityScent)var3).type != 2) {
+        	if (includeWaypoints || var3.type != 2) {
         		if (CoroUtilPath.tryMoveToEntityLivingLongDist((EntityCreature)ent, var3, 1)) {
         			//ZombieAwareness.dbg("ai_FindSense call, type: " + ((EntityScent)var3).type + " - " + ent.getName() + " -> " + var3.getPosition());
-        			return true;
+        			return var3;
         		}
         	}
         }
         
-        return false;
+        return null;
     }
     
     public static boolean ai_FindTarget(EntityLiving ent, boolean omniscient) {
@@ -393,10 +421,10 @@ public class ZAUtil {
      * @param entSource
      * @return
      */
-    public static Entity getSenseNearEntity(Entity entSource) {
+    public static EntityScent getSenseNearEntity(Entity entSource) {
         List<Entity> listEnts = entSource.worldObj.getEntitiesWithinAABBExcludingEntity(entSource, entSource.getEntityBoundingBox().expand((double)ZAConfig.maxPFRangeSense, (double)ZAConfig.maxPFRangeSense, (double)ZAConfig.maxPFRangeSense));
         
-        Entity entBest = null;
+        EntityScent entBest = null;
         //double distBest = 999999;
 
         for(int i = 0; i < listEnts.size(); ++i) {
@@ -408,7 +436,7 @@ public class ZAUtil {
             	
             	//if (dist < distBest) {
 		            if (dist < ((EntityScent)entCheck).getRange() && dist > 5.0F && entSource.worldObj.rand.nextInt(20) == 0) {
-		                entBest = entCheck;
+		                entBest = (EntityScent) entCheck;
 		                return entBest;
 		            }
             	//}
@@ -519,6 +547,22 @@ public class ZAUtil {
 	    		ZombieAwareness.dbg("spawned or buffed sound sense from blockEvent: " + scent.getStrength());
 	    	}
     }
+    
+    public static void hookSetAttackTarget(LivingSetAttackTargetEvent event) {
+    	if (event.getEntityLiving() instanceof EntityLiving) {
+    		if (event.getTarget() instanceof EntityPlayer) {
+	    		//tryPlayAlertSound((EntityLiving)event.getEntityLiving(), new Vec3d(event.getTarget().posX, event.getTarget().posY, event.getTarget().posZ));
+	    		tryPlayAlertSound((EntityLiving)event.getEntityLiving(), new Vec3d(event.getEntityLiving().posX, event.getEntityLiving().posY, event.getEntityLiving().posZ));
+    		} else if (event.getTarget() == null) {
+    			//dont use, AI stupidly detargets when resetting tasks despite still chasing player, causing double alert noise if this code is used
+    			/*if (lookupLastAlertTime.containsKey(event.getEntityLiving())) {
+    				lookupLastAlertTime.remove(event.getEntityLiving());
+        			System.out.println("detarget");
+    			}*/
+    		}
+    	}
+    	
+    }	
     
     public static void spawnNewMobSurface(EntityPlayer player) {
         
@@ -833,4 +877,20 @@ public class ZAUtil {
     	
         return sense;
     }
+    
+    public static void tryPlayAlertSound(EntityLiving entAlerted, Vec3d pos) {
+    	if (!lookupLastAlertTime.containsKey(entAlerted) || lookupLastAlertTime.get(entAlerted) + alertDelay < entAlerted.worldObj.getTotalWorldTime()) {
+			entAlerted.worldObj.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("alert"), SoundCategory.HOSTILE, 4F, 1F);
+			//entAlerted.worldObj.spawnParticle(EnumParticleTypes.HEART, true, pos.xCoord, pos.yCoord + 1, pos.zCoord, 0, 0, 0);
+			entAlerted.worldObj.spawnParticle(EnumParticleTypes.HEART.getParticleID(), true, entAlerted.posX, entAlerted.posY + 2, entAlerted.posZ, 0, 0, 0);
+			lookupLastAlertTime.put(entAlerted, entAlerted.worldObj.getTotalWorldTime());
+			ZombieAwareness.dbg("alert play for ent: " + entAlerted + ", lookupSize: " + lookupLastAlertTime.size());
+		}
+    }
+
+	public static void tickWorld(World world) {
+		/*if (world.getTotalWorldTime() % 40 == 0) {
+			for (Entity ent : lookupLastAlertTime)
+		}*/
+	}
 }

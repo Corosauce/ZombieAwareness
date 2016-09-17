@@ -2,11 +2,16 @@ package ZombieAwareness;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import ZombieAwareness.config.ZAConfig;
+import ZombieAwareness.config.ZAConfigClient;
 
 public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
 
@@ -16,12 +21,15 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     
     //TODO: set to data attribute for better client syncing
     private int strength = 0;
+    private static final DataParameter<Integer> STRENGTH = EntityDataManager.<Integer>createKey(EntityScent.class, DataSerializers.VARINT);
+    private static final DataParameter<Integer> AGE = EntityDataManager.<Integer>createKey(EntityScent.class, DataSerializers.VARINT);
     public int age;
     
     public long lastBuffTime = 0;
     public float lastMultiply = 1F;
     
     public static int AGE_MULTIPLIER = 10;
+    public static int MAX_AGE = 30*20;
 
     public EntityScent(World var1) {
         super(var1);
@@ -41,10 +49,12 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
         super.setDead();
     }
 
+    @Override
     protected boolean canTriggerWalking() {
         return false;
     }
 
+    @Override
     public boolean isInRangeToRenderDist(double var1) {
         return true;
     }
@@ -55,7 +65,11 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     	return true;
     }
 
-    public void entityInit() {}
+    @Override
+    protected void entityInit() {
+    	this.getDataManager().register(STRENGTH, Integer.valueOf(0));
+    	this.getDataManager().register(AGE, Integer.valueOf(0));
+    }
 
     public float getRange() {
         //return (float)this.strength / 100.0F * mod_ZombieAwareness.maxPFRange;
@@ -80,8 +94,17 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
         if (this.strength > ZAConfig.senseMaxStrength) {
         	this.strength = ZAConfig.senseMaxStrength;
         }
-    	this.age = strength * AGE_MULTIPLIER;
+        this.setAge(strength * AGE_MULTIPLIER);
+    	//max age to 30 seconds, will cause senses to despawn before strength hits 0, should be ok
+    	
         //System.out.println("age: " + age);
+    }
+    
+    public void setAge(int age) {
+    	this.age = age;
+    	if (this.age > MAX_AGE) {
+    		this.age = MAX_AGE;
+    	}
     }
     
     public int getStrength() {
@@ -95,7 +118,7 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     	
         this.age--;
         
-        this.strength = /*100 - */this.age / AGE_MULTIPLIER;
+        this.strength--;// = /*100 - */this.age / AGE_MULTIPLIER;
         if (this.strength > ZAConfig.senseMaxStrength) {
         	this.strength = ZAConfig.senseMaxStrength;
         }
@@ -112,7 +135,7 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
         	this.setDead();
         }
         
-        boolean scentDebug = ZAConfig.client_debugSensesVisual;
+        boolean scentDebug = ZAConfigClient.client_debugSensesVisual;
         if (scentDebug) {
 	        if (worldObj.isRemote) {
 	        	if (worldObj.getTotalWorldTime()/*+this.getEntityId()*/ % 5 == 0) {
@@ -141,7 +164,7 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
 
     @Override
     public void readEntityFromNBT(NBTTagCompound var1) {
-        age = var1.getShort("age");
+    	setAge(var1.getShort("age"));
         type = var1.getShort("type");
     }
 
@@ -158,7 +181,7 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
 		if (!worldObj.isRemote) this.setDead();
 		
 		type = data.readInt();
-		age = data.readInt();
+		setAge(data.readInt());
 		//if (type == 0) System.out.println("synced age: " + age);
 	}
 }

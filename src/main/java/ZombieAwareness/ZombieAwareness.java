@@ -39,14 +39,15 @@ import CoroUtil.pathfinding.PFCallbackItem;
 import CoroUtil.util.CoroUtilBlock;
 import CoroUtil.util.CoroUtilEntity;
 import ZombieAwareness.config.ZAConfig;
+import ZombieAwareness.config.ZAConfigClient;
 import ZombieAwareness.config.ZAConfigFeatures;
 import ZombieAwareness.config.ZAConfigPlayerLists;
 import ZombieAwareness.config.ZAConfigSpawning;
 
-@Mod(modid = "ZAMod", name="Zombie Awareness", version="v1.9.5")
+@Mod(modid = "zombieawareness", name="Zombie Awareness", version="v1.9.5")
 public class ZombieAwareness implements IPFCallback {
 	
-	@Mod.Instance( value = "ZAMod" )
+	@Mod.Instance( value = "zombieawareness" )
 	public static ZombieAwareness instance;
 	public static String modID = "zombieawareness";
 
@@ -90,9 +91,12 @@ public class ZombieAwareness implements IPFCallback {
     	ConfigMod.addConfigFile(event, "zaconfigfeatures", configMain);
     	ConfigMod.addConfigFile(event, "zaconfigplayerlists", new ZAConfigPlayerLists());
     	ConfigMod.addConfigFile(event, "zaconfigspawning", new ZAConfigSpawning());
+    	ConfigMod.addConfigFile(event, "zaconfigclient", new ZAConfigClient());
     	
     	//sync to forge values
     	configMain.hookUpdatedValues();
+    	
+    	SoundRegistry.init();
     }
     
     @Mod.EventHandler
@@ -264,6 +268,8 @@ public class ZombieAwareness implements IPFCallback {
 				}
 			}
     	}
+    	
+    	ZAUtil.tickWorld(world);
     }
     
     

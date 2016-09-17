@@ -45,11 +45,7 @@ public class ZAConfig implements IConfigCategory {
 	public static int soundScentSpawnPosRandom = 1;
 	
 	@ConfigComment("Max strength allowed for a sense, in case senses get a super high base strength or large buff")
-	public static int senseMaxStrength = 1000;
-	
-	//Client only fields
-	public static boolean client_renderBlood = true;
-	public static boolean client_debugSensesVisual = false;
+	public static int senseMaxStrength = 300;
 	
 	@Override
 	public String getConfigFileName() {

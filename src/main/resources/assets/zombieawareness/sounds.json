@@ -1,0 +1,8 @@
+{
+  "alert": {
+    "category": "entity",
+    "sounds": [
+      "zombieawareness:alert"
+    ]
+  }
+}

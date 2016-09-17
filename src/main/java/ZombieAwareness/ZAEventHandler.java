@@ -1,9 +1,9 @@
 package ZombieAwareness;
 
-import CoroUtil.forge.CoroAIWorldAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
+import net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.entity.player.PlayerEvent.HarvestCheck;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -31,6 +31,11 @@ public class ZAEventHandler {
         } catch (Exception ex) {
         	ex.printStackTrace();
         }
+	}
+	
+	@SubscribeEvent
+	public void setAttackTarget(LivingSetAttackTargetEvent event) {
+		ZAUtil.hookSetAttackTarget(event);
 	}
 	
 	@SubscribeEvent
