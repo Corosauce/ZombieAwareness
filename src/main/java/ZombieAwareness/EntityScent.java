@@ -13,7 +13,7 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
 	//0 == blood node, 1 == sound node, 2 == wander node
     public int type = 0;
     public boolean isUsed = false;
-    public int strength;
+    public int strength = 0;
     public int age;
     
     public long lastBuffTime = 0;
