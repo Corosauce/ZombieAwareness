@@ -86,16 +86,36 @@ public class ZAUtil {
     //public static HashMap<String, Long> lastSoundTimes;
     //public static HashMap<String, Integer> lastMultiplies;
     
+    //amplified/debuffed sounds, also entries in here are exempt from the vague blacklist
     public static HashMap<SoundEvent, Double> lookupSoundToStrengthMultiplier = new HashMap<SoundEvent, Double>();
     
-    public static List<SoundEvent> listSoundBlacklist = new ArrayList<SoundEvent>();
+    public static List<SoundEvent> listSoundBlacklistExact = new ArrayList<SoundEvent>();
+    public static List<String> listSoundBlacklistVague = new ArrayList<String>();
+    
     
     public static boolean debug = false;
     
     static {
     	
-    	listSoundBlacklist.add(SoundEvents.ENTITY_ARROW_SHOOT);
-    	//listSoundBlacklist.add(SoundEvents.BLOCK);
+    	listSoundBlacklistExact.add(SoundEvents.ENTITY_ARROW_SHOOT);
+    	
+    	//walking
+    	listSoundBlacklistVague.add(".step");
+    	//picking up exp
+    	listSoundBlacklistVague.add(".touch");
+    	//picking up items
+    	listSoundBlacklistVague.add(".pickup");
+    	//weird eating based sound
+    	listSoundBlacklistVague.add(".equip");
+    	//listSoundBlacklistVague.add(".attack.crit");
+    	listSoundBlacklistVague.add("player.attack");
+    	listSoundBlacklistVague.add(".hurt");
+    	listSoundBlacklistVague.add(".death");
+    	
+    	listSoundBlacklistVague.add(".ambient");
+    	
+    	listSoundBlacklistVague.add("generic.eat");
+    	
     	
     	lookupSoundToStrengthMultiplier.put(SoundEvents.ENTITY_GENERIC_EXPLODE, 3D);
     	lookupSoundToStrengthMultiplier.put(SoundEvents.BLOCK_PISTON_EXTEND, 2D);
@@ -146,6 +166,7 @@ public class ZAUtil {
             if((int)player.getHealth() != lastHealth) {
                 if(player.getHealth() < lastHealth) {
                 	EntityScent scent = spawnOrBuffSenseAtPos(player.worldObj, pos, EnumSenseType.SCENT_BLOOD, ZAConfig.scentStrength);
+                	ZombieAwareness.dbg("spawned or buffed scent sense from damage: " + scent.getStrength());
                 }
 
                 lastHealth = (int) player.getHealth();
@@ -157,6 +178,7 @@ public class ZAUtil {
                 lastBleedTime = System.currentTimeMillis() + 30000L;
                 lastBleedTimes.put(CoroUtilEntity.getName(player), lastBleedTime);
                 EntityScent scent = spawnOrBuffSenseAtPos(player.worldObj, pos, EnumSenseType.SCENT_BLOOD, ZAConfig.scentStrength);
+                ZombieAwareness.dbg("spawned or buffed scent sense from bleeding: " + scent.getStrength());
             }
         }
     }
@@ -291,7 +313,7 @@ public class ZAUtil {
 		    			if ((ent.getDistanceToEntity(entP) > 64 && (ent.worldObj.rand.nextInt(20) == 0) || 
 		    					ent.worldObj.rayTraceBlocks(new Vec3d(ent.posX, ent.posY + (double)ent.getEyeHeight(), ent.posZ), new Vec3d(rX, rY, rZ)) == null)) {
 		    				if (CoroUtilPath.tryMoveToXYZLongDist((EntityCreature)ent, rX, rY, rZ, 1)) {
-		    					ZombieAwareness.dbg("pathing to lightsource at " + rX + ", " + rY + ", " + rZ + " - " + ent);
+		    					//ZombieAwareness.dbg("pathing to lightsource at " + rX + ", " + rY + ", " + rZ + " - " + ent);
 			    			}
 			    			return true;
 	    				}
@@ -314,7 +336,7 @@ public class ZAUtil {
         if(var3 != null) {
         	if (includeWaypoints || ((EntityScent)var3).type != 2) {
         		if (CoroUtilPath.tryMoveToEntityLivingLongDist((EntityCreature)ent, var3, 1)) {
-        			ZombieAwareness.dbg("ai_FindSense call, type: " + ((EntityScent)var3).type + " - " + ent.getName() + " -> " + var3.getPosition());
+        			//ZombieAwareness.dbg("ai_FindSense call, type: " + ((EntityScent)var3).type + " - " + ent.getName() + " -> " + var3.getPosition());
         			return true;
         		}
         	}
@@ -413,8 +435,20 @@ public class ZAUtil {
         EntityPlayer closePlayer = getClosestPlayer(world, x, y, z, 3D);
         //int soundVolumeAdjusted = (int)(20.0F * volume);
         
-        if (listSoundBlacklist.contains(sound)) {
+        if (listSoundBlacklistExact.contains(sound)) {
         	return;
+        }
+        
+        //required to prevent all the .step types without having to maintain a huge list of exact sound events
+        //we will also see if we buff a specific sound so we can exempt it from vague blacklist
+        //eg: player.hurt exempt but all mobs hurt blacklisted
+        String soundName = sound.getSoundName().toString();
+        if (!lookupSoundToStrengthMultiplier.containsKey(sound)) {
+	        for (String soundFilter : listSoundBlacklistVague) {
+	        	if (soundName.contains(soundFilter)) {
+	        		return;
+	        	}
+	        }
         }
         
         double strength = ZAConfig.soundStrength;
@@ -426,31 +460,41 @@ public class ZAUtil {
     	
     	Vec3d pos = new Vec3d(x, y, z);
         
+    	
+    	
         if((closePlayer != null)/* && soundVolumeAdjusted > 15*/) {
         	
     		EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength);
     		
-    		ZombieAwareness.dbg("spawned or buffed sound sense from blockEvent");
+    		ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent, sound: " + soundName + ", str: " + scent.getStrength() + ", vol: " + volume);
         	
         } else {
         	//previously used 128 range, lowering for sake of mob despawn concerns
         	EntityPlayer farPlayer = getClosestPlayer(world, x, y, z, 48);
             
             if (farPlayer != null) {
+            	
+            	//custom cases for sounds we want to trigger that can be further away
+            	
             	if (ZAConfigFeatures.noisyZombies && sound == SoundEvents.ENTITY_ZOMBIE_AMBIENT) {
             		if (rand.nextInt(1 + (ZombieAwareness.lastZombieCount * 8)) == 0) {
             			
             			EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength, false);
             			
-            			ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent for noisyZombies");
+            			ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent for noisyZombies, sound: " + soundName + ", str: " + scent.getStrength());
                 	}
-            	} else if(ZAConfigFeatures.noisyPistons && sound == SoundEvents.BLOCK_PISTON_EXTEND) {
+            	} else if (ZAConfigFeatures.noisyPistons && sound == SoundEvents.BLOCK_PISTON_EXTEND) {
         			if (rand.nextInt(20) == 0) {
         				
         				EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength);
         				
-        				ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent for noisyPistons");
+        				ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent for noisyPistons, sound: " + soundName + ", str: " + scent.getStrength());
         			}
+            	} else if (sound == SoundEvents.ENTITY_GENERIC_EXPLODE) {
+            		
+            		EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength);
+    				
+    				ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent for distant sounds, sound: " + soundName + ", str: " + scent.getStrength());
             	}
             	
             }
@@ -472,7 +516,7 @@ public class ZAUtil {
 	    		
 	    		EntityScent scent = spawnOrBuffSenseAtPos(event.getEntity().worldObj, pos, EnumSenseType.SOUND, strength);
 	    		
-	    		ZombieAwareness.dbg("spawned or buffed sound sense from blockEvent");
+	    		ZombieAwareness.dbg("spawned or buffed sound sense from blockEvent: " + scent.getStrength());
 	    	}
     }
     
@@ -771,7 +815,7 @@ public class ZAUtil {
 	        world.spawnEntityInWorld(sense);
     	} else if (frequentSoundMultiply) {
     		//instead of amplifying current strength, amp the base value, but only if current strength is weaker than param
-    		float str = sense.strength;
+    		float str = sense.getStrength();
     		if (str < strength) {
     			str = strength;
     		}

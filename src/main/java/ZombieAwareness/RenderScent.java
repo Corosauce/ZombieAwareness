@@ -42,7 +42,7 @@ public class RenderScent extends Render {
         if (TEMP || ((EntityScent)var1).type == 0) {
         	//renderImage(var1, var2, var4, var6, var8, var9);
             //renderImage(var1, var2, var4, var6, var8, var9, "/misc/shadow.png");
-        	float str = (float)(((float)((EntityScent)var1).strength)/100.0D);
+        	float str = (float)(((float)((EntityScent)var1).getStrength())/100.0D);
         	renderBlood(var1, var2, var4, var6, str, var9);
         } else {
             

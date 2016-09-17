@@ -13,19 +13,22 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
 	//0 == blood node, 1 == sound node, 2 == wander node
     public int type = 0;
     public boolean isUsed = false;
-    public int strength = 0;
+    
+    //TODO: set to data attribute for better client syncing
+    private int strength = 0;
     public int age;
     
     public long lastBuffTime = 0;
     public float lastMultiply = 1F;
+    
+    public static int AGE_MULTIPLIER = 10;
 
     public EntityScent(World var1) {
         super(var1);
         this.isImmuneToFire = true;
         this.setSize(0.0F, 0.0F);
         this.strength = 100;
-        this.age = 0;
-        //System.out.println("new trace: " + ZAUtil.traceCount);
+        this.age = this.strength * AGE_MULTIPLIER;
     }
     
     @Override
@@ -68,42 +71,60 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
         
     }
 
-    public void setStrength(int var1) {
-        this.age = (100 - var1) * 10;
+    public void setStrength(int strength) {
+        //this.age = (100 - var1) * 10;
         /*if (age < 0) {
           age = 0;
         }*/
-        this.strength = 100 - this.age / 10;
+        this.strength = strength;
+        if (this.strength > ZAConfig.senseMaxStrength) {
+        	this.strength = ZAConfig.senseMaxStrength;
+        }
+    	this.age = strength * AGE_MULTIPLIER;
         //System.out.println("age: " + age);
+    }
+    
+    public int getStrength() {
+    	return this.strength;
     }
 
     @Override
     public void onUpdate() {
     	
-        ++this.age;
-        this.strength = 100 - this.age / 10;
+    	//TODO: if raining, age smell sense much faster
+    	
+        this.age--;
+        
+        this.strength = /*100 - */this.age / AGE_MULTIPLIER;
+        if (this.strength > ZAConfig.senseMaxStrength) {
+        	this.strength = ZAConfig.senseMaxStrength;
+        }
         //this.setDead();
         if (type == 0) {
         	//System.out.println(this.strength + " - " + worldObj.isRemote);
         }
         
-        if(!worldObj.isRemote && (this.strength <= 0 || age > 1200)) {
+        /*if(!worldObj.isRemote && (this.strength <= 0 || age > 1200)) {
+        	this.setDead();
+        }*/
+        
+        if(!worldObj.isRemote && age <= 0) {
         	this.setDead();
         }
         
         boolean scentDebug = ZAConfig.client_debugSensesVisual;
         if (scentDebug) {
 	        if (worldObj.isRemote) {
-	        	if (worldObj.getTotalWorldTime() % 5 == 0) {
+	        	if (worldObj.getTotalWorldTime()/*+this.getEntityId()*/ % 5 == 0) {
 	        		for (int i = 0; i < strength / 10; i++) {
 	        			double range = 1D;
 	        			double x = posX - worldObj.rand.nextDouble() / 2 + worldObj.rand.nextDouble();
 	        			double y = posY - worldObj.rand.nextDouble() / 2 + worldObj.rand.nextDouble();
 	        			double z = posZ - worldObj.rand.nextDouble() / 2 + worldObj.rand.nextDouble();
 	        			if (type == 0) {
-	        				worldObj.spawnParticle(EnumParticleTypes.HEART, x, y, z, 0, 0, 0);
+	        				worldObj.spawnParticle(EnumParticleTypes.HEART, true, x, y, z, 0, 0, 0);
 	        			} else if (type == 1) {
-	        				worldObj.spawnParticle(EnumParticleTypes.NOTE, x, y, z, 0, 0, 0);
+	        				worldObj.spawnParticle(EnumParticleTypes.NOTE, true, x, y, z, 0, 0, 0);
 	        			}
 	        			
 	        		}

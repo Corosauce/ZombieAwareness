@@ -44,6 +44,9 @@ public class ZAConfig implements IConfigCategory {
 	@ConfigComment("Random X Z variation of sound source placement")
 	public static int soundScentSpawnPosRandom = 1;
 	
+	@ConfigComment("Max strength allowed for a sense, in case senses get a super high base strength or large buff")
+	public static int senseMaxStrength = 1000;
+	
 	//Client only fields
 	public static boolean client_renderBlood = true;
 	public static boolean client_debugSensesVisual = false;
