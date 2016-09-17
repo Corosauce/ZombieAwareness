@@ -101,6 +101,8 @@ public class ZAUtil {
     	lookupSoundToStrengthMultiplier.put(SoundEvents.BLOCK_PISTON_EXTEND, 2D);
     	lookupSoundToStrengthMultiplier.put(SoundEvents.ENTITY_ARROW_HIT_PLAYER, 1.1D);
     	lookupSoundToStrengthMultiplier.put(SoundEvents.ENTITY_ARROW_HIT, 1.1D);
+    	lookupSoundToStrengthMultiplier.put(SoundEvents.ENTITY_ZOMBIE_AMBIENT, 0.8D);
+    	
     }
 	
 	public static void tickPlayer(EntityPlayer player) {
@@ -139,9 +141,11 @@ public class ZAUtil {
         	int lastHealth = lastHealths.containsKey(CoroUtilEntity.getName(player)) ? lastHealths.get(CoroUtilEntity.getName(player)) : 0;
     		Long lastBleedTime = lastBleedTimes.containsKey(CoroUtilEntity.getName(player)) ? lastBleedTimes.get(CoroUtilEntity.getName(player)) : 0;
     		
+    		Vec3d pos = new Vec3d(player.posX, player.posY, player.posZ);
+    		
             if((int)player.getHealth() != lastHealth) {
                 if(player.getHealth() < lastHealth) {
-                    spawnSenseSmell(player);
+                	EntityScent scent = spawnOrBuffSenseAtPos(player.worldObj, pos, EnumSenseType.SCENT_BLOOD, ZAConfig.scentStrength);
                 }
 
                 lastHealth = (int) player.getHealth();
@@ -152,7 +156,7 @@ public class ZAUtil {
             if(player.getHealth() / player.getMaxHealth() < 0.6F && lastBleedTime < System.currentTimeMillis()) {
                 lastBleedTime = System.currentTimeMillis() + 30000L;
                 lastBleedTimes.put(CoroUtilEntity.getName(player), lastBleedTime);
-                spawnSenseSmell(player);
+                EntityScent scent = spawnOrBuffSenseAtPos(player.worldObj, pos, EnumSenseType.SCENT_BLOOD, ZAConfig.scentStrength);
             }
         }
     }
@@ -250,12 +254,14 @@ public class ZAUtil {
     }
     
     public static void tickCustomMob(EntityLivingBase ent) {
-    	if (ent instanceof EntitySpider) {
-    		if (ent.getPassengers().size() > 0 && ent.getPassengers().get(0) instanceof EntitySkeleton) {
-    			if (ent.worldObj.rand.nextInt(100) == 0) {
-    				spawnWaypoint(ent);
-    			}
-    		}
+    	if (ZAConfigFeatures.wanderingHordes) {
+	    	if (ent instanceof EntitySpider) {
+	    		if (ent.getPassengers().size() > 0 && ent.getPassengers().get(0) instanceof EntitySkeleton) {
+	    			if (ent.worldObj.rand.nextInt(100) == 0) {
+	    				spawnWaypoint(ent);
+	    			}
+	    		}
+	    	}
     	}
     }
     
@@ -400,128 +406,53 @@ public class ZAUtil {
     	
     	if (world.provider.getDimension() != 0 && world.provider.getDimension() != -127) return;
     	
-    	String soundName = sound.getSoundName().toString();
-
-    	//System.out.println("Derb: " + var0 + " - TC: " + traceCount);
-    	
-    	/*if (var0.contains("creeper") || var0.contains("explo")) {
-    		System.out.println("Derb: " + var0);
-		}*/
-    	
-        
-
         if (!canSpawnTrace(world, x, y, z)) {
             return;
         }
-
         
-        
-        EntityPlayer var6 = getClosestPlayer(world, x, y, z, 3D);
-        int var7 = (int)(20.0F * volume);
-        boolean var8 = false;
-        /*if(var0.substring(7).equals("drr")) {
-           var8 = true;
-        }*/
-
-        /*if(soundName.length() > 8+4 && (soundName.substring(7).equals("bow") || soundName.substring(7).equals("pop") || soundName.substring(7).equals("wood"))) {
-            return;
-        }*/
+        EntityPlayer closePlayer = getClosestPlayer(world, x, y, z, 3D);
+        //int soundVolumeAdjusted = (int)(20.0F * volume);
         
         if (listSoundBlacklist.contains(sound)) {
         	return;
         }
         
-        //REWORK
+        double strength = ZAConfig.soundStrength;
+    	
+    	//specific buff for sound
+    	if (lookupSoundToStrengthMultiplier.containsKey(sound)) {
+    		strength *= lookupSoundToStrengthMultiplier.get(sound);
+    	}
+    	
+    	Vec3d pos = new Vec3d(x, y, z);
         
-        if((var8 || var6 != null) && var7 > 15) {
+        if((closePlayer != null)/* && soundVolumeAdjusted > 15*/) {
         	
-        	double strength = ZAConfig.soundStrength;
-        	
-        	//specific buff for sound
-        	if (lookupSoundToStrengthMultiplier.containsKey(sound)) {
-        		strength *= lookupSoundToStrengthMultiplier.get(sound);
-        	}
-        	
-    		Vec3d pos = new Vec3d(x, y, z);
-    		
     		EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength);
     		
     		ZombieAwareness.dbg("spawned or buffed sound sense from blockEvent");
         	
-        }
-		
-		//OLD
-
-        if((var8 || var6 != null) && var7 > 15) {
-            EntityScent var9 = getSenseNodeAtPos(world, new Vec3d(x, y, z), EnumSenseType.SOUND);
-            
-            boolean newNode = false;
-            
-            if (var9 == null) {
-            	var9 = new EntityScent(world);
-            	newNode = true;
-            }
-            
-            double strength = ZAConfig.soundStrength;
-            
-            if(var7 < 25) {
-                var9.setStrength(ZAConfig.soundStrength);
-            }
-
-            var7 = var9.strength;
-
-            if(soundName.substring(7).equals("drr")) {
-                var7 += 10;
-            }
-
-            if(var9.lastBuffTime + (long)ZAConfig.frequentSoundThreshold > System.currentTimeMillis()) {
-            	var9.lastMultiply += 0.1F;
-                var7 = (int)((float)var7 * var9.lastMultiply);
-            } else {
-            	var9.lastMultiply = 1.0F;
-            }
-            //System.out.println("sound: " + var0 + );
-            var9.lastBuffTime = System.currentTimeMillis();
-            var9.setStrength(var7);
-            if (newNode) {
-	            var9.type = 1;
-	            var9.setPosition(x, y, z);
-	            world.spawnEntityInWorld(var9);
-            }
-            
-            ZombieAwareness.dbg("spawned sound sense from sound: " + soundName);
-            
-            //System.out.println("sound: " + var0 + " - range: " + var9.getRange());
-            //System.out.println(var9.getRange());
         } else {
-        	EntityPlayer farPlayer = getClosestPlayer(world, x, y, z, 128D);
+        	//previously used 128 range, lowering for sake of mob despawn concerns
+        	EntityPlayer farPlayer = getClosestPlayer(world, x, y, z, 48);
             
             if (farPlayer != null) {
-            	if(soundName.substring(7).equals("bow") || soundName.substring(7).equals("pop") || soundName.substring(7).equals("wood")) {
-                    return;
-                }
-            	
-            	if (ZAConfigFeatures.noisyZombies && soundName.contains("zombie.say")) {
+            	if (ZAConfigFeatures.noisyZombies && sound == SoundEvents.ENTITY_ZOMBIE_AMBIENT) {
             		if (rand.nextInt(1 + (ZombieAwareness.lastZombieCount * 8)) == 0) {
-            			//if (traceCount < maxTraces / 4) {
-            				EntityScent es = spawnSenseSound(world, x, y, z, 80);
-            				ZombieAwareness.dbg("spawned sound sense from sound: " + soundName);
-            			//}
-            			//if (es != null) System.out.println("zombie: " + var0 + " - TC: " + traceCount + " - " + (es).getRange());
-            		}
-            	} else {
-            		if(ZAConfigFeatures.noisyPistons && soundName.contains("piston")) {
-            			if (rand.nextInt(20) == 0) {
-	            			//if (traceCount < maxTraces / 4) {
-		            			EntityScent es = spawnSenseSound(world, x, y, z, 400);
-		            			if (es != null) {
-		            				ZombieAwareness.dbg("spawned sound sense from sound: " + soundName + " - " + es.getRange());
-		            			}
-		            			//if (es != null) System.out.println("Derbbb: " + var0 + " - TC: " + traceCount + " - " + (es).getRange());
-	            			//}
-            			}
-                    }
+            			
+            			EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength, false);
+            			
+            			ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent for noisyZombies");
+                	}
+            	} else if(ZAConfigFeatures.noisyPistons && sound == SoundEvents.BLOCK_PISTON_EXTEND) {
+        			if (rand.nextInt(20) == 0) {
+        				
+        				EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength);
+        				
+        				ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent for noisyPistons");
+        			}
             	}
+            	
             }
         }
     }
@@ -543,78 +474,6 @@ public class ZAUtil {
 	    		
 	    		ZombieAwareness.dbg("spawned or buffed sound sense from blockEvent");
 	    	}
-    }
-    
-    /**
-     * Either spawns a new sense or returns the sense that is already at these coords
-     * 
-     * @param world
-     * @param x
-     * @param y
-     * @param z
-     * @param strength
-     * @return
-     */
-    public static EntityScent spawnSenseSound(World world, double x, double y, double z, int strength) {
-		int size = ZAConfig.soundScentSpawnPosRandom;
-		int randX = world.rand.nextInt(size);
-		int randZ = world.rand.nextInt(size);
-		
-    	EntityScent var9 = getSenseNodeAtPos(world, new Vec3d(x + (-(size/2) + randX), y, z + (-(size/2) + randZ)), EnumSenseType.SOUND);
-    	
-    	boolean newNode = false;
-    	
-    	if (var9 == null) {
-    		var9 = new EntityScent(world);
-    		newNode = true;
-    	}
-    	
-		var9.setStrength(strength);
-		
-		if (newNode) {
-			var9.type = 1;
-	        var9.setPosition(x + (-(size/2) + randX), y, z + (-(size/2) + randZ));
-	        world.spawnEntityInWorld(var9);
-		}
-        return var9;
-    }
-
-    /**
-     * Either spawns a new sense or returns the sense that is already at these coords
-     * 
-     * @param var0
-     */
-    public static EntityScent spawnSenseSmell(Entity var0) {
-
-        if (!canSpawnTrace(var0.worldObj, var0.posX, var0.posY, var0.posZ)) {
-            return null;
-        }
-
-        double height = var0.posY;
-        
-        EntityScent var1 = getSenseNodeAtPos(var0.worldObj, new Vec3d(var0.posX, height, var0.posZ), EnumSenseType.SCENT_BLOOD);
-        
-        boolean newNode = false;
-    	
-    	if (var1 == null) {
-    		var1 = new EntityScent(var0.worldObj);
-    		newNode = true;
-    	}
-        
-    	var1.setStrength(ZAConfig.scentStrength);
-    	
-    	if (newNode) {
-	        var1.setPosition(var0.posX, height, var0.posZ);
-	        var1.type = 0;
-	        
-	        var0.worldObj.spawnEntityInWorld(var1);
-    	}
-        
-        return var1;
-        
-        //System.out.println("scent: " + var0 + " - range: " + var1.getRange());
-        //System.out.println("?!?!?! - " + var1.type);
-        //System.out.println(var1.getRange());
     }
     
     public static void spawnNewMobSurface(EntityPlayer player) {
@@ -777,33 +636,30 @@ public class ZAUtil {
         return true;
     }
     
-    public static void spawnWaypoint(Entity var0) {
-        if (!ZAConfigFeatures.awareness_Scent/* || traceCount > maxTraces*/) {
-            return;
-        }
+    public static void spawnWaypoint(Entity entSource) {
         
         int range = 256;
         
-        double tryX = (int)var0.posX - (range/2) + (rand.nextInt(range));
-        double tryZ = (int)var0.posZ - (range/2) + (rand.nextInt(range));
-        double tryY =  var0.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
+        double tryX = (int)entSource.posX - (range/2) + (rand.nextInt(range));
+        double tryZ = (int)entSource.posZ - (range/2) + (rand.nextInt(range));
+        double tryY =  entSource.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 
-        if (!canSpawnTrace(var0.worldObj, tryX, tryY, tryZ)) {
+        if (!canSpawnTrace(entSource.worldObj, tryX, tryY, tryZ)) {
             return;
         }
 
-        double height = var0.posY/* - (double)var0.yOffset*/ + 0.0D;
+        double height = entSource.posY/* - (double)var0.yOffset*/ + 0.0D;
         /*if (var0 instanceof EntityPlayer) {
           height -= 1.0D;
         }*/
         //System.out.println(height);
         
-        EntityScent var1 = getSenseNodeAtPos(var0.worldObj, new Vec3d(tryX, tryY, tryZ), EnumSenseType.WAYPOINT);
+        EntityScent var1 = getSenseNodeAtPos(entSource.worldObj, new Vec3d(tryX, tryY, tryZ), EnumSenseType.WAYPOINT);
         
         boolean newNode = false;
     	
     	if (var1 == null) {
-    		var1 = new EntityScent(var0.worldObj);
+    		var1 = new EntityScent(entSource.worldObj);
     		newNode = true;
     	}
 
@@ -813,10 +669,10 @@ public class ZAUtil {
 	        var1.setPosition(tryX, tryY, tryZ);
 	        var1.type = 2;
 	        
-	        var0.worldObj.spawnEntityInWorld(var1);
+	        entSource.worldObj.spawnEntityInWorld(var1);
         }
         
-        if (debug) System.out.println("WP: " + var0 + " - range: " + var1.getRange());
+        if (debug) System.out.println("WP: " + entSource + " - range: " + var1.getRange());
         //System.out.println("?!?!?! - " + var1.type);
         //System.out.println(var1.getRange());
     }
@@ -890,6 +746,10 @@ public class ZAUtil {
     	return null;
     }
     
+    public static EntityScent spawnOrBuffSenseAtPos(World world, Vec3d parPos, EnumSenseType type, int strength) {
+    	return spawnOrBuffSenseAtPos(world, parPos, type, strength, true);
+    }
+    
     /**
      * Tries to spawn a new sense, if one is close enough, it will multiply that senses current strength by lastMultiply
      * 
@@ -899,7 +759,7 @@ public class ZAUtil {
      * @param strength
      * @return
      */
-    public static EntityScent spawnOrBuffSenseAtPos(World world, Vec3d parPos, EnumSenseType type, int strength) {
+    public static EntityScent spawnOrBuffSenseAtPos(World world, Vec3d parPos, EnumSenseType type, int strength, boolean frequentSoundMultiply) {
 		
     	EntityScent sense = getSenseNodeAtPos(world, parPos, type);
     	
@@ -909,10 +769,9 @@ public class ZAUtil {
 	        sense.setPosition(parPos.xCoord, parPos.yCoord, parPos.zCoord);
     		sense.setStrength(strength);
 	        world.spawnEntityInWorld(sense);
-    	} else {
-    		//instead of amplifying current strength, amp the base value, but only  
+    	} else if (frequentSoundMultiply) {
+    		//instead of amplifying current strength, amp the base value, but only if current strength is weaker than param
     		float str = sense.strength;
-    		
     		if (str < strength) {
     			str = strength;
     		}
