@@ -1,5 +1,6 @@
 package ZombieAwareness;
 
+import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
@@ -35,25 +36,35 @@ public class ZAEventHandler {
 	
 	@SubscribeEvent
 	public void setAttackTarget(LivingSetAttackTargetEvent event) {
-		ZAUtil.hookSetAttackTarget(event);
+		if (!event.getEntityLiving().worldObj.isRemote) {
+			ZAUtil.hookSetAttackTarget(event);
+		}
 	}
 	
 	@SubscribeEvent
 	public void breakSpeed(BreakSpeed event) {
-		ZAUtil.hookBlockEvent(event, 20);
+		if (!event.getEntityLiving().worldObj.isRemote) {
+			ZombieAwareness.dbg("breakSpeed event");
+			ZAUtil.hookBlockEvent(event, 20);
+		}
 	}
 	
 	@SubscribeEvent
 	public void harvest(HarvestCheck event) {
-		ZAUtil.hookBlockEvent(event, 3);
+		if (!event.getEntityLiving().worldObj.isRemote) {
+			
+			ZombieAwareness.dbg("harvest event");
+			ZAUtil.hookBlockEvent(event, 3);
+		}
 	}
 	
 	@SubscribeEvent
 	public void interact(PlayerInteractEvent event) {
 		if (!event.getEntityLiving().worldObj.isRemote) {
-			ZAUtil.hookBlockEvent(event, 3);
-			
-			
+			if (event.getHand() == EnumHand.MAIN_HAND) {
+				ZombieAwareness.dbg("interact event");
+				ZAUtil.hookBlockEvent(event, 3);
+			}
 		}
 	}
 	

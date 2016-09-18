@@ -76,6 +76,15 @@ public class ZAUtil {
 	 * -- falling anvils
 	 * -- 
 	 * 
+	 * TODO: for release
+	 * - whitelist instead of blacklist i think
+	 * - sound sense profile for long distance ones, for explosion, piston, noisy zombie, has data:
+	 * -- sound event or partial string match
+	 * -- max distance spawnable
+	 * -- multiplier
+	 * - buff jukebox, notebox
+	 * - fix interact spam
+	 * 
 	 */
 	
 	//these 2 are only used for each player, but i cant exactly backtrack to the player that makes the sound so its shared, shouldnt be too horrible...
@@ -498,13 +507,16 @@ public class ZAUtil {
         	
         } else {
         	//previously used 128 range, lowering for sake of mob despawn concerns
-        	EntityPlayer farPlayer = getClosestPlayer(world, x, y, z, 48);
+        	EntityPlayer farPlayer = getClosestPlayer(world, x, y, z, 128);
+        	
             
             if (farPlayer != null) {
             	
+            	double distToPlayer = farPlayer.getDistance(x, y, z);
+            	
             	//custom cases for sounds we want to trigger that can be further away
             	
-            	if (ZAConfigFeatures.noisyZombies && sound == SoundEvents.ENTITY_ZOMBIE_AMBIENT) {
+            	if (ZAConfigFeatures.noisyZombies && sound == SoundEvents.ENTITY_ZOMBIE_AMBIENT && distToPlayer <= 48) {
             		if (rand.nextInt(1 + (ZombieAwareness.lastZombieCount * 8)) == 0) {
             			
             			EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength, false);
