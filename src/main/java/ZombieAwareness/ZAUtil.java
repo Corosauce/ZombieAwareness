@@ -900,7 +900,7 @@ public class ZAUtil {
     	if (!lookupLastAlertTime.containsKey(entAlerted) || lookupLastAlertTime.get(entAlerted) + alertDelay < entAlerted.worldObj.getTotalWorldTime()) {
 			entAlerted.worldObj.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("alert"), SoundCategory.HOSTILE, 4F, 1F);
 			//entAlerted.worldObj.spawnParticle(EnumParticleTypes.HEART, true, pos.xCoord, pos.yCoord + 1, pos.zCoord, 0, 0, 0);
-			entAlerted.worldObj.spawnParticle(EnumParticleTypes.HEART.getParticleID(), true, entAlerted.posX, entAlerted.posY + 2, entAlerted.posZ, 0, 0, 0);
+			//entAlerted.worldObj.spawnParticle(EnumParticleTypes.HEART.getParticleID(), true, entAlerted.posX, entAlerted.posY + 2, entAlerted.posZ, 0, 0, 0);
 			lookupLastAlertTime.put(entAlerted, entAlerted.worldObj.getTotalWorldTime());
 			ZombieAwareness.dbg("alert play for ent: " + entAlerted + ", lookupSize: " + lookupLastAlertTime.size());
 		}
