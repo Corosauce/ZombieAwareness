@@ -516,6 +516,12 @@ public class ZAUtil {
             	
             	//custom cases for sounds we want to trigger that can be further away
             	
+            	//new
+            	
+            	
+            	
+            	//old
+            	
             	if (ZAConfigFeatures.noisyZombies && sound == SoundEvents.ENTITY_ZOMBIE_AMBIENT && distToPlayer <= 48) {
             		if (rand.nextInt(1 + (ZombieAwareness.lastZombieCount * 8)) == 0) {
             			
