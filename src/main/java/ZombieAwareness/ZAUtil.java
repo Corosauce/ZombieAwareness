@@ -65,6 +65,7 @@ public class ZAUtil {
 	 * 
 	 * - must have sound triggers:
 	 * - block mine
+	 * - block place eg minecraft:block.gravel.place
 	 * - chest use
 	 * - doors
 	 * - buttons
@@ -83,7 +84,8 @@ public class ZAUtil {
 	 * -- max distance spawnable
 	 * -- multiplier
 	 * - buff jukebox, notebox
-	 * - fix interact spam
+	 * x fix interact spam
+	 * 
 	 * 
 	 */
 	
@@ -100,9 +102,13 @@ public class ZAUtil {
     //public static HashMap<String, Integer> lastMultiplies;
     
     //amplified/debuffed sounds, also entries in here are exempt from the vague blacklist
+    @Deprecated
     public static HashMap<SoundEvent, Double> lookupSoundToStrengthMultiplier = new HashMap<SoundEvent, Double>();
+    public static List<SoundProfileEntry> listSoundProfiles = new ArrayList<SoundProfileEntry>();
     
+    @Deprecated
     public static List<SoundEvent> listSoundBlacklistExact = new ArrayList<SoundEvent>();
+    @Deprecated
     public static List<String> listSoundBlacklistVague = new ArrayList<String>();
     
     public static WeakHashMap<Entity, Long> lookupLastAlertTime = new WeakHashMap<Entity, Long>();
@@ -147,6 +153,40 @@ public class ZAUtil {
     	lookupSoundToStrengthMultiplier.put(SoundEvents.BLOCK_IRON_DOOR_CLOSE, 1.3D);
     	lookupSoundToStrengthMultiplier.put(SoundEvents.BLOCK_WOODEN_TRAPDOOR_CLOSE, 1.3D);
     	
+    	int noisyInteractRange = 30;
+    	double noisyInteractBuff = 1.3D;
+    	
+    	//short dist ones
+    	listSoundProfiles.add(new SoundProfileEntry(SoundEvents.ENTITY_ARROW_HIT_PLAYER, 1.1D));
+    	listSoundProfiles.add(new SoundProfileEntry(SoundEvents.ENTITY_ARROW_HIT, 1.1D));
+    	
+    	listSoundProfiles.add(new SoundProfileEntry(SoundEvents.BLOCK_CHEST_CLOSE, noisyInteractBuff).setDistanceMax(noisyInteractRange));
+    	listSoundProfiles.add(new SoundProfileEntry(SoundEvents.BLOCK_WOODEN_DOOR_CLOSE, noisyInteractBuff).setDistanceMax(noisyInteractRange));
+    	listSoundProfiles.add(new SoundProfileEntry(SoundEvents.BLOCK_IRON_DOOR_CLOSE, noisyInteractBuff).setDistanceMax(noisyInteractRange));
+    	listSoundProfiles.add(new SoundProfileEntry(SoundEvents.BLOCK_WOODEN_TRAPDOOR_CLOSE, noisyInteractBuff).setDistanceMax(noisyInteractRange));
+    	
+    	listSoundProfiles.add(new SoundProfileEntry(".place", noisyInteractBuff));
+    	
+    	//TODO: buttons levers
+    	
+    	//long dist ones
+    	if (ZAConfigFeatures.noisyZombies) listSoundProfiles.add(new SoundProfileEntry(SoundEvents.ENTITY_ZOMBIE_AMBIENT, 0.8D, 8*20).setDistanceMax(48));
+    	if (ZAConfigFeatures.noisyPistons) listSoundProfiles.add(new SoundProfileEntry(SoundEvents.BLOCK_PISTON_EXTEND, 2D, 20).setDistanceMax(128));
+    	
+    	listSoundProfiles.add(new SoundProfileEntry(SoundEvents.ENTITY_GENERIC_EXPLODE, 3D).setDistanceMax(128));
+    	
+    	
+    }
+    
+    public static SoundProfileEntry getFirstEntry(String sound) {
+    	for (SoundProfileEntry entry : listSoundProfiles) {
+    		if (entry.getSoundName().equals(sound)) {
+    			return entry;
+    		} else if (entry.isPartialMatchOnly() && sound.contains(entry.getSoundName())) {
+    			return entry;
+    		}
+    	}
+    	return null;
     }
 	
 	public static void tickPlayer(EntityPlayer player) {
@@ -469,37 +509,68 @@ public class ZAUtil {
             return;
         }
         
-        EntityPlayer closePlayer = getClosestPlayer(world, x, y, z, 3D);
+        //EntityPlayer closePlayer = getClosestPlayer(world, x, y, z, 3D);
+        
+        EntityPlayer closestPlayer = getClosestPlayer(world, x, y, z, 128);
+        
         //int soundVolumeAdjusted = (int)(20.0F * volume);
         
-        if (listSoundBlacklistExact.contains(sound)) {
+        /*if (listSoundBlacklistExact.contains(sound)) {
         	return;
-        }
+        }*/
         
         //required to prevent all the .step types without having to maintain a huge list of exact sound events
         //we will also see if we buff a specific sound so we can exempt it from vague blacklist
         //eg: player.hurt exempt but all mobs hurt blacklisted
         String soundName = sound.getSoundName().toString();
-        if (!lookupSoundToStrengthMultiplier.containsKey(sound)) {
+        /*if (!lookupSoundToStrengthMultiplier.containsKey(sound)) {
 	        for (String soundFilter : listSoundBlacklistVague) {
 	        	if (soundName.contains(soundFilter)) {
 	        		return;
 	        	}
 	        }
-        }
+        }*/
         
         double strength = ZAConfig.soundStrength;
     	
     	//specific buff for sound
-    	if (lookupSoundToStrengthMultiplier.containsKey(sound)) {
+    	/*if (lookupSoundToStrengthMultiplier.containsKey(sound)) {
     		strength *= lookupSoundToStrengthMultiplier.get(sound);
-    	}
+    	}*/
     	
     	Vec3d pos = new Vec3d(x, y, z);
         
+    	if (closestPlayer != null) {
+    		double distToPlayer = closestPlayer.getDistance(x, y, z);
+        	
+        	//custom cases for sounds we want to trigger that can be further away
+        	
+        	//new
+        	
+        	SoundProfileEntry entry = getFirstEntry(soundName);
+        	
+        	if (entry != null) {
+        		if (distToPlayer <= entry.getDistanceMax()) {
+            		if (entry.getOddsTo1ToUse() <= 0 || rand.nextInt(entry.getOddsTo1ToUse()) == 0) {
+            			strength *= entry.getMultiplier();
+            			
+            			EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength);
+                		
+                		ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent, sound: " + soundName + ", str: " + scent.getStrengthPeak() + ", vol: " + volume);
+            		}
+        		} else {
+        			//ZombieAwareness.dbg("too far: " + soundName + " - " + distToPlayer);
+        		}
+        	} else {
+        		//debug what we could add
+        		if (distToPlayer <= 3) {
+        			ZombieAwareness.dbg("didnt spawn for: " + soundName);
+        		}
+        	}
+    	}
     	
     	
-        if((closePlayer != null)/* && soundVolumeAdjusted > 15*/) {
+        /*if((closePlayer != null)) {
         	
     		EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength);
     		
@@ -507,16 +578,10 @@ public class ZAUtil {
         	
         } else {
         	//previously used 128 range, lowering for sake of mob despawn concerns
-        	EntityPlayer farPlayer = getClosestPlayer(world, x, y, z, 128);
+        	//EntityPlayer farPlayer = getClosestPlayer(world, x, y, z, 128);
         	
             
             if (farPlayer != null) {
-            	
-            	double distToPlayer = farPlayer.getDistance(x, y, z);
-            	
-            	//custom cases for sounds we want to trigger that can be further away
-            	
-            	//new
             	
             	
             	
@@ -544,7 +609,7 @@ public class ZAUtil {
             	}
             	
             }
-        }
+        }*/
     }
     
     public static void hookBlockEvent(PlayerEvent event, int chance) {

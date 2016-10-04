@@ -44,7 +44,7 @@ public class ZAEventHandler {
 	@SubscribeEvent
 	public void breakSpeed(BreakSpeed event) {
 		if (!event.getEntityLiving().worldObj.isRemote) {
-			ZombieAwareness.dbg("breakSpeed event");
+			//ZombieAwareness.dbg("breakSpeed event");
 			ZAUtil.hookBlockEvent(event, 20);
 		}
 	}
@@ -62,8 +62,11 @@ public class ZAEventHandler {
 	public void interact(PlayerInteractEvent event) {
 		if (!event.getEntityLiving().worldObj.isRemote) {
 			if (event.getHand() == EnumHand.MAIN_HAND) {
-				ZombieAwareness.dbg("interact event");
-				ZAUtil.hookBlockEvent(event, 3);
+				/**
+				 * event is way too spammy, since i have much greater sound play access now I am going to try and avoid using this event entirely
+				 */
+				//ZombieAwareness.dbg("interact event");
+				//ZAUtil.hookBlockEvent(event, 3);
 			}
 		}
 	}
