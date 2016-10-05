@@ -12,6 +12,10 @@ public class SoundRegistry {
 
 	public static void init() {
 		register("alert");
+		register("target");
+		register("investigate");
+		
+		
 		
 	}
 

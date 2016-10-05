@@ -23,6 +23,8 @@ import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemRecord;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.SoundCategory;
@@ -114,6 +116,9 @@ public class ZAUtil {
     public static WeakHashMap<Entity, Long> lookupLastAlertTime = new WeakHashMap<Entity, Long>();
     public static long alertDelay = 60*20;
     
+    public static WeakHashMap<Entity, Long> lookupLastInvestigateTime = new WeakHashMap<Entity, Long>();
+    public static long investigateDelay = 60*20;
+    
     public static boolean debug = false;
     
     static {
@@ -160,12 +165,18 @@ public class ZAUtil {
     	listSoundProfiles.add(new SoundProfileEntry(SoundEvents.ENTITY_ARROW_HIT_PLAYER, 1.1D));
     	listSoundProfiles.add(new SoundProfileEntry(SoundEvents.ENTITY_ARROW_HIT, 1.1D));
     	
+    	
+    	
     	listSoundProfiles.add(new SoundProfileEntry(SoundEvents.BLOCK_CHEST_CLOSE, noisyInteractBuff).setDistanceMax(noisyInteractRange));
     	listSoundProfiles.add(new SoundProfileEntry(SoundEvents.BLOCK_WOODEN_DOOR_CLOSE, noisyInteractBuff).setDistanceMax(noisyInteractRange));
     	listSoundProfiles.add(new SoundProfileEntry(SoundEvents.BLOCK_IRON_DOOR_CLOSE, noisyInteractBuff).setDistanceMax(noisyInteractRange));
     	listSoundProfiles.add(new SoundProfileEntry(SoundEvents.BLOCK_WOODEN_TRAPDOOR_CLOSE, noisyInteractBuff).setDistanceMax(noisyInteractRange));
     	
     	listSoundProfiles.add(new SoundProfileEntry(".place", noisyInteractBuff));
+    	listSoundProfiles.add(new SoundProfileEntry("player.burp", 1.1D));
+    	
+    	//covers all note block sounds
+    	listSoundProfiles.add(new SoundProfileEntry("block.note", noisyInteractBuff).setDistanceMax(64));
     	
     	//TODO: buttons levers
     	
@@ -340,9 +351,9 @@ public class ZAUtil {
 		if (senseTracked != null && ent.getNavigator().getPath() != null) {
 			PathPoint pathTo = ent.getNavigator().getPath().getFinalPathPoint();
 			if (pathTo != null) {
-				EntityPlayer player = getClosestPlayer(ent.worldObj, pathTo.xCoord, pathTo.yCoord, pathTo.zCoord, 4);
+				EntityPlayer player = getClosestPlayer(ent.worldObj, pathTo.xCoord, pathTo.yCoord, pathTo.zCoord, 6D);
 				if (player != null) {
-					tryPlayAlertSound(ent, new Vec3d(ent.posX, ent.posY, ent.posZ));
+					tryPlayInvestigateSound(ent, new Vec3d(ent.posX, ent.posY, ent.posZ));
 				}
 				
 			}
@@ -564,7 +575,7 @@ public class ZAUtil {
         	} else {
         		//debug what we could add
         		if (distToPlayer <= 3) {
-        			ZombieAwareness.dbg("didnt spawn for: " + soundName);
+        			//ZombieAwareness.dbg("didnt spawn for: " + soundName);
         		}
         	}
     	}
@@ -632,10 +643,13 @@ public class ZAUtil {
     }
     
     public static void hookSetAttackTarget(LivingSetAttackTargetEvent event) {
+    	
+    	//ZombieAwareness.dbg(event.getEntityLiving().getEntityId() + " targetting " + event.getTarget());
+    	
     	if (event.getEntityLiving() instanceof EntityLiving) {
     		if (event.getTarget() instanceof EntityPlayer) {
 	    		//tryPlayAlertSound((EntityLiving)event.getEntityLiving(), new Vec3d(event.getTarget().posX, event.getTarget().posY, event.getTarget().posZ));
-	    		tryPlayAlertSound((EntityLiving)event.getEntityLiving(), new Vec3d(event.getEntityLiving().posX, event.getEntityLiving().posY, event.getEntityLiving().posZ));
+	    		tryPlayTargetSound((EntityLiving)event.getEntityLiving(), (EntityLivingBase)event.getTarget(), new Vec3d(event.getEntityLiving().posX, event.getEntityLiving().posY, event.getEntityLiving().posZ));
     		} else if (event.getTarget() == null) {
     			//dont use, AI stupidly detargets when resetting tasks despite still chasing player, causing double alert noise if this code is used
     			/*if (lookupLastAlertTime.containsKey(event.getEntityLiving())) {
@@ -645,7 +659,20 @@ public class ZAUtil {
     		}
     	}
     	
-    }	
+    }
+
+	public static void hookPlayEvent(World world, int type,
+			BlockPos blockPosIn, int data) {
+		//if event type is for playing a record
+		if (type == 1010) {
+			//if putting in a record and not taking out
+			if (Item.getItemById(data) instanceof ItemRecord) {
+				Vec3d pos = new Vec3d(blockPosIn.getX(), blockPosIn.getY(), blockPosIn.getZ());
+				EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, 300);
+				ZombieAwareness.dbg("spawned or buffed sound sense from playEvent: " + scent.getStrengthPeak());
+			}
+		}
+	}
     
     public static void spawnNewMobSurface(EntityPlayer player) {
         
@@ -961,13 +988,26 @@ public class ZAUtil {
         return sense;
     }
     
-    public static void tryPlayAlertSound(EntityLiving entAlerted, Vec3d pos) {
+    public static void tryPlayTargetSound(EntityLiving entAlerted, EntityLivingBase entTargetted, Vec3d pos) {
     	if (!lookupLastAlertTime.containsKey(entAlerted) || lookupLastAlertTime.get(entAlerted) + alertDelay < entAlerted.worldObj.getTotalWorldTime()) {
-			entAlerted.worldObj.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("alert"), SoundCategory.HOSTILE, 4F, 1F);
-			//entAlerted.worldObj.spawnParticle(EnumParticleTypes.HEART, true, pos.xCoord, pos.yCoord + 1, pos.zCoord, 0, 0, 0);
-			//entAlerted.worldObj.spawnParticle(EnumParticleTypes.HEART.getParticleID(), true, entAlerted.posX, entAlerted.posY + 2, entAlerted.posZ, 0, 0, 0);
-			lookupLastAlertTime.put(entAlerted, entAlerted.worldObj.getTotalWorldTime());
-			ZombieAwareness.dbg("alert play for ent: " + entAlerted + ", lookupSize: " + lookupLastAlertTime.size());
+    		if (entAlerted.canEntityBeSeen(entTargetted)) {
+				//entAlerted.worldObj.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("target"), SoundCategory.HOSTILE, 3F, 0.8F + (entAlerted.worldObj.rand.nextFloat() * 0.2F));
+	    		entAlerted.worldObj.playSound(null, entTargetted.posX, entTargetted.posY, entTargetted.posZ, SoundRegistry.get("target"), SoundCategory.HOSTILE, 0.5F, 0.8F + (entAlerted.worldObj.rand.nextFloat() * 0.2F));
+				lookupLastAlertTime.put(entAlerted, entAlerted.worldObj.getTotalWorldTime());
+				//ZombieAwareness.dbg("!!! alert play for ent: " + entAlerted.getEntityId() + ", lookupSize: " + lookupLastAlertTime.size());
+    		} else {
+    			//ZombieAwareness.dbg("??? tried play alert for no LOS entity: " + entAlerted.getEntityId() + ", lookupSize: " + lookupLastAlertTime.size());
+    		}
+		} else {
+			//ZombieAwareness.dbg("already played alert for ent: " + entAlerted.getEntityId() + ", lookupSize: " + lookupLastAlertTime.size());
+		}
+    }
+    
+    public static void tryPlayInvestigateSound(EntityLiving entAlerted, Vec3d pos) {
+    	if (!lookupLastInvestigateTime.containsKey(entAlerted) || lookupLastInvestigateTime.get(entAlerted) + investigateDelay < entAlerted.worldObj.getTotalWorldTime()) {
+			entAlerted.worldObj.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("investigate"), SoundCategory.HOSTILE, 4F, 0.7F + (entAlerted.worldObj.rand.nextFloat() * 0.3F));
+			lookupLastInvestigateTime.put(entAlerted, entAlerted.worldObj.getTotalWorldTime());
+			//ZombieAwareness.dbg("!!! investigate play for ent: " + entAlerted.getEntityId() + ", lookupSize: " + lookupLastInvestigateTime.size());
 		}
     }
 

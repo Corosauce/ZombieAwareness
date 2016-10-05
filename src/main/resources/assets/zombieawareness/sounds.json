@@ -4,5 +4,19 @@
     "sounds": [
       "zombieawareness:alert"
     ]
+  },
+  "target": {
+    "category": "entity",
+    "sounds": [
+      "zombieawareness:target/zombie_target_1"
+    ]
+  },
+  "investigate": {
+    "category": "entity",
+    "sounds": [
+      "zombieawareness:investigate/zombie_investigate_1", 
+	  "zombieawareness:investigate/zombie_investigate_2", 
+	  "zombieawareness:investigate/zombie_investigate_3"
+    ]
   }
 }

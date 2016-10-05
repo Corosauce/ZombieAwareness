@@ -80,6 +80,8 @@ public class WorldEventListener implements IWorldEventListener {
 	public void playEvent(EntityPlayer player, int type, BlockPos blockPosIn,
 			int data) {
 
+		ZAUtil.hookPlayEvent(DimensionManager.getWorld(dimID), type, blockPosIn, data);
+		
 	}
 
 	@Override
