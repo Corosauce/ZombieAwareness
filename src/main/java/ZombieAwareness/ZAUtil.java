@@ -80,12 +80,12 @@ public class ZAUtil {
 	 * -- 
 	 * 
 	 * TODO: for release
-	 * - whitelist instead of blacklist i think
-	 * - sound sense profile for long distance ones, for explosion, piston, noisy zombie, has data:
-	 * -- sound event or partial string match
-	 * -- max distance spawnable
-	 * -- multiplier
-	 * - buff jukebox, notebox
+	 * x whitelist instead of blacklist i think
+	 * x sound sense profile for long distance ones, for explosion, piston, noisy zombie, has data:
+	 * x- sound event or partial string match
+	 * x- max distance spawnable
+	 * x- multiplier
+	 * x buff jukebox, notebox
 	 * x fix interact spam
 	 * 
 	 * 
@@ -533,7 +533,7 @@ public class ZAUtil {
         //required to prevent all the .step types without having to maintain a huge list of exact sound events
         //we will also see if we buff a specific sound so we can exempt it from vague blacklist
         //eg: player.hurt exempt but all mobs hurt blacklisted
-        String soundName = sound.getSoundName().toString();
+        String soundName = SoundProfileEntry.getSoundEventName(sound);
         /*if (!lookupSoundToStrengthMultiplier.containsKey(sound)) {
 	        for (String soundFilter : listSoundBlacklistVague) {
 	        	if (soundName.contains(soundFilter)) {
@@ -992,7 +992,7 @@ public class ZAUtil {
     	if (!lookupLastAlertTime.containsKey(entAlerted) || lookupLastAlertTime.get(entAlerted) + alertDelay < entAlerted.worldObj.getTotalWorldTime()) {
     		if (entAlerted.canEntityBeSeen(entTargetted)) {
 				//entAlerted.worldObj.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("target"), SoundCategory.HOSTILE, 3F, 0.8F + (entAlerted.worldObj.rand.nextFloat() * 0.2F));
-	    		entAlerted.worldObj.playSound(null, entTargetted.posX, entTargetted.posY, entTargetted.posZ, SoundRegistry.get("target"), SoundCategory.HOSTILE, 0.5F, 0.8F + (entAlerted.worldObj.rand.nextFloat() * 0.2F));
+	    		entAlerted.worldObj.playSound(null, entTargetted.posX, entTargetted.posY, entTargetted.posZ, SoundRegistry.get("target"), SoundCategory.HOSTILE, (float)ZAConfigFeatures.soundVolumeAlertTarget, 0.8F + (entAlerted.worldObj.rand.nextFloat() * 0.2F));
 				lookupLastAlertTime.put(entAlerted, entAlerted.worldObj.getTotalWorldTime());
 				//ZombieAwareness.dbg("!!! alert play for ent: " + entAlerted.getEntityId() + ", lookupSize: " + lookupLastAlertTime.size());
     		} else {
@@ -1005,7 +1005,7 @@ public class ZAUtil {
     
     public static void tryPlayInvestigateSound(EntityLiving entAlerted, Vec3d pos) {
     	if (!lookupLastInvestigateTime.containsKey(entAlerted) || lookupLastInvestigateTime.get(entAlerted) + investigateDelay < entAlerted.worldObj.getTotalWorldTime()) {
-			entAlerted.worldObj.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("investigate"), SoundCategory.HOSTILE, 4F, 0.7F + (entAlerted.worldObj.rand.nextFloat() * 0.3F));
+			entAlerted.worldObj.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("investigate"), SoundCategory.HOSTILE, (float)ZAConfigFeatures.soundVolumeInvestigate, 0.7F + (entAlerted.worldObj.rand.nextFloat() * 0.3F));
 			lookupLastInvestigateTime.put(entAlerted, entAlerted.worldObj.getTotalWorldTime());
 			//ZombieAwareness.dbg("!!! investigate play for ent: " + entAlerted.getEntityId() + ", lookupSize: " + lookupLastInvestigateTime.size());
 		}

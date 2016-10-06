@@ -1,6 +1,7 @@
 package ZombieAwareness;
 
 import net.minecraft.util.SoundEvent;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 /**
  * Accounts for all things we need deal with for sounds, range, amp, chance, matching, etc
@@ -17,13 +18,17 @@ public class SoundProfileEntry {
 	private boolean partialMatchOnly = false;
 	//0 = always use
 	private int oddsTo1ToUse = 0;
+	
+	public static String getSoundEventName(SoundEvent soundEvent) {
+		return ObfuscationReflectionHelper.getPrivateValue(SoundEvent.class, soundEvent, "field_187506_b").toString();
+	}
 
 	public SoundProfileEntry(SoundEvent soundEvent, double multiplier/*, double distanceMax*/) {
-		this(soundEvent.getSoundName().toString(), multiplier/*, distanceMax*/, false, 0);
+		this(getSoundEventName(soundEvent), multiplier/*, distanceMax*/, false, 0);
 	}
 	
 	public SoundProfileEntry(SoundEvent soundEvent, double multiplier/*, double distanceMax*/, int oddsTo1ToUse) {
-		this(soundEvent.getSoundName().toString(), multiplier/*, distanceMax*/, false, oddsTo1ToUse);
+		this(getSoundEventName(soundEvent), multiplier/*, distanceMax*/, false, oddsTo1ToUse);
 	}
 	
 	public SoundProfileEntry(String soundName, double multiplier) {

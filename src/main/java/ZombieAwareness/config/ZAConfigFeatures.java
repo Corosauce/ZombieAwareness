@@ -28,6 +28,12 @@ public class ZAConfigFeatures implements IConfigCategory {
 	public static double zombieSummonHelpBaseChance = 0D;
 	@ConfigComment("MC/Forge default is 0.05, this overrides that default, set to -1 to cause no override then restore forges default in their config")
 	public static double zombieBabyChance = 0.0F;
+	
+	@ConfigComment("How loud sounds should be when you are alerted that a mob is coming to investigate an area near you")
+	public static double soundVolumeInvestigate = 4D;
+	
+	@ConfigComment("How loud sounds should be for a mob targetting you")
+	public static double soundVolumeAlertTarget = 0.5D;
 
 	@Override
 	public String getConfigFileName() {
