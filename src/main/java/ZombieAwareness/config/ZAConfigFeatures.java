@@ -30,10 +30,13 @@ public class ZAConfigFeatures implements IConfigCategory {
 	public static double zombieBabyChance = 0.0F;
 	
 	@ConfigComment("How loud sounds should be when you are alerted that a mob is coming to investigate an area near you")
-	public static double soundVolumeInvestigate = 4D;
+	public static double soundVolumeInvestigate = 0.5D;
 	
 	@ConfigComment("How loud sounds should be for a mob targetting you")
 	public static double soundVolumeAlertTarget = 0.5D;
+	
+	@ConfigComment("Uses a different kind of mob alert noise, might break immersion a bit ;)")
+	public static boolean soundUseAlternateAlertNoise = false;
 
 	@Override
 	public String getConfigFileName() {

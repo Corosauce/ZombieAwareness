@@ -353,7 +353,8 @@ public class ZAUtil {
 			if (pathTo != null) {
 				EntityPlayer player = getClosestPlayer(ent.worldObj, pathTo.xCoord, pathTo.yCoord, pathTo.zCoord, 6D);
 				if (player != null) {
-					tryPlayInvestigateSound(ent, new Vec3d(ent.posX, ent.posY, ent.posZ));
+					//tryPlayInvestigateSound(ent, new Vec3d(ent.posX, ent.posY, ent.posZ));
+					tryPlayInvestigateSound(ent, new Vec3d(pathTo.xCoord, pathTo.yCoord, pathTo.zCoord));
 				}
 				
 			}
@@ -992,10 +993,12 @@ public class ZAUtil {
     	if (!lookupLastAlertTime.containsKey(entAlerted) || lookupLastAlertTime.get(entAlerted) + alertDelay < entAlerted.worldObj.getTotalWorldTime()) {
     		if (entAlerted.canEntityBeSeen(entTargetted)) {
 				//entAlerted.worldObj.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("target"), SoundCategory.HOSTILE, 3F, 0.8F + (entAlerted.worldObj.rand.nextFloat() * 0.2F));
-	    		entAlerted.worldObj.playSound(null, entTargetted.posX, entTargetted.posY, entTargetted.posZ, SoundRegistry.get("target"), SoundCategory.HOSTILE, (float)ZAConfigFeatures.soundVolumeAlertTarget, 0.8F + (entAlerted.worldObj.rand.nextFloat() * 0.2F));
+	    		entAlerted.worldObj.playSound(null, entTargetted.posX, entTargetted.posY, entTargetted.posZ, ZAConfigFeatures.soundUseAlternateAlertNoise ? SoundRegistry.get("alert") : SoundRegistry.get("target"), SoundCategory.HOSTILE, (float)ZAConfigFeatures.soundVolumeAlertTarget, ZAConfigFeatures.soundUseAlternateAlertNoise ? 1F : 0.8F + (entAlerted.worldObj.rand.nextFloat() * 0.2F));
 				lookupLastAlertTime.put(entAlerted, entAlerted.worldObj.getTotalWorldTime());
 				//ZombieAwareness.dbg("!!! alert play for ent: " + entAlerted.getEntityId() + ", lookupSize: " + lookupLastAlertTime.size());
     		} else {
+    			//likely due to new call for help routine in vanilla, so treat it like investigating until line of sight is made
+    			tryPlayInvestigateSound(entAlerted, pos);
     			//ZombieAwareness.dbg("??? tried play alert for no LOS entity: " + entAlerted.getEntityId() + ", lookupSize: " + lookupLastAlertTime.size());
     		}
 		} else {
