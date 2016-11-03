@@ -100,12 +100,12 @@ public class CommonProxy implements IGuiHandler
 
     public void weatherDbg()
     {
-        // TODO Auto-generated method stub
+    	
     }
 
     public void windDbg()
     {
-        // TODO Auto-generated method stub
+    	
     }
     
     public Entity getEntByID(int id) {

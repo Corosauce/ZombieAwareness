@@ -26,7 +26,7 @@ public class ZAConfig implements IConfigCategory {
 	public static int soundStrength = 60;
 	@ConfigComment("max rate of spawning sound sources in milliseconds")
 	public static int frequentSoundThreshold = 1000;
-	@ConfigComment("Range of extra random speed to give a zombie for extra spawns and zombie duplications, eg: 0 = no boost, 1 = up to double speed")
+	@ConfigComment("Range of extra random speed to give a zombie for extra spawns and zombie duplications, eg: 0 = no boost, 1 = up to double speed (works for my extra spawned mobs only)")
 	public static double zombieRandSpeedBoost = 0.3D;
 	//public static int tickRateMainLoop = 1;
 	@ConfigComment("how frequently the mod iterates all entities, effects rates, less is more frequent [performance sensitive]")

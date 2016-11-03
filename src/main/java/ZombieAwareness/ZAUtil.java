@@ -79,7 +79,7 @@ public class ZAUtil {
 	 * -- falling anvils
 	 * -- 
 	 * 
-	 * TODO: for release
+	 * for 1.10.2 release
 	 * x whitelist instead of blacklist i think
 	 * x sound sense profile for long distance ones, for explosion, piston, noisy zombie, has data:
 	 * x- sound event or partial string match
@@ -122,9 +122,7 @@ public class ZAUtil {
     public static boolean debug = false;
     
     static {
-    	
-    	//TODO: consider whitelists instead, too many things to blacklist
-    	
+    	    	
     	listSoundBlacklistExact.add(SoundEvents.ENTITY_ARROW_SHOOT);
     	listSoundBlacklistExact.add(SoundRegistry.get("alert"));
     	

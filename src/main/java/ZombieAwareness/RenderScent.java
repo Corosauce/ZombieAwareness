@@ -123,7 +123,11 @@ public class RenderScent extends Render {
 
             if (iblockstate.getRenderType() != EnumBlockRenderType.INVISIBLE && world.getLightFromNeighbors(blockpos) > 3)
             {
-                this.renderBloodSingle(iblockstate, x, y, z, blockpos, shadowAlpha, f, d2, d3, d4);
+            	//for (int ii = 0; ii < 100; ii++) {
+            		//double xx = entityIn.worldObj.rand.nextDouble() * 10D;
+            		//double zz = entityIn.worldObj.rand.nextDouble() * 10D;
+            		this.renderBloodSingle(iblockstate, x, y, z, blockpos, shadowAlpha, f, d2, d3, d4);
+            	//}
             }
         }
 
