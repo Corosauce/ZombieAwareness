@@ -3,8 +3,12 @@ package ZombieAwareness;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 import CoroUtil.OldUtil;
 import CoroUtil.pathfinding.PFQueue;
 import CoroUtil.util.CoroUtil;
@@ -24,11 +28,20 @@ public class CommandZA extends CommandBase {
 	@Override
 	public void execute(MinecraftServer server, ICommandSender var1, String[] var2) {
 		
+		EntityPlayer player = null;
+		if (var1 instanceof EntityPlayer) {
+			player = (EntityPlayer) var1;
+		}
+		World world = var1.getEntityWorld();
+		int dimension = world.provider.getDimension();
+		BlockPos posBlock = var1.getPosition();
+		Vec3d posVec = var1.getPositionVector();
+		
 		try {
 			if (var2.length < 1)
 	        {
 				//exception throws dont seem to always get sent to player, do it manually
-				CoroUtil.sendPlayerMsg((EntityPlayerMP) var1, "Invalid usage, example: '/za set maxZombiesNight 100, /za get count <entityname>, /za kill <entityname>', see ZAMod.cfg for all possible set configurations");
+				CoroUtil.sendCommandSenderMsg(var1, "Invalid usage, example: '/za set maxZombiesNight 100, /za get count <entityname>, /za kill <entityname>', see ZAMod.cfg for all possible set configurations");
 	            throw new WrongUsageException("Invalid usage");
 	        }
 	        else
@@ -50,7 +63,7 @@ public class CommandZA extends CommandBase {
 			        		OldUtil.setPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1], boolVal);
 			        	}
 			        	
-			        	CoroUtil.sendPlayerMsg((EntityPlayerMP) var1, var2[1] + " now set to: " + OldUtil.getPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1]));
+			        	CoroUtil.sendCommandSenderMsg(var1, var2[1] + " now set to: " + OldUtil.getPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1]));
 	        		}
 		        	
 		        	
@@ -60,14 +73,14 @@ public class CommandZA extends CommandBase {
 	        	} else if (var2[0].equalsIgnoreCase("get")) {
 	        		if (var2[1].equalsIgnoreCase("time")) {
 	        			if (ZombieAwareness.lastSpawnSysTime > 0) {
-	        				CoroUtil.sendPlayerMsg((EntityPlayerMP) var1, "last ZA spawn: " + (int)((System.currentTimeMillis() - ZombieAwareness.lastSpawnSysTime) / 1000F) + "s");
+	        				CoroUtil.sendCommandSenderMsg(var1, "last ZA spawn: " + (int)((System.currentTimeMillis() - ZombieAwareness.lastSpawnSysTime) / 1000F) + "s");
 	        			} else {
-	        				CoroUtil.sendPlayerMsg((EntityPlayerMP) var1, "none yet");
+	        				CoroUtil.sendCommandSenderMsg(var1, "none yet");
 	        			}
 	        		} else if (var2[1].equalsIgnoreCase("counts")) {
-	        			CoroUtil.sendPlayerMsg((EntityPlayerMP) var1, "surface: " + ZombieAwareness.lastMobsCountSurface + ", caves: " + ZombieAwareness.lastMobsCountCaves);
+	        			CoroUtil.sendCommandSenderMsg(var1, "surface: " + ZombieAwareness.lastMobsCountSurface + ", caves: " + ZombieAwareness.lastMobsCountCaves);
 	        		} else {
-	        			CoroUtil.sendPlayerMsg((EntityPlayerMP) var1, var2[1] + " set to: " + OldUtil.getPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1]));
+	        			CoroUtil.sendCommandSenderMsg(var1, var2[1] + " set to: " + OldUtil.getPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1]));
 	        		}
 	        	}
 	        	
@@ -83,5 +96,10 @@ public class CommandZA extends CommandBase {
     {
         return par1ICommandSender.canCommandSenderUseCommand(this.getRequiredPermissionLevel(), this.getCommandName());
     }
+	
+	@Override
+	public int getRequiredPermissionLevel() {
+		return 2;
+	}
 
 }
