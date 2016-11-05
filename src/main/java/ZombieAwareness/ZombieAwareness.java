@@ -44,7 +44,7 @@ import ZombieAwareness.config.ZAConfigFeatures;
 import ZombieAwareness.config.ZAConfigPlayerLists;
 import ZombieAwareness.config.ZAConfigSpawning;
 
-@Mod(modid = "zombieawareness", name="Zombie Awareness", version="v1.20")
+@Mod(modid = "zombieawareness", name="Zombie Awareness", version="v1.20", dependencies="required-after:coroutil")
 public class ZombieAwareness implements IPFCallback {
 	
 	@Mod.Instance( value = "zombieawareness" )
