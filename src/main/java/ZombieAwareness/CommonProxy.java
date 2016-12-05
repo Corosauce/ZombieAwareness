@@ -20,15 +20,7 @@ public class CommonProxy implements IGuiHandler
     public void init(ZombieAwareness pMod)
     {
         mod = pMod;
-        //TickRegistry.registerTickHandler(new ServerTickHandler(), Side.SERVER);
-        
     	EntityRegistry.registerModEntity(EntityScent.class, "EntityScent", entityId++, pMod, 32, 20, false);
-    	
-        //EntityRegistry.registerModEntity(EntitySurfboard.class, "EntitySurfboard", entityId++, mod, 64, 10, true);
-        
-		//EntityRegistry.registerGlobalEntityID(c_w_MovingBlockStructure.class, "c_w_MovingBlockStructure", entityId-1,0,0);
-        //EntityRegistry.registerModEntity(EntityKoaManly.class, "Koa Man", entityId++, mod, 64, 1, true);
-        //GameRegistry.registerTileEntity(TileEntityTSiren.class, "c_w_TileEntityTSiren");
     }
 
     public int getUniqueTextureLoc()

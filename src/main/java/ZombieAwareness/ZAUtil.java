@@ -875,7 +875,9 @@ public class ZAUtil {
     }
 
     public static boolean canSpawnTrace(World world, double x, double y, double z) {
-    	IBlockState state = world.getBlockState(new BlockPos(x,y,z));
+    	BlockPos pos = new BlockPos(x,y,z);
+    	if (!world.isBlockLoaded(pos)) return false;
+    	IBlockState state = world.getBlockState(pos);
         if (state.getMaterial() == Material.CIRCUITS) {
             return false;
         }

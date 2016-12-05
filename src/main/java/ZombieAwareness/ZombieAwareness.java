@@ -1,7 +1,9 @@
 package ZombieAwareness;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import modconfig.ConfigMod;
@@ -16,6 +18,9 @@ import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.entity.monster.EntityEnderman;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.monster.EntityPigZombie;
+import net.minecraft.entity.monster.EntitySkeleton;
+import net.minecraft.entity.monster.EntitySpider;
+import net.minecraft.entity.monster.EntityWitch;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.passive.EntityWolf;
@@ -31,6 +36,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import CoroUtil.OldUtil;
@@ -70,7 +76,7 @@ public class ZombieAwareness implements IPFCallback {
     public static long lastSpawnTime;
     public static long lastSpawnSysTime;
     
-    
+    public static HashMap<Class, Boolean> lookupClassToEntityTick = new HashMap<Class, Boolean>();
     
     /*@Override
     public boolean hasClientSide() {
@@ -106,6 +112,13 @@ public class ZombieAwareness implements IPFCallback {
     	
     	proxy.init(this);
     }
+    
+    @Mod.EventHandler
+    public void loadPost(FMLPostInitializationEvent event) {
+    	//TODO: move??
+    	generateEntityTickList();
+    }
+    
     
     @Mod.EventHandler
     public void serverStarting(FMLServerStartingEvent event) {
@@ -164,13 +177,9 @@ public class ZombieAwareness implements IPFCallback {
     		if (world.getTotalWorldTime() % ZAConfig.tickRateAILoop == 0) {
 	        	List ents = world.loadedEntityList;
 	        	for (int i = 0; i < world.loadedEntityList.size(); i++) {
-	        		Entity ent = (Entity)world.loadedEntityList.get(i);
+	        		Entity ent = world.loadedEntityList.get(i);
 	        		
-	        		if (ent instanceof EntityMob && /*!(ent instanceof ICoroAI) &&*/ (
-	        				(ZAConfigPlayerLists.blacklistUsedAITick && (EntityList.getEntityString(ent) == null || ((!ZAConfigPlayerLists.forceListUsedAITickAsWhitelist && !ZAConfigPlayerLists.blacklistAITick.toLowerCase().contains(EntityList.getEntityString(ent).toLowerCase())) || (ZAConfigPlayerLists.forceListUsedAITickAsWhitelist && ZAConfigPlayerLists.blacklistAITick.toLowerCase().contains(EntityList.getEntityString(ent).toLowerCase())))
-	        						)) || 
-	        						(!ZAConfigPlayerLists.blacklistUsedAITick && (!(ent instanceof EntityEnderman) && !(ent instanceof EntityWolf) && !(ent instanceof EntityCreeper) && !(ent instanceof EntityPigZombie)))
-	        						)) {
+	        		if (shouldTickEntity(ent)) {
 	        			
 	        			//if (EntityList.getEntityString(ent) != null) System.out.println(EntityList.getEntityString(ent).toLowerCase());
 	        			
@@ -314,7 +323,9 @@ public class ZombieAwareness implements IPFCallback {
 					item.speed = 1F;
 				}*/
 				
-				if (!item.ent.isDead && OldUtil.chunkExists(item.ent.worldObj, (int)item.ent.posX / 16, (int)item.ent.posZ / 16)) item.ent.getNavigator().setPath(item.pe, item.speed);
+				if (!item.ent.isDead && OldUtil.chunkExists(item.ent.worldObj, MathHelper.floor_double(item.ent.posX / 16), MathHelper.floor_double(item.ent.posZ / 16))) {
+					item.ent.getNavigator().setPath(item.pe, item.speed);
+				}
 			}
 		} catch (Exception ex) {
 			System.out.println("Crash in ZA Callback Item manager");
@@ -329,6 +340,75 @@ public class ZombieAwareness implements IPFCallback {
 	@Override
 	public ArrayList<PFCallbackItem> getQueue() {
 		return callbackList;
+	}
+	
+	public static boolean shouldTickEntity(Entity ent) {
+		
+		if (!canEntityBeProcessedOverride(ent)) {
+			return false;
+		}
+		
+		/**
+		 * list is default on, used for enderman, etc
+		 * 
+		 * if using list override
+		 * - if entry exists
+		 * -- return value
+		 * - if entry doesnt exist
+		 * -- generate default value based on non list rules
+		 * 
+		 * for generating or if not using list:
+		 * - usual pile of if statements we used
+		 * 
+		 */
+		
+		return ent instanceof EntityMob && (
+		(ZAConfigPlayerLists.blacklistUsedAITick && 
+		(EntityList.getEntityString(ent) == null || 
+		((!ZAConfigPlayerLists.forceListUsedAITickAsWhitelist && !ZAConfigPlayerLists.blacklistAITick.toLowerCase().contains(EntityList.getEntityString(ent).toLowerCase())) || 
+		(ZAConfigPlayerLists.forceListUsedAITickAsWhitelist && ZAConfigPlayerLists.blacklistAITick.toLowerCase().contains(EntityList.getEntityString(ent).toLowerCase()))))) || 
+		(!ZAConfigPlayerLists.blacklistUsedAITick && (!(ent instanceof EntityEnderman) && !(ent instanceof EntityWolf) && !(ent instanceof EntityCreeper) && !(ent instanceof EntityPigZombie)))
+		);
+	}
+	
+	/**
+	 * Handles special cases for specific instances like if owned and has an owner. But I want that to never be processed anyways
+	 * Placeholder for now until more dynamic needs are found
+	 * 
+	 * @param ent
+	 * @return false if you want to cancel processing, true lets it continue with other rules
+	 */
+	public static boolean canEntityBeProcessedOverride(Entity entity) {
+		return true;
+		/*boolean result = false;
+		if (entity instanceof IEntityOwnable) {
+			if (entity.
+		}*/
+	}
+	
+	public static boolean getDefaultForEntity(Class ent) {
+		boolean result = false;
+		if (EntityMob.class.isAssignableFrom(ent)) {
+			if (EntityZombie.class.isAssignableFrom(ent) || EntitySkeleton.class.isAssignableFrom(ent) || EntityWitch.class.isAssignableFrom(ent) || EntitySpider.class.isAssignableFrom(ent)) {
+				result = true;
+			} else {
+				result = false;
+			}
+			/*if (ent instanceof EntityEnderman || ent instanceof EntityWolf || ent instanceof EntityCreeper || ent instanceof EntityPigZombie || ent instanceof EntityWither) {
+				result = false;
+			} else {
+				result = true;
+			}*/
+		}
+		return result;
+	}
+	
+	public static void generateEntityTickList() {
+		for (Map.Entry<Class<? extends Entity >, String> entry : EntityList.CLASS_TO_NAME.entrySet()) {
+			boolean tickEnt = getDefaultForEntity(entry.getKey());
+			lookupClassToEntityTick.put(entry.getKey(), tickEnt);
+    		//System.out.println(entry.getKey() + " - " + tickEnt);
+    	}
 	}
 	
 	public static void dbg(Object obj) {

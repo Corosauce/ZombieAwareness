@@ -11,7 +11,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import CoroUtil.OldUtil;
 import CoroUtil.pathfinding.PFQueue;
-import CoroUtil.util.CoroUtil;
+import CoroUtil.util.CoroUtilMisc;
 
 public class CommandZA extends CommandBase {
 
@@ -41,7 +41,7 @@ public class CommandZA extends CommandBase {
 			if (var2.length < 1)
 	        {
 				//exception throws dont seem to always get sent to player, do it manually
-				CoroUtil.sendCommandSenderMsg(var1, "Invalid usage, example: '/za set maxZombiesNight 100, /za get count <entityname>, /za kill <entityname>', see ZAMod.cfg for all possible set configurations");
+				CoroUtilMisc.sendCommandSenderMsg(var1, "Invalid usage, example: '/za set maxZombiesNight 100, /za get count <entityname>, /za kill <entityname>', see ZAMod.cfg for all possible set configurations");
 	            throw new WrongUsageException("Invalid usage");
 	        }
 	        else
@@ -63,7 +63,7 @@ public class CommandZA extends CommandBase {
 			        		OldUtil.setPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1], boolVal);
 			        	}
 			        	
-			        	CoroUtil.sendCommandSenderMsg(var1, var2[1] + " now set to: " + OldUtil.getPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1]));
+			        	CoroUtilMisc.sendCommandSenderMsg(var1, var2[1] + " now set to: " + OldUtil.getPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1]));
 	        		}
 		        	
 		        	
@@ -73,14 +73,14 @@ public class CommandZA extends CommandBase {
 	        	} else if (var2[0].equalsIgnoreCase("get")) {
 	        		if (var2[1].equalsIgnoreCase("time")) {
 	        			if (ZombieAwareness.lastSpawnSysTime > 0) {
-	        				CoroUtil.sendCommandSenderMsg(var1, "last ZA spawn: " + (int)((System.currentTimeMillis() - ZombieAwareness.lastSpawnSysTime) / 1000F) + "s");
+	        				CoroUtilMisc.sendCommandSenderMsg(var1, "last ZA spawn: " + (int)((System.currentTimeMillis() - ZombieAwareness.lastSpawnSysTime) / 1000F) + "s");
 	        			} else {
-	        				CoroUtil.sendCommandSenderMsg(var1, "none yet");
+	        				CoroUtilMisc.sendCommandSenderMsg(var1, "none yet");
 	        			}
 	        		} else if (var2[1].equalsIgnoreCase("counts")) {
-	        			CoroUtil.sendCommandSenderMsg(var1, "surface: " + ZombieAwareness.lastMobsCountSurface + ", caves: " + ZombieAwareness.lastMobsCountCaves);
+	        			CoroUtilMisc.sendCommandSenderMsg(var1, "surface: " + ZombieAwareness.lastMobsCountSurface + ", caves: " + ZombieAwareness.lastMobsCountCaves);
 	        		} else {
-	        			CoroUtil.sendCommandSenderMsg(var1, var2[1] + " set to: " + OldUtil.getPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1]));
+	        			CoroUtilMisc.sendCommandSenderMsg(var1, var2[1] + " set to: " + OldUtil.getPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1]));
 	        		}
 	        	}
 	        	
