@@ -990,17 +990,24 @@ public class ZAUtil {
     }
     
     public static void tryPlayTargetSound(EntityLiving entAlerted, EntityLivingBase entTargetted, Vec3d pos) {
+		//added max dist and blocks loaded check due to https://github.com/Corosauce/ZombieAwareness/issues/11
+		double distMaxCancel = 75;
     	if (!lookupLastAlertTime.containsKey(entAlerted) || lookupLastAlertTime.get(entAlerted) + alertDelay < entAlerted.worldObj.getTotalWorldTime()) {
-    		if (entAlerted.canEntityBeSeen(entTargetted)) {
-				//entAlerted.worldObj.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("target"), SoundCategory.HOSTILE, 3F, 0.8F + (entAlerted.worldObj.rand.nextFloat() * 0.2F));
-	    		entAlerted.worldObj.playSound(null, entTargetted.posX, entTargetted.posY, entTargetted.posZ, ZAConfigFeatures.soundUseAlternateAlertNoise ? SoundRegistry.get("alert") : SoundRegistry.get("target"), SoundCategory.HOSTILE, (float)ZAConfigFeatures.soundVolumeAlertTarget, ZAConfigFeatures.soundUseAlternateAlertNoise ? 1F : 0.8F + (entAlerted.worldObj.rand.nextFloat() * 0.2F));
-				lookupLastAlertTime.put(entAlerted, entAlerted.worldObj.getTotalWorldTime());
-				//ZombieAwareness.dbg("!!! alert play for ent: " + entAlerted.getEntityId() + ", lookupSize: " + lookupLastAlertTime.size());
-    		} else {
-    			//likely due to new call for help routine in vanilla, so treat it like investigating until line of sight is made
-    			tryPlayInvestigateSound(entAlerted, pos);
-    			//ZombieAwareness.dbg("??? tried play alert for no LOS entity: " + entAlerted.getEntityId() + ", lookupSize: " + lookupLastAlertTime.size());
-    		}
+			if (entAlerted.getDistanceToEntity(entTargetted) < distMaxCancel
+                    && entAlerted.getEntityWorld().provider.getDimension() == entTargetted.getEntityWorld().provider.getDimension()
+					&& entAlerted.getEntityWorld().isBlockLoaded(entAlerted.getPosition())
+					&& entTargetted.getEntityWorld().isBlockLoaded(entTargetted.getPosition())) {
+				if (entAlerted.canEntityBeSeen(entTargetted)) {
+					//entAlerted.worldObj.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("target"), SoundCategory.HOSTILE, 3F, 0.8F + (entAlerted.worldObj.rand.nextFloat() * 0.2F));
+					entAlerted.worldObj.playSound(null, entTargetted.posX, entTargetted.posY, entTargetted.posZ, ZAConfigFeatures.soundUseAlternateAlertNoise ? SoundRegistry.get("alert") : SoundRegistry.get("target"), SoundCategory.HOSTILE, (float) ZAConfigFeatures.soundVolumeAlertTarget, ZAConfigFeatures.soundUseAlternateAlertNoise ? 1F : 0.8F + (entAlerted.worldObj.rand.nextFloat() * 0.2F));
+					lookupLastAlertTime.put(entAlerted, entAlerted.worldObj.getTotalWorldTime());
+					//ZombieAwareness.dbg("!!! alert play for ent: " + entAlerted.getEntityId() + ", lookupSize: " + lookupLastAlertTime.size());
+				} else {
+					//likely due to new call for help routine in vanilla, so treat it like investigating until line of sight is made
+					tryPlayInvestigateSound(entAlerted, pos);
+					//ZombieAwareness.dbg("??? tried play alert for no LOS entity: " + entAlerted.getEntityId() + ", lookupSize: " + lookupLastAlertTime.size());
+				}
+			}
 		} else {
 			//ZombieAwareness.dbg("already played alert for ent: " + entAlerted.getEntityId() + ", lookupSize: " + lookupLastAlertTime.size());
 		}
