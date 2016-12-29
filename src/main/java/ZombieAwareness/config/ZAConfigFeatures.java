@@ -39,13 +39,23 @@ public class ZAConfigFeatures implements IConfigCategory {
 	public static boolean soundUseAlternateAlertNoise = false;
 
 	@Override
+	public String getName() {
+		return "Features";
+	}
+
+	@Override
+	public String getRegistryName() {
+		return "zaconfigfeatures";
+	}
+
+	@Override
 	public String getConfigFileName() {
-		return "ZombieAwareness" + File.separator + "Features";
+		return "ZombieAwareness" + File.separator + getName();
 	}
 
 	@Override
 	public String getCategory() {
-		return "Zombie Awareness: Features";
+		return "Zombie Awareness: " + getName();
 	}
 
 	@Override

@@ -28,8 +28,18 @@ public class ZAConfigPlayerLists implements IConfigCategory {
 	public static String whitelistExtraSpawning = "Corosus";
 
 	@Override
+	public String getName() {
+		return "PlayerRulesAndLists";
+	}
+
+	@Override
+	public String getRegistryName() {
+		return "zaconfigplayerlists";
+	}
+
+	@Override
 	public String getConfigFileName() {
-		return "ZombieAwareness" + File.separator + "PlayerRulesAndLists";
+		return "ZombieAwareness" + File.separator + getName();
 	}
 
 	@Override

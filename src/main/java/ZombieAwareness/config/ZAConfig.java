@@ -46,15 +46,25 @@ public class ZAConfig implements IConfigCategory {
 	
 	@ConfigComment("Max strength allowed for a sense, in case senses get a super high base strength or large buff")
 	public static int senseMaxStrength = 300;
-	
+
+	@Override
+	public String getName() {
+		return "General";
+	}
+
+	@Override
+	public String getRegistryName() {
+		return "zaconfig";
+	}
+
 	@Override
 	public String getConfigFileName() {
-		return "ZombieAwareness" + File.separator + "General";
+		return "ZombieAwareness" + File.separator + getName();
 	}
 
 	@Override
 	public String getCategory() {
-		return "Zombie Awareness: General";
+		return "Zombie Awareness: " + getName();
 	}
 
 	@Override

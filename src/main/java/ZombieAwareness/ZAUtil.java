@@ -232,7 +232,7 @@ public class ZAUtil {
 
         if (ZAConfigFeatures.awareness_Scent) {
         	int lastHealth = lastHealths.containsKey(CoroUtilEntity.getName(player)) ? lastHealths.get(CoroUtilEntity.getName(player)) : 0;
-    		Long lastBleedTime = lastBleedTimes.containsKey(CoroUtilEntity.getName(player)) ? lastBleedTimes.get(CoroUtilEntity.getName(player)) : 0;
+    		Long lastBleedTime = lastBleedTimes.containsKey(CoroUtilEntity.getName(player)) ? lastBleedTimes.get(CoroUtilEntity.getName(player)) : 0L;
     		
     		Vec3d pos = new Vec3d(player.posX, player.posY, player.posZ);
     		

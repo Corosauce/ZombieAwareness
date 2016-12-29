@@ -50,25 +50,18 @@ import ZombieAwareness.config.ZAConfigFeatures;
 import ZombieAwareness.config.ZAConfigPlayerLists;
 import ZombieAwareness.config.ZAConfigSpawning;
 
-@Mod(modid = "zombieawareness", name="Zombie Awareness", version="v1.20", dependencies="required-after:coroutil")
+@Mod(modid = ZombieAwareness.modID, name="Zombie Awareness", version=ZombieAwareness.version, dependencies="required-after:coroutil")
 public class ZombieAwareness implements IPFCallback {
 	
-	@Mod.Instance( value = "zombieawareness" )
+	@Mod.Instance( value = ZombieAwareness.modID )
 	public static ZombieAwareness instance;
-	public static String modID = "zombieawareness";
+	public static final String modID = "zombieawareness";
+	public static final String version = "${version}";
 
 	//Usefull references
     public static MinecraftServer mc;
     public static World worldRef;
-    public static EntityPlayer player;
-    //public static World lastWorld;
     public static boolean ingui;
-    
-    public static boolean openChat = false;
-    
-    public static long lastWorldTime;
-    
-    public static boolean tryTropicraft = true;
     
     public static int lastZombieCount;
     public static int lastMobsCountSurface;
@@ -78,14 +71,6 @@ public class ZombieAwareness implements IPFCallback {
     
     public static HashMap<Class, Boolean> lookupClassToEntityTick = new HashMap<Class, Boolean>();
     
-    /*@Override
-    public boolean hasClientSide() {
-    	return false;
-    }*/
-    
-    /** For use in preInit ONLY */
-    public Configuration preInitConfig;
-    
     @SidedProxy(clientSide = "ZombieAwareness.ClientProxy", serverSide = "ZombieAwareness.CommonProxy")
     public static CommonProxy proxy;
 
@@ -93,11 +78,11 @@ public class ZombieAwareness implements IPFCallback {
     public void preInit(FMLPreInitializationEvent event)
     {
     	ZAConfigFeatures configMain = new ZAConfigFeatures();
-    	ConfigMod.addConfigFile(event, "zaconfig", new ZAConfig());
-    	ConfigMod.addConfigFile(event, "zaconfigfeatures", configMain);
-    	ConfigMod.addConfigFile(event, "zaconfigplayerlists", new ZAConfigPlayerLists());
-    	ConfigMod.addConfigFile(event, "zaconfigspawning", new ZAConfigSpawning());
-    	ConfigMod.addConfigFile(event, "zaconfigclient", new ZAConfigClient());
+    	ConfigMod.addConfigFile(event, new ZAConfig());
+    	ConfigMod.addConfigFile(event, configMain);
+    	ConfigMod.addConfigFile(event, new ZAConfigPlayerLists());
+    	ConfigMod.addConfigFile(event, new ZAConfigSpawning());
+    	ConfigMod.addConfigFile(event, new ZAConfigClient());
     	
     	//sync to forge values
     	configMain.hookUpdatedValues();

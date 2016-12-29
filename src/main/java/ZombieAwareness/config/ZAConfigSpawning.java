@@ -51,13 +51,23 @@ public class ZAConfigSpawning implements IConfigCategory {
 	public static boolean extraSpawningUseNaturalSpawnList = false;
 
 	@Override
+	public String getName() {
+		return "Spawning";
+	}
+
+	@Override
+	public String getRegistryName() {
+		return "zaconfigspawning";
+	}
+
+	@Override
 	public String getConfigFileName() {
-		return "ZombieAwareness" + File.separator + "Spawning";
+		return "ZombieAwareness" + File.separator + getName();
 	}
 
 	@Override
 	public String getCategory() {
-		return "Zombie Awareness: Spawning";
+		return "Zombie Awareness: " + getName();
 	}
 
 	@Override
