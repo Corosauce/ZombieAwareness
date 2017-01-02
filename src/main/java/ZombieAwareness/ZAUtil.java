@@ -260,8 +260,10 @@ public class ZAUtil {
 		
 		if (ZAConfig.zombieRandSpeedBoost > 0) {
 			double randBoost = ent.worldObj.rand.nextDouble() * ZAConfig.zombieRandSpeedBoost;
-			AttributeModifier speedBoostModifier = new AttributeModifier(UUID.fromString("B9766B59-9566-4402-BC1F-2EE2A276D836"), "ZA speed boost", randBoost, 1);
-			ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(speedBoostModifier);
+			AttributeModifier speedBoostModifier = new AttributeModifier(UUID.fromString("8dd7fab2-5bf6-4d07-9c0f-22b3512c1494"), "ZA speed boost", randBoost, 1);
+            if (!ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(speedBoostModifier)) {
+                ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(speedBoostModifier);
+            }
 		}
 		
 	}
