@@ -34,7 +34,11 @@ public class ZAConfigFeatures implements IConfigCategory {
 	
 	@ConfigComment("How loud sounds should be for a mob targetting you")
 	public static double soundVolumeAlertTarget = 0.5D;
-	
+
+	public static boolean soundAlerts = true;
+
+	public static boolean soundInvestigates = true;
+
 	@ConfigComment("Uses a different kind of mob alert noise, might break immersion a bit ;)")
 	public static boolean soundUseAlternateAlertNoise = false;
 

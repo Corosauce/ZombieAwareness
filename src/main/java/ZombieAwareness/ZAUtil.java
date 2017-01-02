@@ -992,6 +992,9 @@ public class ZAUtil {
     }
     
     public static void tryPlayTargetSound(EntityLiving entAlerted, EntityLivingBase entTargetted, Vec3d pos) {
+
+		if (!ZAConfigFeatures.soundAlerts) return;
+
 		//added max dist and blocks loaded check due to https://github.com/Corosauce/ZombieAwareness/issues/11
 		double distMaxCancel = 75;
     	if (!lookupLastAlertTime.containsKey(entAlerted) || lookupLastAlertTime.get(entAlerted) + alertDelay < entAlerted.worldObj.getTotalWorldTime()) {
@@ -1016,6 +1019,9 @@ public class ZAUtil {
     }
     
     public static void tryPlayInvestigateSound(EntityLiving entAlerted, Vec3d pos) {
+
+		if (!ZAConfigFeatures.soundInvestigates) return;
+
     	if (!lookupLastInvestigateTime.containsKey(entAlerted) || lookupLastInvestigateTime.get(entAlerted) + investigateDelay < entAlerted.worldObj.getTotalWorldTime()) {
 			entAlerted.worldObj.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("investigate"), SoundCategory.HOSTILE, (float)ZAConfigFeatures.soundVolumeInvestigate, 0.7F + (entAlerted.worldObj.rand.nextFloat() * 0.3F));
 			lookupLastInvestigateTime.put(entAlerted, entAlerted.worldObj.getTotalWorldTime());
