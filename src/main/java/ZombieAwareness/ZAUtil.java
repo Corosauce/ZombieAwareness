@@ -7,6 +7,7 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.WeakHashMap;
 
+import CoroUtil.util.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -40,9 +41,6 @@ import net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.eventhandler.Event.Result;
 import CoroUtil.pathfinding.PFQueue;
-import CoroUtil.util.CoroUtilBlock;
-import CoroUtil.util.CoroUtilEntity;
-import CoroUtil.util.CoroUtilPath;
 import ZombieAwareness.config.ZAConfig;
 import ZombieAwareness.config.ZAConfigFeatures;
 import ZombieAwareness.config.ZAConfigPlayerLists;
@@ -260,7 +258,7 @@ public class ZAUtil {
 		
 		if (ZAConfig.zombieRandSpeedBoost > 0) {
 			double randBoost = ent.worldObj.rand.nextDouble() * ZAConfig.zombieRandSpeedBoost;
-			AttributeModifier speedBoostModifier = new AttributeModifier(UUID.fromString("8dd7fab2-5bf6-4d07-9c0f-22b3512c1494"), "ZA speed boost", randBoost, 1);
+			AttributeModifier speedBoostModifier = new AttributeModifier(CoroUtilAttributes.SPEED_BOOST_UUID, "ZA speed boost", randBoost, EnumAttribModifierType.INCREMENT_MULTIPLY_BASE.ordinal());
             if (!ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(speedBoostModifier)) {
                 ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(speedBoostModifier);
             }
