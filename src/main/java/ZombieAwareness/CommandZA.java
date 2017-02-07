@@ -8,6 +8,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import CoroUtil.OldUtil;
 import CoroUtil.pathfinding.PFQueue;
@@ -82,7 +83,9 @@ public class CommandZA extends CommandBase {
 	        		} else {
 	        			CoroUtilMisc.sendCommandSenderMsg(var1, var2[1] + " set to: " + OldUtil.getPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1]));
 	        		}
-	        	}
+				} else if (var2[0].equalsIgnoreCase("isActive")) {
+					var1.addChatMessage(new TextComponentString((ZAUtil.isZombieAwarenessActive(world) ? "true" : "false")));
+				}
 	        	
 	        }
 		} catch (Exception ex) {
