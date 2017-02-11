@@ -258,7 +258,8 @@ public class ZAUtil {
 		
 		if (ZAConfig.zombieRandSpeedBoost > 0) {
 			double randBoost = ent.worldObj.rand.nextDouble() * ZAConfig.zombieRandSpeedBoost;
-			AttributeModifier speedBoostModifier = new AttributeModifier(CoroUtilAttributes.SPEED_BOOST_UUID, "ZA speed boost", randBoost, EnumAttribModifierType.INCREMENT_MULTIPLY_BASE.ordinal());
+			//AttributeModifier speedBoostModifier = new AttributeModifier(CoroUtilAttributes.SPEED_BOOST_UUID, "ZA speed boost", randBoost, EnumAttribModifierType.INCREMENT_MULTIPLY_BASE.ordinal());
+			AttributeModifier speedBoostModifier = new AttributeModifier(UUID.fromString("8dd7fab2-5bf6-4d07-9c0f-22b3512c1494"), "ZA speed boost", randBoost, 1);
             if (!ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(speedBoostModifier)) {
                 ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(speedBoostModifier);
             }
