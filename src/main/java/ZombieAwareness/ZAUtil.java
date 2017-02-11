@@ -1032,4 +1032,14 @@ public class ZAUtil {
 			for (Entity ent : lookupLastAlertTime)
 		}*/
 	}
+
+	public static boolean isZombieAwarenessActive(World world) {
+		if (world == null) return false;
+		if (ZAConfig.daysBeforeFeaturesActivate <= 0) return true;
+		if (((double)world.getWorldTime() / 24000D) >= ZAConfig.daysBeforeFeaturesActivate) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

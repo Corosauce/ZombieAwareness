@@ -37,6 +37,7 @@ public class ZAEventHandler {
 	@SubscribeEvent
 	public void setAttackTarget(LivingSetAttackTargetEvent event) {
 		if (!event.getEntityLiving().worldObj.isRemote) {
+			if (!ZAUtil.isZombieAwarenessActive(event.getEntityLiving().worldObj)) return;
 			ZAUtil.hookSetAttackTarget(event);
 		}
 	}
@@ -44,6 +45,7 @@ public class ZAEventHandler {
 	@SubscribeEvent
 	public void breakSpeed(BreakSpeed event) {
 		if (!event.getEntityLiving().worldObj.isRemote) {
+			if (!ZAUtil.isZombieAwarenessActive(event.getEntityLiving().worldObj)) return;
 			//ZombieAwareness.dbg("breakSpeed event");
 			ZAUtil.hookBlockEvent(event, 20);
 		}
@@ -52,7 +54,7 @@ public class ZAEventHandler {
 	@SubscribeEvent
 	public void harvest(HarvestCheck event) {
 		if (!event.getEntityLiving().worldObj.isRemote) {
-			
+			if (!ZAUtil.isZombieAwarenessActive(event.getEntityLiving().worldObj)) return;
 			ZombieAwareness.dbg("harvest event");
 			ZAUtil.hookBlockEvent(event, 3);
 		}
@@ -75,7 +77,9 @@ public class ZAEventHandler {
 	public void tickServer(ServerTickEvent event) {
 		
 		if (event.phase == Phase.START) {
-			
+
+			if (!ZAUtil.isZombieAwarenessActive(DimensionManager.getWorld(0))) return;
+
 			if (lastWorld != DimensionManager.getWorld(0)) {
 	    		lastWorld = DimensionManager.getWorld(0);
 	    		

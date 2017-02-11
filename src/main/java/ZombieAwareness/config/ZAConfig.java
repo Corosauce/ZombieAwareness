@@ -7,7 +7,7 @@ import modconfig.IConfigCategory;
 
 public class ZAConfig implements IConfigCategory {
 
-	@ConfigComment("Max pathfind range for zombies [performance sensitive]")
+	@ConfigComment("[Not used for now] Max pathfind range for zombies [performance sensitive]")
 	public static int maxPFRange = 64; //also max awareness range
 	@ConfigComment("Max awareness range for zombies")
 	public static int maxPFRangeSense = 64; //also max awareness range
@@ -41,11 +41,12 @@ public class ZAConfig implements IConfigCategory {
 	
 	@ConfigComment("Minimum distance required between active sense sources, prevents spamming sources [performance sensitive]")
 	public static double extraScentCutoffRange = 1;
-	@ConfigComment("Random X Z variation of sound source placement")
-	public static int soundScentSpawnPosRandom = 1;
 	
 	@ConfigComment("Max strength allowed for a sense, in case senses get a super high base strength or large buff")
 	public static int senseMaxStrength = 300;
+
+	@ConfigComment("Days before all of the mods features will be activated")
+	public static double daysBeforeFeaturesActivate = 0;
 
 	@Override
 	public String getName() {
