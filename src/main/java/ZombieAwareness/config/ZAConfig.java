@@ -7,8 +7,8 @@ import modconfig.IConfigCategory;
 
 public class ZAConfig implements IConfigCategory {
 
-	@ConfigComment("[Not used for now] Max pathfind range for zombies [performance sensitive]")
-	public static int maxPFRange = 64; //also max awareness range
+	/*@ConfigComment("[Not used for now] Max pathfind range for zombies [performance sensitive]")
+	public static int maxPFRange = 64; //also max awareness range*/
 	@ConfigComment("Max awareness range for zombies")
 	public static int maxPFRangeSense = 64; //also max awareness range
 	@ConfigComment("Prevent non zombies from being attracted to light")

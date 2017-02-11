@@ -1,11 +1,12 @@
 package ZombieAwareness;
 
+import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import ZombieAwareness.config.*;
 import modconfig.ConfigMod;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -14,16 +15,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.IEntityLivingData;
-import net.minecraft.entity.monster.EntityCreeper;
-import net.minecraft.entity.monster.EntityEnderman;
 import net.minecraft.entity.monster.EntityMob;
-import net.minecraft.entity.monster.EntityPigZombie;
 import net.minecraft.entity.monster.EntitySkeleton;
 import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.entity.monster.EntityWitch;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.monster.IMob;
-import net.minecraft.entity.passive.EntityWolf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.server.MinecraftServer;
@@ -44,11 +41,6 @@ import CoroUtil.pathfinding.IPFCallback;
 import CoroUtil.pathfinding.PFCallbackItem;
 import CoroUtil.util.CoroUtilBlock;
 import CoroUtil.util.CoroUtilEntity;
-import ZombieAwareness.config.ZAConfig;
-import ZombieAwareness.config.ZAConfigClient;
-import ZombieAwareness.config.ZAConfigFeatures;
-import ZombieAwareness.config.ZAConfigPlayerLists;
-import ZombieAwareness.config.ZAConfigSpawning;
 
 @Mod(modid = ZombieAwareness.modID, name="Zombie Awareness", version=ZombieAwareness.version, dependencies="required-after:coroutil")
 public class ZombieAwareness implements IPFCallback {
@@ -69,10 +61,15 @@ public class ZombieAwareness implements IPFCallback {
     public static long lastSpawnTime;
     public static long lastSpawnSysTime;
     
-    public static HashMap<Class, Boolean> lookupClassToEntityTick = new HashMap<Class, Boolean>();
+    //public static HashMap<Class, Boolean> lookupClassToEntityTick = new HashMap<Class, Boolean>();
     
     @SidedProxy(clientSide = "ZombieAwareness.ClientProxy", serverSide = "ZombieAwareness.CommonProxy")
     public static CommonProxy proxy;
+
+	public static Configuration config;
+
+	//used mainly for filename placeholder for dynamic config
+	public static ZAConfigMobLists mobLists = new ZAConfigMobLists();
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
@@ -83,9 +80,13 @@ public class ZombieAwareness implements IPFCallback {
     	ConfigMod.addConfigFile(event, new ZAConfigPlayerLists());
     	ConfigMod.addConfigFile(event, new ZAConfigSpawning());
     	ConfigMod.addConfigFile(event, new ZAConfigClient());
+
     	
     	//sync to forge values
     	configMain.hookUpdatedValues();
+
+		config = new Configuration(new File("config" + File.separator + mobLists.getConfigFileName() + ".cfg"));
+		config.save();
     	
     	SoundRegistry.init();
     }
@@ -101,7 +102,12 @@ public class ZombieAwareness implements IPFCallback {
     @Mod.EventHandler
     public void loadPost(FMLPostInitializationEvent event) {
     	//TODO: move??
-    	generateEntityTickList();
+		try {
+			generateEntityTickList();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
     }
     
     
@@ -164,7 +170,7 @@ public class ZombieAwareness implements IPFCallback {
 	        	for (int i = 0; i < world.loadedEntityList.size(); i++) {
 	        		Entity ent = world.loadedEntityList.get(i);
 	        		
-	        		if (shouldTickEntity(ent)) {
+	        		if (canProcessEntity(ent) && ent instanceof EntityLiving) {
 	        			
 	        			//if (EntityList.getEntityString(ent) != null) System.out.println(EntityList.getEntityString(ent).toLowerCase());
 	        			
@@ -326,41 +332,39 @@ public class ZombieAwareness implements IPFCallback {
 	public ArrayList<PFCallbackItem> getQueue() {
 		return callbackList;
 	}
-	
-	public static boolean shouldTickEntity(Entity ent) {
-		
+
+	public static boolean canProcessEntity(Entity ent) {
 		if (!canEntityBeProcessedOverride(ent)) {
 			return false;
 		}
-		
-		/**
-		 * list is default on, used for enderman, etc
-		 * 
-		 * if using list override
-		 * - if entry exists
-		 * -- return value
-		 * - if entry doesnt exist
-		 * -- generate default value based on non list rules
-		 * 
-		 * for generating or if not using list:
-		 * - usual pile of if statements we used
-		 * 
-		 */
-		
-		return ent instanceof EntityMob && (
-		(ZAConfigPlayerLists.blacklistUsedAITick && 
-		(EntityList.getEntityString(ent) == null || 
-		((!ZAConfigPlayerLists.forceListUsedAITickAsWhitelist && !ZAConfigPlayerLists.blacklistAITick.toLowerCase().contains(EntityList.getEntityString(ent).toLowerCase())) || 
-		(ZAConfigPlayerLists.forceListUsedAITickAsWhitelist && ZAConfigPlayerLists.blacklistAITick.toLowerCase().contains(EntityList.getEntityString(ent).toLowerCase()))))) || 
-		(!ZAConfigPlayerLists.blacklistUsedAITick && (!(ent instanceof EntityEnderman) && !(ent instanceof EntityWolf) && !(ent instanceof EntityCreeper) && !(ent instanceof EntityPigZombie)))
-		);
+		return canProcessEntity(ent.getClass(), false);
+	}
+
+	public static boolean canProcessEntity(Class ent, boolean pregen) {
+
+		String entName = getEntityRegisteredName(ent);
+		if (ZAUtil.lookupTickableEntities.containsKey(ent))
+		{
+			return ZAUtil.lookupTickableEntities.get(ent);
+		}
+
+		boolean result = false;
+		if (canConfigEntity(ent)) {
+			if (!pregen) config.load();
+			boolean canProcess = getDefaultForEntity(ent);
+			result = config.get("tickable_entities", entName, canProcess).getBoolean(canProcess);
+			if (!pregen) config.save();
+			ZAUtil.lookupTickableEntities.put(ent, result);
+		}
+
+		return result;
 	}
 	
 	/**
 	 * Handles special cases for specific instances like if owned and has an owner. But I want that to never be processed anyways
 	 * Placeholder for now until more dynamic needs are found
 	 * 
-	 * @param ent
+	 * @param entity
 	 * @return false if you want to cancel processing, true lets it continue with other rules
 	 */
 	public static boolean canEntityBeProcessedOverride(Entity entity) {
@@ -370,30 +374,40 @@ public class ZombieAwareness implements IPFCallback {
 			if (entity.
 		}*/
 	}
+
+	/**
+	 * Used to avoid adding entries to config that cant be used even if set to true
+	 *
+	 * @param ent
+	 * @return
+	 */
+	public static boolean canConfigEntity(Class ent) {
+		return EntityMob.class.isAssignableFrom(ent);
+	}
 	
 	public static boolean getDefaultForEntity(Class ent) {
+
 		boolean result = false;
-		if (EntityMob.class.isAssignableFrom(ent)) {
-			if (EntityZombie.class.isAssignableFrom(ent) || EntitySkeleton.class.isAssignableFrom(ent) || EntityWitch.class.isAssignableFrom(ent) || EntitySpider.class.isAssignableFrom(ent)) {
+		if (canConfigEntity(ent)) {
+			if (ent.isAssignableFrom(EntityZombie.class) || ent.isAssignableFrom(EntitySkeleton.class) || ent.isAssignableFrom(EntityWitch.class) || ent.isAssignableFrom(EntitySpider.class)) {
 				result = true;
 			} else {
 				result = false;
 			}
-			/*if (ent instanceof EntityEnderman || ent instanceof EntityWolf || ent instanceof EntityCreeper || ent instanceof EntityPigZombie || ent instanceof EntityWither) {
-				result = false;
-			} else {
-				result = true;
-			}*/
 		}
 		return result;
 	}
-	
+
+	/**
+	 * Generates list of entities we can process, these are written to config they can modify every entities config after first run
+	 *
+	 */
 	public static void generateEntityTickList() {
+		config.load();
 		for (Map.Entry<Class<? extends Entity >, String> entry : EntityList.CLASS_TO_NAME.entrySet()) {
-			boolean tickEnt = getDefaultForEntity(entry.getKey());
-			lookupClassToEntityTick.put(entry.getKey(), tickEnt);
-    		//System.out.println(entry.getKey() + " - " + tickEnt);
+			boolean tickEnt = canProcessEntity(entry.getKey(), true);
     	}
+		config.save();
 	}
 	
 	public static void dbg(Object obj) {
@@ -402,4 +416,16 @@ public class ZombieAwareness implements IPFCallback {
 		}
 	}
 
+	public static String getEntityRegisteredName(Class ent) {
+		try {
+
+			return EntityList.getEntityStringFromClass(ent);
+		} catch (Exception ex) {
+			if (ZAConfig.debugConsole) {
+				ex.printStackTrace();
+			}
+			return ent.getClass().getSimpleName();
+
+		}
+	}
 }

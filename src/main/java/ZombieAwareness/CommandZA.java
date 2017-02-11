@@ -85,6 +85,9 @@ public class CommandZA extends CommandBase {
 	        		}
 				} else if (var2[0].equalsIgnoreCase("isActive")) {
 					var1.addChatMessage(new TextComponentString((ZAUtil.isZombieAwarenessActive(world) ? "true" : "false")));
+				} else if (var2[0].equalsIgnoreCase("profile") && player != null) {
+					ZAUtil.startProfile(player.getName());
+					player.addChatComponentMessage(new TextComponentString("ZA Profile started"));
 				}
 	        	
 	        }

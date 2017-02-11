@@ -1,23 +1,12 @@
 package ZombieAwareness;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
-import java.util.WeakHashMap;
+import java.util.*;
 
 import CoroUtil.util.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityCreature;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.entity.IEntityLivingData;
-import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.*;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.monster.EntitySkeleton;
 import net.minecraft.entity.monster.EntitySpider;
@@ -33,9 +22,11 @@ import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome.SpawnListEntry;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -116,6 +107,14 @@ public class ZAUtil {
     
     public static WeakHashMap<Entity, Long> lookupLastInvestigateTime = new WeakHashMap<Entity, Long>();
     public static long investigateDelay = 60*20;
+
+	public static HashMap<Class, Boolean> lookupTickableEntities = new HashMap<>();
+
+	//quick process testing
+	public static HashMap<Class, Integer> lookupProcessedEntityCounts = new HashMap<>();
+	public static boolean profileActive = false;
+	public static long profileStartTime = 0;
+	public static String profileForPlayer = "";
     
     public static boolean debug = false;
     
@@ -184,6 +183,34 @@ public class ZAUtil {
     	
     	
     }
+
+    public static void startProfile(String playerName) {
+		profileActive = true;
+		profileForPlayer = playerName;
+		profileStartTime = DimensionManager.getWorld(0).getTotalWorldTime();
+	}
+
+	public static void trackProfile() {
+		if (profileActive) {
+			World world = DimensionManager.getWorld(0);
+			if (world.getTotalWorldTime() > profileStartTime + 10 * 20) {
+				EntityPlayer player = world.getPlayerEntityByName(profileForPlayer);
+				if (player != null) {
+					for (Map.Entry<Class, Integer> entry : lookupProcessedEntityCounts.entrySet()) {
+						player.addChatMessage(new TextComponentString(entry.getKey() + " : " + entry.getValue()));
+					}
+
+				}
+				resetProfile();
+			}
+		}
+	}
+
+	public static void resetProfile() {
+		profileActive = false;
+		lookupProcessedEntityCounts.clear();
+		profileForPlayer = "";
+	}
     
     public static SoundProfileEntry getFirstEntry(String sound) {
     	for (SoundProfileEntry entry : listSoundProfiles) {
@@ -306,11 +333,20 @@ public class ZAUtil {
 	}
     
     public static void tickAI(EntityLiving ent) {
+
+		if (profileActive) {
+			int val = 0;
+			if (lookupProcessedEntityCounts.containsKey(ent.getClass())) {
+				val = lookupProcessedEntityCounts.get(ent.getClass());
+			}
+			lookupProcessedEntityCounts.put(ent.getClass(), val + 1);
+		}
     	
     	if (ZAConfig.debugConsoleSuperDetailed) ZombieAwareness.dbg("ZA DBG: Ticking: " + ent);
     	
     	//A more performance friendly omniscient, only runs it when no target, but still allows for smaller ranged retargetting
-    	if (ent.worldObj.getTotalWorldTime() % 40 == 0) {
+		//adding entity ID onto world time to stagger processing per entity more, should improve TPS
+    	if ((ent.worldObj.getTotalWorldTime() + ent.getEntityId()) % 40 == 0) {
 	    	if (ZAConfig.omniscient && ent.getAttackTarget() == null) {
 	    		ai_FindTarget(ent, true);
 	    	} else {
@@ -321,18 +357,18 @@ public class ZAUtil {
 		if (PFQueue.instance == null) {
     		new PFQueue(ent.worldObj);
     	}
-		long time = 0;
+		/*long time = 0;
 		try {
 			if (PFQueue.pfDelays.containsKey(ent)) {
 				time = (Long)PFQueue.pfDelays.get(ent);
 			}
 		} catch (Exception ex) {
 			
-		}
+		}*/
 		
 		EntityScent senseTracked = null;
 		
-		if (ent.getAttackTarget() == null && (/*ent.worldObj.rand.nextInt(5) == 0 && */time < System.currentTimeMillis() && ent.getNavigator().noPath())) {
+		if (ent.getAttackTarget() == null && (/*ent.worldObj.rand.nextInt(5) == 0 && *//*time < System.currentTimeMillis() && */ent.getNavigator().noPath())) {
 			//Find player made senses
 			if (!ZAConfig.awareness_Light_OnlyZombies || (ent instanceof EntityZombie)) {
 				if (!ZAConfigFeatures.awareness_Light || !ai_FindLightSource(ent)) {
@@ -383,7 +419,7 @@ public class ZAUtil {
     		
     		Random rand = new Random();
     		
-    		int size = 32;
+    		int size;
     		
     		for (int i = 0; i < 4; i++) {
     			EntityPlayer entP = getClosestPlayerToEntity(ent.worldObj, ent, 999);
@@ -994,6 +1030,8 @@ public class ZAUtil {
 
 		if (!ZAConfigFeatures.soundAlerts) return;
 
+		if (!ZombieAwareness.canProcessEntity(entAlerted)) return;
+
 		//added max dist and blocks loaded check due to https://github.com/Corosauce/ZombieAwareness/issues/11
 		double distMaxCancel = 75;
     	if (!lookupLastAlertTime.containsKey(entAlerted) || lookupLastAlertTime.get(entAlerted) + alertDelay < entAlerted.worldObj.getTotalWorldTime()) {
@@ -1021,6 +1059,8 @@ public class ZAUtil {
 
 		if (!ZAConfigFeatures.soundInvestigates) return;
 
+		if (!ZombieAwareness.canProcessEntity(entAlerted)) return;
+
     	if (!lookupLastInvestigateTime.containsKey(entAlerted) || lookupLastInvestigateTime.get(entAlerted) + investigateDelay < entAlerted.worldObj.getTotalWorldTime()) {
 			entAlerted.worldObj.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("investigate"), SoundCategory.HOSTILE, (float)ZAConfigFeatures.soundVolumeInvestigate, 0.7F + (entAlerted.worldObj.rand.nextFloat() * 0.3F));
 			lookupLastInvestigateTime.put(entAlerted, entAlerted.worldObj.getTotalWorldTime());
@@ -1029,6 +1069,9 @@ public class ZAUtil {
     }
 
 	public static void tickWorld(World world) {
+		if (!world.isRemote) {
+			trackProfile();
+		}
 		/*if (world.getTotalWorldTime() % 40 == 0) {
 			for (Entity ent : lookupLastAlertTime)
 		}*/
