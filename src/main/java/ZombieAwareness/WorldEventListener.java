@@ -46,7 +46,7 @@ public class WorldEventListener implements IWorldEventListener {
 	public void playSoundToAllNearExcept(EntityPlayer player,
 			SoundEvent soundIn, SoundCategory category, double x, double y,
 			double z, float volume, float pitch) {
-		ZAUtil.hookSoundEvent(soundIn, DimensionManager.getWorld(dimID), x, y, z, volume, pitch);
+		ZAUtil.hookSoundEvent(soundIn, player.worldObj, x, y, z, volume, pitch);
 	}
 
 	@Override
@@ -80,7 +80,7 @@ public class WorldEventListener implements IWorldEventListener {
 	public void playEvent(EntityPlayer player, int type, BlockPos blockPosIn,
 			int data) {
 
-		ZAUtil.hookPlayEvent(DimensionManager.getWorld(dimID), type, blockPosIn, data);
+		ZAUtil.hookPlayEvent(player.worldObj, type, blockPosIn, data);
 		
 	}
 
