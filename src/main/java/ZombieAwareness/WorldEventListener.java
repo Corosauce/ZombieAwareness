@@ -10,6 +10,8 @@ import net.minecraft.world.IWorldEventListener;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 
+import javax.annotation.Nullable;
+
 /**
  * 
  * Forge sound event doesnt pass along position, so we are using mc events to get that
@@ -43,10 +45,16 @@ public class WorldEventListener implements IWorldEventListener {
 	}
 
 	@Override
-	public void playSoundToAllNearExcept(EntityPlayer player,
+	public void playSoundToAllNearExcept(@Nullable EntityPlayer player,
 			SoundEvent soundIn, SoundCategory category, double x, double y,
 			double z, float volume, float pitch) {
-		ZAUtil.hookSoundEvent(soundIn, player.worldObj, x, y, z, volume, pitch);
+
+		//there is an edge case where world can be null during world load, just cancel the call
+		World world = DimensionManager.getWorld(dimID);
+		if (world == null) return;
+
+		ZAUtil.hookSoundEvent(soundIn, world, x, y, z, volume, pitch);
+
 	}
 
 	@Override
@@ -80,7 +88,11 @@ public class WorldEventListener implements IWorldEventListener {
 	public void playEvent(EntityPlayer player, int type, BlockPos blockPosIn,
 			int data) {
 
-		ZAUtil.hookPlayEvent(player.worldObj, type, blockPosIn, data);
+		//there is an edge case where world can be null during world load, just cancel the call
+		World world = DimensionManager.getWorld(dimID);
+		if (world == null) return;
+
+		ZAUtil.hookPlayEvent(world, type, blockPosIn, data);
 		
 	}
 
