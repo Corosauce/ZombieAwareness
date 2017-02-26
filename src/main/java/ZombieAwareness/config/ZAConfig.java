@@ -29,7 +29,7 @@ public class ZAConfig implements IConfigCategory {
 	@ConfigComment("Range of extra random speed to give a zombie for extra spawns and zombie duplications, eg: 0 = no boost, 1 = up to double speed (works for my extra spawned mobs only)")
 	public static double zombieRandSpeedBoost = 0.3D;
 	//public static int tickRateMainLoop = 1;
-	@ConfigComment("how frequently the mod iterates all entities, effects rates, less is more frequent [performance sensitive]")
+	@ConfigComment("The amount of delay in game ticks between processing mobs with enhanced AI, less is more frequent [performance sensitive]")
 	public static int tickRateAILoop = 5;
 	@ConfigComment("how frequently the mod iterates all players, effects rates, less is more frequent")
 	public static int tickRatePlayerLoop = 1;
