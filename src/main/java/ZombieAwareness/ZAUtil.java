@@ -295,12 +295,12 @@ public class ZAUtil {
 		
 	}
     
-    public static void huntTarget(EntityLivingBase ent, EntityLivingBase targ, int pri) {
-    	CoroUtilPath.tryMoveToEntityLivingLongDist((EntityCreature)ent, targ, 1);
-		if (ent instanceof EntityLiving) ((EntityLiving)ent).setAttackTarget(targ);
+    public static void huntTarget(EntityLiving ent, EntityLivingBase targ, int pri) {
+    	CoroUtilPath.tryMoveToEntityLivingLongDist(ent, targ, 1);
+		if (ent instanceof EntityLiving) (ent).setAttackTarget(targ);
 	}
 	
-	public static void huntTarget(EntityLivingBase ent, EntityLivingBase targ) {
+	public static void huntTarget(EntityLiving ent, EntityLivingBase targ) {
 		huntTarget(ent, targ, 0);
 	}
     
@@ -400,7 +400,7 @@ public class ZAUtil {
 	    tickCustomMob(ent);
     }
     
-    public static void tickCustomMob(EntityLivingBase ent) {
+    public static void tickCustomMob(EntityLiving ent) {
     	if (ZAConfigFeatures.wanderingHordes) {
 	    	if (ent instanceof EntitySpider) {
 	    		if (ent.getPassengers().size() > 0 && ent.getPassengers().get(0) instanceof EntitySkeleton) {
@@ -412,7 +412,7 @@ public class ZAUtil {
     	}
     }
     
-    public static boolean ai_FindLightSource(EntityLivingBase ent) {
+    public static boolean ai_FindLightSource(EntityLiving ent) {
     	
     	if (ent.worldObj.isDaytime()) return false;
     	
@@ -437,7 +437,7 @@ public class ZAUtil {
 		    		if (lightValue > 4) {
 		    			if ((ent.getDistanceToEntity(entP) > 64 && (ent.worldObj.rand.nextInt(20) == 0) || 
 		    					ent.worldObj.rayTraceBlocks(new Vec3d(ent.posX, ent.posY + (double)ent.getEyeHeight(), ent.posZ), new Vec3d(rX, rY, rZ)) == null)) {
-		    				if (CoroUtilPath.tryMoveToXYZLongDist((EntityCreature)ent, rX, rY, rZ, 1)) {
+		    				if (CoroUtilPath.tryMoveToXYZLongDist(ent, rX, rY, rZ, 1)) {
 		    					//ZombieAwareness.dbg("pathing to lightsource at " + rX + ", " + rY + ", " + rZ + " - " + ent);
 			    			}
 			    			return true;
@@ -450,17 +450,17 @@ public class ZAUtil {
     	return false;
     }
     
-    public static EntityScent ai_FindSense(EntityLivingBase ent) {
+    public static EntityScent ai_FindSense(EntityLiving ent) {
     	return ai_FindSense(ent, true);
     }
     
-    public static EntityScent ai_FindSense(EntityLivingBase ent, boolean includeWaypoints) {
+    public static EntityScent ai_FindSense(EntityLiving ent, boolean includeWaypoints) {
     	
     	EntityScent var3 = getSenseNearEntity(ent);
 
         if(var3 != null) {
         	if (includeWaypoints || var3.type != 2) {
-        		if (CoroUtilPath.tryMoveToEntityLivingLongDist((EntityCreature)ent, var3, 1)) {
+        		if (CoroUtilPath.tryMoveToEntityLivingLongDist(ent, var3, 1)) {
         			//ZombieAwareness.dbg("ai_FindSense call, type: " + ((EntityScent)var3).type + " - " + ent.getName() + " -> " + var3.getPosition());
         			return var3;
         		}

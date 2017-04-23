@@ -67,6 +67,7 @@ public class ZombieAwareness implements IPFCallback {
     public static CommonProxy proxy;
 
 	public static Configuration config;
+	public static String configCategory = "tickable_entities";
 
 	//used mainly for filename placeholder for dynamic config
 	public static ZAConfigMobLists mobLists = new ZAConfigMobLists();
@@ -86,6 +87,10 @@ public class ZombieAwareness implements IPFCallback {
     	configMain.hookUpdatedValues();
 
 		config = new Configuration(new File("config" + File.separator + mobLists.getConfigFileName() + ".cfg"));
+		String comment = "Entities to be enhanced, will show everything ZombieAwareness should be able to enhance, " +
+				"only zombie based mobs and some others are default on, if a mob uses ground pathfinding and is able to be hostile you can try enabling more from other mods, " +
+				"but how well the enhancing works depends on how the mod implemented their mob";
+		config.setCategoryComment(configCategory, comment);
 		config.save();
     	
     	SoundRegistry.init();
@@ -352,7 +357,7 @@ public class ZombieAwareness implements IPFCallback {
 		if (canConfigEntity(ent)) {
 			if (!pregen) config.load();
 			boolean canProcess = getDefaultForEntity(ent);
-			result = config.get("tickable_entities", entName, canProcess).getBoolean(canProcess);
+			result = config.get(configCategory, entName, canProcess).getBoolean(canProcess);
 			if (!pregen) config.save();
 			ZAUtil.lookupTickableEntities.put(ent, result);
 		}
@@ -382,7 +387,7 @@ public class ZombieAwareness implements IPFCallback {
 	 * @return
 	 */
 	public static boolean canConfigEntity(Class ent) {
-		return EntityMob.class.isAssignableFrom(ent);
+		return EntityMob.class.isAssignableFrom(ent) || IMob.class.isAssignableFrom(ent);
 	}
 	
 	public static boolean getDefaultForEntity(Class ent) {
