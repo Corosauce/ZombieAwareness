@@ -21,6 +21,7 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
@@ -428,11 +429,15 @@ public class ZAUtil {
         			
         			size = 32 * (i+1);
         			
-		    		int rX = (int)entP.posX + (rand.nextInt(size) - (size/2));
-		    		int rY = (int)entP.posY + (rand.nextInt(size/2) - (size/4));
-		    		int rZ = (int)entP.posZ + (rand.nextInt(size) - (size/2));
-		    		
-		    		int lightValue = entP.worldObj.getLightFromNeighbors(new BlockPos(rX, rY, rZ));
+		    		int rX = MathHelper.floor_double(entP.posX + (rand.nextInt(size) - (size/2)));
+		    		int rY = MathHelper.floor_double(entP.posY + (rand.nextInt(size/2) - (size/4)));
+		    		int rZ = MathHelper.floor_double(entP.posZ + (rand.nextInt(size) - (size/2)));
+
+		    		BlockPos pos = new BlockPos(rX, rY, rZ);
+
+					if (!ent.worldObj.isBlockLoaded(pos)) continue;
+
+		    		int lightValue = entP.worldObj.getLightFromNeighbors(pos);
 		    		
 		    		if (lightValue > 4) {
 		    			if ((ent.getDistanceToEntity(entP) > 64 && (ent.worldObj.rand.nextInt(20) == 0) || 
