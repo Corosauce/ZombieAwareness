@@ -13,20 +13,20 @@ import net.minecraftforge.common.DimensionManager;
 import javax.annotation.Nullable;
 
 /**
- * 
+ *
  * Forge sound event doesnt pass along position, so we are using mc events to get that
- * 
+ *
  * @author Corosus
  *
  */
 public class WorldEventListener implements IWorldEventListener {
 
 	public int dimID = -1;
-	
+
 	public WorldEventListener(int dimID) {
 		this.dimID = dimID;
 	}
-	
+
 	@Override
 	public void notifyBlockUpdate(World worldIn, BlockPos pos,
 			IBlockState oldState, IBlockState newState, int flags) {
@@ -70,6 +70,11 @@ public class WorldEventListener implements IWorldEventListener {
 	}
 
 	@Override
+	public void spawnParticle(int id, boolean ignoreRange, boolean p_190570_3_, double x, double y, double z, double xSpeed, double ySpeed, double zSpeed, int... parameters) {
+
+	}
+
+	@Override
 	public void onEntityAdded(Entity entityIn) {
 
 	}
@@ -93,7 +98,7 @@ public class WorldEventListener implements IWorldEventListener {
 		if (world == null) return;
 
 		ZAUtil.hookPlayEvent(world, type, blockPosIn, data);
-		
+
 	}
 
 	@Override

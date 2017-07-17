@@ -14,55 +14,55 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 
 public class ZAEventHandler {
-	
+
 	public static World lastWorld = null;
-	
+
 	@SubscribeEvent
 	public void soundEvent(PlaySoundAtEntityEvent event) {
-		
+
 		try {
 			/*if (event.getSound().getSoundName().toString().contains("piston")) {
 				System.out.println(event.getSound().getSoundName().toString());
 			}*/
-			
+
 			if (event.getEntity() != null) {
 				//moved to world event listener for getting coords
-				//ZAUtil.soundHook(event.getSound().getSoundName().toString(), event.getEntity().worldObj, (float)event.getEntity().posX, (float)event.getEntity().posY, (float)event.getEntity().posZ, event.getVolume(), event.getPitch());
+				//ZAUtil.soundHook(event.getSound().getSoundName().toString(), event.getEntity().world, (float)event.getEntity().posX, (float)event.getEntity().posY, (float)event.getEntity().posZ, event.getVolume(), event.getPitch());
 			}
         } catch (Exception ex) {
         	ex.printStackTrace();
         }
 	}
-	
+
 	@SubscribeEvent
 	public void setAttackTarget(LivingSetAttackTargetEvent event) {
-		if (!event.getEntityLiving().worldObj.isRemote) {
-			if (!ZAUtil.isZombieAwarenessActive(event.getEntityLiving().worldObj)) return;
+		if (!event.getEntityLiving().world.isRemote) {
+			if (!ZAUtil.isZombieAwarenessActive(event.getEntityLiving().world)) return;
 			ZAUtil.hookSetAttackTarget(event);
 		}
 	}
-	
+
 	@SubscribeEvent
 	public void breakSpeed(BreakSpeed event) {
-		if (!event.getEntityLiving().worldObj.isRemote) {
-			if (!ZAUtil.isZombieAwarenessActive(event.getEntityLiving().worldObj)) return;
+		if (!event.getEntityLiving().world.isRemote) {
+			if (!ZAUtil.isZombieAwarenessActive(event.getEntityLiving().world)) return;
 			//ZombieAwareness.dbg("breakSpeed event");
 			ZAUtil.hookBlockEvent(event, 20);
 		}
 	}
-	
+
 	@SubscribeEvent
 	public void harvest(HarvestCheck event) {
-		if (!event.getEntityLiving().worldObj.isRemote) {
-			if (!ZAUtil.isZombieAwarenessActive(event.getEntityLiving().worldObj)) return;
+		if (!event.getEntityLiving().world.isRemote) {
+			if (!ZAUtil.isZombieAwarenessActive(event.getEntityLiving().world)) return;
 			ZombieAwareness.dbg("harvest event");
 			ZAUtil.hookBlockEvent(event, 3);
 		}
 	}
-	
+
 	@SubscribeEvent
 	public void interact(PlayerInteractEvent event) {
-		if (!event.getEntityLiving().worldObj.isRemote) {
+		if (!event.getEntityLiving().world.isRemote) {
 			if (event.getHand() == EnumHand.MAIN_HAND) {
 				/**
 				 * event is way too spammy, since i have much greater sound play access now I am going to try and avoid using this event entirely
@@ -72,24 +72,24 @@ public class ZAEventHandler {
 			}
 		}
 	}
-	
+
 	@SubscribeEvent
 	public void tickServer(ServerTickEvent event) {
-		
+
 		if (event.phase == Phase.START) {
 
 			if (!ZAUtil.isZombieAwarenessActive(DimensionManager.getWorld(0))) return;
 
 			if (lastWorld != DimensionManager.getWorld(0)) {
 	    		lastWorld = DimensionManager.getWorld(0);
-	    		
+
 	    		World worlds[] = DimensionManager.getWorlds();
 	    		for (int i = 0; i < worlds.length; i++) {
 	    			World world = worlds[i];
 	    			world.addEventListener(new WorldEventListener(world.provider.getDimension()));
 	    		}
 	    	}
-			
+
 			//System.out.println("tick ZA");
 			ZombieAwareness.instance.onTick(FMLCommonHandler.instance().getMinecraftServerInstance());
 		}

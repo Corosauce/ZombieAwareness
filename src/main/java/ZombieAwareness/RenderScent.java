@@ -1,9 +1,10 @@
 package ZombieAwareness;
 
+import ZombieAwareness.config.ZAConfigClient;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -15,13 +16,10 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
-
 import org.lwjgl.opengl.GL11;
 
-import ZombieAwareness.config.ZAConfigClient;
-
 public class RenderScent extends Render {
-    
+
     public static ResourceLocation TEXTURE64 = new ResourceLocation(ZombieAwareness.modID + ":textures/entities/bloodx64.png");
     //public static ResourceLocation TEXTURE32 = new ResourceLocation(ZombieAwareness.modID + ":textures/entities/bloodx32.png");
 
@@ -34,7 +32,7 @@ public class RenderScent extends Render {
         //System.out.println("1");
 
     	boolean TEMP = false;
-    	
+
         //System.out.println("2");
         if (TEMP || ((EntityScent)var1).type == 0) {
         	//renderImage(var1, var2, var4, var6, var8, var9);
@@ -42,7 +40,7 @@ public class RenderScent extends Render {
         	float str = (float)((EntityScent)var1).getAgeScale();
         	renderBlood(var1, var2, var4, var6, str, var9);
         } else {
-            
+
         }
 
         //}
@@ -62,9 +60,9 @@ public class RenderScent extends Render {
     	//call texture set
     	bindEntityTexture(var1);
     	//if (!ZAConfig.client_renderBlood) return;
-    	
+
         //if (((EntityScent)var1).type == 0) {
-        
+
         //System.out.println("!!!!!!!!!!!!!! - " + (double)(((double)((EntityScent)var1).strength)/100.0D));
         //}
     	shadowSize = 1.0F;
@@ -78,9 +76,9 @@ public class RenderScent extends Render {
     }
 
     private World getWorldFromRenderManager() {
-        return this.renderManager.worldObj;
+        return this.renderManager.world;
     }
-    
+
     private void renderBlood(Entity entityIn, double x, double y, double z, float shadowAlpha, float partialTicks)
     {
         GlStateManager.enableBlend();
@@ -104,17 +102,17 @@ public class RenderScent extends Render {
         double d5 = entityIn.lastTickPosX + (entityIn.posX - entityIn.lastTickPosX) * (double)partialTicks;
         double d0 = entityIn.lastTickPosY + (entityIn.posY - entityIn.lastTickPosY) * (double)partialTicks;
         double d1 = entityIn.lastTickPosZ + (entityIn.posZ - entityIn.lastTickPosZ) * (double)partialTicks;
-        int i = MathHelper.floor_double(d5 - (double)f);
-        int j = MathHelper.floor_double(d5 + (double)f);
-        int k = MathHelper.floor_double(d0 - (double)f);
-        int l = MathHelper.floor_double(d0);
-        int i1 = MathHelper.floor_double(d1 - (double)f);
-        int j1 = MathHelper.floor_double(d1 + (double)f);
+        int i = MathHelper.floor(d5 - (double)f);
+        int j = MathHelper.floor(d5 + (double)f);
+        int k = MathHelper.floor(d0 - (double)f);
+        int l = MathHelper.floor(d0);
+        int i1 = MathHelper.floor(d1 - (double)f);
+        int j1 = MathHelper.floor(d1 + (double)f);
         double d2 = x - d5;
         double d3 = y - d0;
         double d4 = z - d1;
         Tessellator tessellator = Tessellator.getInstance();
-        VertexBuffer vertexbuffer = tessellator.getBuffer();
+        BufferBuilder vertexbuffer = tessellator.getBuffer();
         vertexbuffer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
 
         for (BlockPos blockpos : BlockPos.getAllInBoxMutable(new BlockPos(i, k, i1), new BlockPos(j, l, j1)))
@@ -124,8 +122,8 @@ public class RenderScent extends Render {
             if (iblockstate.getRenderType() != EnumBlockRenderType.INVISIBLE && world.getLightFromNeighbors(blockpos) > 3)
             {
             	//for (int ii = 0; ii < 100; ii++) {
-            		//double xx = entityIn.worldObj.rand.nextDouble() * 10D;
-            		//double zz = entityIn.worldObj.rand.nextDouble() * 10D;
+            		//double xx = entityIn.world.rand.nextDouble() * 10D;
+            		//double zz = entityIn.world.rand.nextDouble() * 10D;
             		this.renderBloodSingle(iblockstate, x, y, z, blockpos, shadowAlpha, f, d2, d3, d4);
             	//}
             }
@@ -142,7 +140,7 @@ public class RenderScent extends Render {
         if (state.isFullCube())
         {
             Tessellator tessellator = Tessellator.getInstance();
-            VertexBuffer vertexbuffer = tessellator.getBuffer();
+            BufferBuilder vertexbuffer = tessellator.getBuffer();
             double d0 = p_188299_9_;//((double)p_188299_9_ - (p_188299_4_ - ((double)p_188299_8_.getY() + p_188299_13_)) / 2.0D) * 1D/*0.5D*/ * (double)this.getWorldFromRenderManager().getLightBrightness(p_188299_8_);
 
             if (d0 >= 0.0D)
