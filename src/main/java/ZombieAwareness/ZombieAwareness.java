@@ -1,10 +1,7 @@
 package ZombieAwareness;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 import ZombieAwareness.config.*;
 import modconfig.ConfigMod;
@@ -24,6 +21,7 @@ import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
@@ -41,6 +39,8 @@ import CoroUtil.pathfinding.IPFCallback;
 import CoroUtil.pathfinding.PFCallbackItem;
 import CoroUtil.util.CoroUtilBlock;
 import CoroUtil.util.CoroUtilEntity;
+import net.minecraftforge.fml.common.registry.EntityEntry;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 @Mod(modid = ZombieAwareness.modID, name="Zombie Awareness", version=ZombieAwareness.version, dependencies="required-after:coroutil")
 public class ZombieAwareness implements IPFCallback {
@@ -71,6 +71,9 @@ public class ZombieAwareness implements IPFCallback {
 
 	//used mainly for filename placeholder for dynamic config
 	public static ZAConfigMobLists mobLists = new ZAConfigMobLists();
+
+	public static HashMap<Class, String> lookupClassToOldName = new HashMap<>();
+	public static HashMap<Class, String> lookupClassToRegisteredName = new HashMap<>();
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
@@ -345,6 +348,13 @@ public class ZombieAwareness implements IPFCallback {
 		return canProcessEntity(ent.getClass(), false);
 	}
 
+	/**
+	 * Looks up and generates config info if entry missing
+	 *
+	 * @param ent
+	 * @param pregen
+	 * @return
+	 */
 	public static boolean canProcessEntity(Class ent, boolean pregen) {
 
 		String entName = getEntityRegisteredName(ent);
@@ -409,9 +419,19 @@ public class ZombieAwareness implements IPFCallback {
 	 */
 	public static void generateEntityTickList() {
 		config.load();
-		for (Map.Entry<Class<? extends Entity >, String> entry : EntityList.CLASS_TO_NAME.entrySet()) {
+
+		for (Map.Entry<ResourceLocation, EntityEntry> entry : ForgeRegistries.ENTITIES.getEntries()) {
+
+			lookupClassToOldName.put(entry.getValue().getEntityClass(), entry.getValue().getName());
+			lookupClassToRegisteredName.put(entry.getValue().getEntityClass(), entry.getKey().toString());
+
+			boolean tickEnt = canProcessEntity(entry.getValue().getEntityClass(), true);
+		}
+
+		//pre 1.11.2 way
+		/*for (Map.Entry<Class<? extends Entity >, String> entry : EntityList.CLASS_TO_NAME.entrySet()) {
 			boolean tickEnt = canProcessEntity(entry.getKey(), true);
-    	}
+    	}*/
 		config.save();
 	}
 	
@@ -421,10 +441,18 @@ public class ZombieAwareness implements IPFCallback {
 		}
 	}
 
+	/**
+	 * 1.10.2: only name available
+	 * 1.11.2: 'name' field in EntityEntry, new registered name is the snake case key for ForgeRegistries.ENTITIES.getEntries() as a resource location
+	 *
+	 * @param ent
+	 * @return
+	 */
 	public static String getEntityRegisteredName(Class ent) {
 		try {
 
-			return EntityList.getEntityStringFromClass(ent);
+			return getClassToOldName(ent);
+			//return EntityList.getEntityStringFromClass(ent);
 		} catch (Exception ex) {
 			if (ZAConfig.debugConsole) {
 				ex.printStackTrace();
@@ -432,5 +460,17 @@ public class ZombieAwareness implements IPFCallback {
 			return ent.getClass().getSimpleName();
 
 		}
+	}
+
+	/**
+	 * Patch method from 1.11.2 entity registry rework, using new cached lookup
+	 *
+	 * @param ent
+	 * @return
+	 */
+	public static String getClassToOldName(Class ent) {
+
+		return lookupClassToOldName.get(ent);
+
 	}
 }
