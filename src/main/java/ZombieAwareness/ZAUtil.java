@@ -388,10 +388,10 @@ public class ZAUtil {
 		if (senseTracked != null && ent.getNavigator().getPath() != null) {
 			PathPoint pathTo = ent.getNavigator().getPath().getFinalPathPoint();
 			if (pathTo != null) {
-				EntityPlayer player = getClosestPlayer(ent.world, pathTo.xCoord, pathTo.yCoord, pathTo.zCoord, 6D);
+				EntityPlayer player = getClosestPlayer(ent.world, pathTo.x, pathTo.y, pathTo.z, 6D);
 				if (player != null) {
 					//tryPlayInvestigateSound(ent, new Vec3d(ent.posX, ent.posY, ent.posZ));
-					tryPlayInvestigateSound(ent, new Vec3d(pathTo.xCoord, pathTo.yCoord, pathTo.zCoord));
+					tryPlayInvestigateSound(ent, new Vec3d(pathTo.x, pathTo.y, pathTo.z));
 				}
 				
 			}
@@ -970,7 +970,7 @@ public class ZAUtil {
     	
     	if (ZAConfig.extraScentCutoffRange == -1) return null;
     	
-    	AxisAlignedBB aabb = new AxisAlignedBB(parPos.xCoord, parPos.yCoord, parPos.zCoord, parPos.xCoord + 1, parPos.yCoord + 1, parPos.zCoord + 1);
+    	AxisAlignedBB aabb = new AxisAlignedBB(parPos.x, parPos.y, parPos.z, parPos.x + 1, parPos.y + 1, parPos.z + 1);
     	aabb = aabb.expand(ZAConfig.extraScentCutoffRange, ZAConfig.extraScentCutoffRange, ZAConfig.extraScentCutoffRange);
     	
     	List list = parWorld.getEntitiesWithinAABB(EntityScent.class, aabb);
@@ -1008,7 +1008,7 @@ public class ZAUtil {
     	if (sense == null) {
     		sense = new EntityScent(world);
     		sense.type = type.ordinal();
-	        sense.setPosition(parPos.xCoord, parPos.yCoord, parPos.zCoord);
+	        sense.setPosition(parPos.x, parPos.y, parPos.z);
     		sense.setStrengthPeak(strength);
 	        world.spawnEntity(sense);
     	} else if (frequentSoundMultiply) {
@@ -1046,7 +1046,7 @@ public class ZAUtil {
 					&& entAlerted.getEntityWorld().isBlockLoaded(entAlerted.getPosition())
 					&& entTargetted.getEntityWorld().isBlockLoaded(entTargetted.getPosition())) {
 				if (entAlerted.canEntityBeSeen(entTargetted)) {
-					//entAlerted.world.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("target"), SoundCategory.HOSTILE, 3F, 0.8F + (entAlerted.world.rand.nextFloat() * 0.2F));
+					//entAlerted.world.playSound(null, pos.x, pos.y, pos.z, SoundRegistry.get("target"), SoundCategory.HOSTILE, 3F, 0.8F + (entAlerted.world.rand.nextFloat() * 0.2F));
 					entAlerted.world.playSound(null, entTargetted.posX, entTargetted.posY, entTargetted.posZ, ZAConfigFeatures.soundUseAlternateAlertNoise ? SoundRegistry.get("alert") : SoundRegistry.get("target"), SoundCategory.HOSTILE, (float) ZAConfigFeatures.soundVolumeAlertTarget, ZAConfigFeatures.soundUseAlternateAlertNoise ? 1F : 0.8F + (entAlerted.world.rand.nextFloat() * 0.2F));
 					lookupLastAlertTime.put(entAlerted, entAlerted.world.getTotalWorldTime());
 					//ZombieAwareness.dbg("!!! alert play for ent: " + entAlerted.getEntityId() + ", lookupSize: " + lookupLastAlertTime.size());
@@ -1068,7 +1068,7 @@ public class ZAUtil {
 		if (!ZombieAwareness.canProcessEntity(entAlerted)) return;
 
     	if (!lookupLastInvestigateTime.containsKey(entAlerted) || lookupLastInvestigateTime.get(entAlerted) + investigateDelay < entAlerted.world.getTotalWorldTime()) {
-			entAlerted.world.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("investigate"), SoundCategory.HOSTILE, (float)ZAConfigFeatures.soundVolumeInvestigate, 0.7F + (entAlerted.world.rand.nextFloat() * 0.3F));
+			entAlerted.world.playSound(null, pos.x, pos.y, pos.z, SoundRegistry.get("investigate"), SoundCategory.HOSTILE, (float)ZAConfigFeatures.soundVolumeInvestigate, 0.7F + (entAlerted.world.rand.nextFloat() * 0.3F));
 			lookupLastInvestigateTime.put(entAlerted, entAlerted.world.getTotalWorldTime());
 			//ZombieAwareness.dbg("!!! investigate play for ent: " + entAlerted.getEntityId() + ", lookupSize: " + lookupLastInvestigateTime.size());
 		}
