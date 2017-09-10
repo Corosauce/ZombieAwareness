@@ -27,7 +27,7 @@ public class ZAEventHandler {
 			
 			if (event.getEntity() != null) {
 				//moved to world event listener for getting coords
-				//ZAUtil.soundHook(event.getSound().getSoundName().toString(), event.getEntity().worldObj, (float)event.getEntity().posX, (float)event.getEntity().posY, (float)event.getEntity().posZ, event.getVolume(), event.getPitch());
+				//ZAUtil.soundHook(event.getSound().getSoundName().toString(), event.getEntity().world, (float)event.getEntity().posX, (float)event.getEntity().posY, (float)event.getEntity().posZ, event.getVolume(), event.getPitch());
 			}
         } catch (Exception ex) {
         	ex.printStackTrace();
@@ -36,16 +36,16 @@ public class ZAEventHandler {
 	
 	@SubscribeEvent
 	public void setAttackTarget(LivingSetAttackTargetEvent event) {
-		if (!event.getEntityLiving().worldObj.isRemote) {
-			if (!ZAUtil.isZombieAwarenessActive(event.getEntityLiving().worldObj)) return;
+		if (!event.getEntityLiving().world.isRemote) {
+			if (!ZAUtil.isZombieAwarenessActive(event.getEntityLiving().world)) return;
 			ZAUtil.hookSetAttackTarget(event);
 		}
 	}
 	
 	@SubscribeEvent
 	public void breakSpeed(BreakSpeed event) {
-		if (!event.getEntityLiving().worldObj.isRemote) {
-			if (!ZAUtil.isZombieAwarenessActive(event.getEntityLiving().worldObj)) return;
+		if (!event.getEntityLiving().world.isRemote) {
+			if (!ZAUtil.isZombieAwarenessActive(event.getEntityLiving().world)) return;
 			//ZombieAwareness.dbg("breakSpeed event");
 			ZAUtil.hookBlockEvent(event, 20);
 		}
@@ -53,8 +53,8 @@ public class ZAEventHandler {
 	
 	@SubscribeEvent
 	public void harvest(HarvestCheck event) {
-		if (!event.getEntityLiving().worldObj.isRemote) {
-			if (!ZAUtil.isZombieAwarenessActive(event.getEntityLiving().worldObj)) return;
+		if (!event.getEntityLiving().world.isRemote) {
+			if (!ZAUtil.isZombieAwarenessActive(event.getEntityLiving().world)) return;
 			ZombieAwareness.dbg("harvest event");
 			ZAUtil.hookBlockEvent(event, 3);
 		}
@@ -62,7 +62,7 @@ public class ZAEventHandler {
 	
 	@SubscribeEvent
 	public void interact(PlayerInteractEvent event) {
-		if (!event.getEntityLiving().worldObj.isRemote) {
+		if (!event.getEntityLiving().world.isRemote) {
 			if (event.getHand() == EnumHand.MAIN_HAND) {
 				/**
 				 * event is way too spammy, since i have much greater sound play access now I am going to try and avoid using this event entirely

@@ -17,12 +17,12 @@ import CoroUtil.util.CoroUtilMisc;
 public class CommandZA extends CommandBase {
 
 	@Override
-	public String getCommandName() {
+	public String getName() {
 		return "za";
 	}
 
 	@Override
-	public String getCommandUsage(ICommandSender icommandsender) {
+	public String getUsage(ICommandSender icommandsender) {
 		return "Magic dev method!";
 	}
 
@@ -84,10 +84,10 @@ public class CommandZA extends CommandBase {
 	        			CoroUtilMisc.sendCommandSenderMsg(var1, var2[1] + " set to: " + OldUtil.getPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1]));
 	        		}
 				} else if (var2[0].equalsIgnoreCase("isActive")) {
-					var1.addChatMessage(new TextComponentString((ZAUtil.isZombieAwarenessActive(world) ? "true" : "false")));
+					var1.sendMessage(new TextComponentString((ZAUtil.isZombieAwarenessActive(world) ? "true" : "false")));
 				} else if (var2[0].equalsIgnoreCase("profile") && player != null) {
 					ZAUtil.startProfile(player.getName());
-					player.addChatComponentMessage(new TextComponentString("ZA Profile started"));
+					player.sendMessage(new TextComponentString("ZA Profile started"));
 				}
 	        	
 	        }
@@ -100,7 +100,7 @@ public class CommandZA extends CommandBase {
 	@Override
 	public boolean checkPermission(MinecraftServer server, ICommandSender par1ICommandSender)
     {
-        return par1ICommandSender.canCommandSenderUseCommand(this.getRequiredPermissionLevel(), this.getCommandName());
+        return par1ICommandSender.canUseCommand(this.getRequiredPermissionLevel(), this.getName());
     }
 	
 	@Override

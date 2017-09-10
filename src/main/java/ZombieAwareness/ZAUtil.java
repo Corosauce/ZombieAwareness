@@ -198,7 +198,7 @@ public class ZAUtil {
 				EntityPlayer player = world.getPlayerEntityByName(profileForPlayer);
 				if (player != null) {
 					for (Map.Entry<Class, Integer> entry : lookupProcessedEntityCounts.entrySet()) {
-						player.addChatMessage(new TextComponentString(entry.getKey() + " : " + entry.getValue()));
+						player.sendMessage(new TextComponentString(entry.getKey() + " : " + entry.getValue()));
 					}
 
 				}
@@ -234,7 +234,7 @@ public class ZAUtil {
 		
 		if (!ZAConfigPlayerLists.whiteListUsedExtraSpawning || ZAConfigPlayerLists.whitelistExtraSpawning.contains(CoroUtilEntity.getName(player))) {
 			if (ZAConfigFeatures.extraSpawningSurface) {
-				if (!player.worldObj.isDaytime()) {
+				if (!player.world.isDaytime()) {
 					if (ZombieAwareness.lastMobsCountSurface < ZAConfigSpawning.extraSpawningSurfaceMaxCount) {
 						if (ZAConfigSpawning.extraSpawningSurfaceRandomPool <= 0 || rand.nextInt(ZAConfigSpawning.extraSpawningSurfaceRandomPool) == 0) {
 							spawnNewMobSurface(player);
@@ -264,7 +264,7 @@ public class ZAUtil {
     		
             if((int)player.getHealth() != lastHealth) {
                 if(player.getHealth() < lastHealth) {
-                	EntityScent scent = spawnOrBuffSenseAtPos(player.worldObj, pos, EnumSenseType.SCENT_BLOOD, ZAConfig.scentStrength);
+                	EntityScent scent = spawnOrBuffSenseAtPos(player.world, pos, EnumSenseType.SCENT_BLOOD, ZAConfig.scentStrength);
                 	ZombieAwareness.dbg("spawned or buffed scent sense from damage: " + scent.getStrengthPeak());
                 }
 
@@ -276,7 +276,7 @@ public class ZAUtil {
             if(player.getHealth() / player.getMaxHealth() < 0.6F && lastBleedTime < System.currentTimeMillis()) {
                 lastBleedTime = System.currentTimeMillis() + 30000L;
                 lastBleedTimes.put(CoroUtilEntity.getName(player), lastBleedTime);
-                EntityScent scent = spawnOrBuffSenseAtPos(player.worldObj, pos, EnumSenseType.SCENT_BLOOD, ZAConfig.scentStrength);
+                EntityScent scent = spawnOrBuffSenseAtPos(player.world, pos, EnumSenseType.SCENT_BLOOD, ZAConfig.scentStrength);
                 ZombieAwareness.dbg("spawned or buffed scent sense from bleeding: " + scent.getStrengthPeak());
             }
         }
@@ -285,7 +285,7 @@ public class ZAUtil {
 	public static void giveRandomSpeedBoost(EntityLiving ent) {
 		
 		if (ZAConfig.zombieRandSpeedBoost > 0) {
-			double randBoost = ent.worldObj.rand.nextDouble() * ZAConfig.zombieRandSpeedBoost;
+			double randBoost = ent.world.rand.nextDouble() * ZAConfig.zombieRandSpeedBoost;
 			//TODO: uncomment/replace once CoroUtil gets released with this
 			//AttributeModifier speedBoostModifier = new AttributeModifier(CoroUtilAttributes.SPEED_BOOST_UUID, "ZA speed boost", randBoost, EnumAttribModifierType.INCREMENT_MULTIPLY_BASE.ordinal());
 			AttributeModifier speedBoostModifier = new AttributeModifier(UUID.fromString("8dd7fab2-5bf6-4d07-9c0f-22b3512c1494"), "ZA speed boost", randBoost, 1);
@@ -348,7 +348,7 @@ public class ZAUtil {
     	
     	//A more performance friendly omniscient, only runs it when no target, but still allows for smaller ranged retargetting
 		//adding entity ID onto world time to stagger processing per entity more, should improve TPS
-    	if ((ent.worldObj.getTotalWorldTime() + ent.getEntityId()) % 40 == 0) {
+    	if ((ent.world.getTotalWorldTime() + ent.getEntityId()) % 40 == 0) {
 	    	if (ZAConfig.omniscient && ent.getAttackTarget() == null) {
 	    		ai_FindTarget(ent, true);
 	    	} else {
@@ -357,7 +357,7 @@ public class ZAUtil {
     	}
     	
 		if (PFQueue.instance == null) {
-    		new PFQueue(ent.worldObj);
+    		new PFQueue(ent.world);
     	}
 		/*long time = 0;
 		try {
@@ -370,12 +370,12 @@ public class ZAUtil {
 		
 		EntityScent senseTracked = null;
 		
-		if (ent.getAttackTarget() == null && (/*ent.worldObj.rand.nextInt(5) == 0 && *//*time < System.currentTimeMillis() && */ent.getNavigator().noPath())) {
+		if (ent.getAttackTarget() == null && (/*ent.world.rand.nextInt(5) == 0 && *//*time < System.currentTimeMillis() && */ent.getNavigator().noPath())) {
 			//Find player made senses
 			if (!ZAConfig.awareness_Light_OnlyZombies || (ent instanceof EntityZombie)) {
 				if (!ZAConfigFeatures.awareness_Light || !ai_FindLightSource(ent)) {
     				//TEMP CODE, THREAD ME SO I CAN SCAN FOR BLOCKS FASTER!!! - ended up designing with minimal scanning, this works ok for now
-					if (ent.worldObj.rand.nextInt(3) == 0) {
+					if (ent.world.rand.nextInt(3) == 0) {
 						senseTracked = ai_FindSense(ent, true);
 					}
 	    			
@@ -388,7 +388,7 @@ public class ZAUtil {
 		if (senseTracked != null && ent.getNavigator().getPath() != null) {
 			PathPoint pathTo = ent.getNavigator().getPath().getFinalPathPoint();
 			if (pathTo != null) {
-				EntityPlayer player = getClosestPlayer(ent.worldObj, pathTo.xCoord, pathTo.yCoord, pathTo.zCoord, 6D);
+				EntityPlayer player = getClosestPlayer(ent.world, pathTo.xCoord, pathTo.yCoord, pathTo.zCoord, 6D);
 				if (player != null) {
 					//tryPlayInvestigateSound(ent, new Vec3d(ent.posX, ent.posY, ent.posZ));
 					tryPlayInvestigateSound(ent, new Vec3d(pathTo.xCoord, pathTo.yCoord, pathTo.zCoord));
@@ -405,7 +405,7 @@ public class ZAUtil {
     	if (ZAConfigFeatures.wanderingHordes) {
 	    	if (ent instanceof EntitySpider) {
 	    		if (ent.getPassengers().size() > 0 && ent.getPassengers().get(0) instanceof EntitySkeleton) {
-	    			if (ent.worldObj.rand.nextInt(100) == 0) {
+	    			if (ent.world.rand.nextInt(100) == 0) {
 	    				spawnWaypoint(ent);
 	    			}
 	    		}
@@ -415,33 +415,33 @@ public class ZAUtil {
     
     public static boolean ai_FindLightSource(EntityLiving ent) {
     	
-    	if (ent.worldObj.isDaytime()) return false;
+    	if (ent.world.isDaytime()) return false;
     	
-    	if (ent.worldObj.rand.nextInt(1) == 0) {
+    	if (ent.world.rand.nextInt(1) == 0) {
     		
     		Random rand = new Random();
     		
     		int size;
     		
     		for (int i = 0; i < 4; i++) {
-    			EntityPlayer entP = getClosestPlayerToEntity(ent.worldObj, ent, 999);
+    			EntityPlayer entP = getClosestPlayerToEntity(ent.world, ent, 999);
         		if (entP != null) {
         			
         			size = 32 * (i+1);
         			
-		    		int rX = MathHelper.floor_double(entP.posX + (rand.nextInt(size) - (size/2)));
-		    		int rY = MathHelper.floor_double(entP.posY + (rand.nextInt(size/2) - (size/4)));
-		    		int rZ = MathHelper.floor_double(entP.posZ + (rand.nextInt(size) - (size/2)));
+		    		int rX = MathHelper.floor(entP.posX + (rand.nextInt(size) - (size/2)));
+		    		int rY = MathHelper.floor(entP.posY + (rand.nextInt(size/2) - (size/4)));
+		    		int rZ = MathHelper.floor(entP.posZ + (rand.nextInt(size) - (size/2)));
 
 		    		BlockPos pos = new BlockPos(rX, rY, rZ);
 
-					if (!ent.worldObj.isBlockLoaded(pos)) continue;
+					if (!ent.world.isBlockLoaded(pos)) continue;
 
-		    		int lightValue = entP.worldObj.getLightFromNeighbors(pos);
+		    		int lightValue = entP.world.getLightFromNeighbors(pos);
 		    		
 		    		if (lightValue > 4) {
-		    			if ((ent.getDistanceToEntity(entP) > 64 && (ent.worldObj.rand.nextInt(20) == 0) || 
-		    					ent.worldObj.rayTraceBlocks(new Vec3d(ent.posX, ent.posY + (double)ent.getEyeHeight(), ent.posZ), new Vec3d(rX, rY, rZ)) == null)) {
+		    			if ((ent.getDistanceToEntity(entP) > 64 && (ent.world.rand.nextInt(20) == 0) || 
+		    					ent.world.rayTraceBlocks(new Vec3d(ent.posX, ent.posY + (double)ent.getEyeHeight(), ent.posZ), new Vec3d(rX, rY, rZ)) == null)) {
 		    				if (CoroUtilPath.tryMoveToXYZLongDist(ent, rX, rY, rZ, 1)) {
 		    					//ZombieAwareness.dbg("pathing to lightsource at " + rX + ", " + rY + ", " + rZ + " - " + ent);
 			    			}
@@ -480,11 +480,11 @@ public class ZAUtil {
     	
     	if (omniscient) huntRange = 512;
     	
-    	if (/*ent.getHealth() > ent.getMaxHealth() * 0.90F && */(ent.getAttackTarget() == null || ent.worldObj.rand.nextInt(100) == 0)) {
+    	if (/*ent.getHealth() > ent.getMaxHealth() * 0.90F && */(ent.getAttackTarget() == null || ent.world.rand.nextInt(100) == 0)) {
 			boolean found = false;
 			Entity clEnt = null;
 			float closest = 9999F;
-	    	List list = ent.worldObj.getEntitiesWithinAABBExcludingEntity(ent, ent.getEntityBoundingBox().expand(huntRange, huntRange/2, huntRange));
+	    	List list = ent.world.getEntitiesWithinAABBExcludingEntity(ent, ent.getEntityBoundingBox().expand(huntRange, huntRange/2, huntRange));
 	        for(int j = 0; j < list.size(); j++)
 	        {
 	            Entity entity1 = (Entity)list.get(j);
@@ -524,7 +524,7 @@ public class ZAUtil {
      * @return
      */
     public static EntityScent getSenseNearEntity(Entity entSource) {
-        List<Entity> listEnts = entSource.worldObj.getEntitiesWithinAABBExcludingEntity(entSource, entSource.getEntityBoundingBox().expand((double)ZAConfig.maxPFRangeSense, (double)ZAConfig.maxPFRangeSense, (double)ZAConfig.maxPFRangeSense));
+        List<Entity> listEnts = entSource.world.getEntitiesWithinAABBExcludingEntity(entSource, entSource.getEntityBoundingBox().expand((double)ZAConfig.maxPFRangeSense, (double)ZAConfig.maxPFRangeSense, (double)ZAConfig.maxPFRangeSense));
         
         EntityScent entBest = null;
         //double distBest = 999999;
@@ -537,7 +537,7 @@ public class ZAUtil {
             	double dist = entSource.getDistanceToEntity(entCheck);
             	
             	//if (dist < distBest) {
-		            if (dist < ((EntityScent)entCheck).getRange() && dist > 5.0F && entSource.worldObj.rand.nextInt(20) == 0) {
+		            if (dist < ((EntityScent)entCheck).getRange() && dist > 5.0F && entSource.world.rand.nextInt(20) == 0) {
 		                entBest = (EntityScent) entCheck;
 		                return entBest;
 		            }
@@ -669,16 +669,16 @@ public class ZAUtil {
     	
     	if (!ZAConfigFeatures.awareness_Sound) return;
     	
-    	if (event.getEntity().worldObj.provider.getDimension() != 0 && event.getEntity().worldObj.provider.getDimension() != -127) return;
+    	if (event.getEntity().world.provider.getDimension() != 0 && event.getEntity().world.provider.getDimension() != -127) return;
     	
     	if (event.getEntityPlayer() == null || (ZAConfigPlayerLists.whiteListUsedSenses && !ZAConfigPlayerLists.whitelistSenses.contains(CoroUtilEntity.getName(event.getEntityPlayer())))) return;
     	
-	    	if (!event.getEntity().worldObj.isRemote && event.getEntity().worldObj.rand.nextInt(chance) == 0) {
+	    	if (!event.getEntity().world.isRemote && event.getEntity().world.rand.nextInt(chance) == 0) {
 		    	
 	    		int strength = ZAConfig.soundStrength;
 	    		Vec3d pos = new Vec3d(event.getEntityPlayer().posX, event.getEntityPlayer().posY, event.getEntityPlayer().posZ);
 	    		
-	    		EntityScent scent = spawnOrBuffSenseAtPos(event.getEntity().worldObj, pos, EnumSenseType.SOUND, strength);
+	    		EntityScent scent = spawnOrBuffSenseAtPos(event.getEntity().world, pos, EnumSenseType.SOUND, strength);
 	    		
 	    		ZombieAwareness.dbg("spawned or buffed sound sense from blockEvent: " + scent.getStrengthPeak());
 	    	}
@@ -726,19 +726,19 @@ public class ZAUtil {
         for (int tries = 0; tries < 5; tries++) {
 	        int tryX = (int)player.posX - (range/2) + (rand.nextInt(range));
 	        int tryZ = (int)player.posZ - (range/2) + (rand.nextInt(range));
-	        int tryY = player.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
+	        int tryY = player.world.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 	
-	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(player.worldObj, tryX, tryY, tryZ) || player.worldObj.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
+	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(player.world, tryX, tryY, tryZ) || player.world.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
 	            continue;
 	        }
 	
-	        /*EntityZombie entZ = new EntityZombie(player.worldObj);
+	        /*EntityZombie entZ = new EntityZombie(player.world);
 			entZ.setPosition(tryX, tryY, tryZ);
 			entZ.onSpawnWithEgg((IEntityLivingData)null);
-			player.worldObj.spawnEntityInWorld(entZ);*/
+			player.world.spawnEntityInWorld(entZ);*/
 
-			int randSize = player.worldObj.rand.nextInt(ZAConfigSpawning.extraSpawningSurfaceMaxGroupSize) + 1;
-			WorldServer world = (WorldServer) player.worldObj;
+			int randSize = player.world.rand.nextInt(ZAConfigSpawning.extraSpawningSurfaceMaxGroupSize) + 1;
+			WorldServer world = (WorldServer) player.world;
 	        for (int i = 0; i < randSize; i++) {
 	        	spawnMobsAllowed(player, world, tryX, tryY, tryZ);
 	        }
@@ -765,12 +765,12 @@ public class ZAUtil {
 	        int tryZ = (int)player.posZ - (range/2) + (rand.nextInt(range));
 	        
 	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist
-	        		|| !isInDarkCave(player.worldObj, tryX, tryY, tryZ, true)) {
+	        		|| !isInDarkCave(player.world, tryX, tryY, tryZ, true)) {
 	            continue;
 	        }
 	
-	        int randSize = player.worldObj.rand.nextInt(ZAConfigSpawning.extraSpawningCavesMaxGroupSize) + 1;
-	        WorldServer world = (WorldServer) player.worldObj;
+	        int randSize = player.world.rand.nextInt(ZAConfigSpawning.extraSpawningCavesMaxGroupSize) + 1;
+	        WorldServer world = (WorldServer) player.world;
 	        for (int i = 0; i < randSize; i++) {
 	        	spawnMobsAllowed(player, world, tryX, tryY, tryZ);
 	        }
@@ -787,7 +787,7 @@ public class ZAUtil {
 			entZ.setPosition(tryX + 0.5F, tryY + 1.1F, tryZ + 0.5F);
 			entZ.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(entZ)), (IEntityLivingData)null);
 			giveRandomSpeedBoost(entZ);
-			world.spawnEntityInWorld(entZ);
+			world.spawnEntity(entZ);
 			
 			if (ZAConfigSpawning.extraSpawningAutoTarget) entZ.setAttackTarget(player);
 			
@@ -795,7 +795,7 @@ public class ZAUtil {
 	        	ZombieAwareness.dbg("spawnNewMob: " + tryX + ", " + tryY + ", " + tryZ);
 	        }
     	} else {
-    		//WorldServer world = (WorldServer) player.worldObj;
+    		//WorldServer world = (WorldServer) player.world;
     		SpawnListEntry spawnlistentry = world.getSpawnListEntryForTypeAt(EnumCreatureType.MONSTER, new BlockPos(tryX, tryY, tryZ));
     		
     		EntityLiving entityliving;
@@ -808,7 +808,7 @@ public class ZAUtil {
                 Result canSpawn = ForgeEventFactory.canEntitySpawn(entityliving, world, tryX + 0.5F, tryY + 1.1F, tryZ + 0.5F);
                 if (canSpawn == Result.ALLOW || (canSpawn == Result.DEFAULT && entityliving.getCanSpawnHere()))
                 {
-                    world.spawnEntityInWorld(entityliving);
+                    world.spawnEntity(entityliving);
                     if (!ForgeEventFactory.doSpecialSpawn(entityliving, world, tryX + 0.5F, tryY + 1.1F, tryZ + 0.5F))
                     {
                         entityliving.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(entityliving)), (IEntityLivingData) null);
@@ -882,9 +882,9 @@ public class ZAUtil {
         
         double tryX = (int)entSource.posX - (range/2) + (rand.nextInt(range));
         double tryZ = (int)entSource.posZ - (range/2) + (rand.nextInt(range));
-        double tryY =  entSource.worldObj.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
+        double tryY =  entSource.world.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 
-        if (!canSpawnTrace(entSource.worldObj, tryX, tryY, tryZ)) {
+        if (!canSpawnTrace(entSource.world, tryX, tryY, tryZ)) {
             return;
         }
 
@@ -894,12 +894,12 @@ public class ZAUtil {
         }*/
         //System.out.println(height);
         
-        EntityScent var1 = getSenseNodeAtPos(entSource.worldObj, new Vec3d(tryX, tryY, tryZ), EnumSenseType.WAYPOINT);
+        EntityScent var1 = getSenseNodeAtPos(entSource.world, new Vec3d(tryX, tryY, tryZ), EnumSenseType.WAYPOINT);
         
         boolean newNode = false;
     	
     	if (var1 == null) {
-    		var1 = new EntityScent(entSource.worldObj);
+    		var1 = new EntityScent(entSource.world);
     		newNode = true;
     	}
 
@@ -909,7 +909,7 @@ public class ZAUtil {
 	        var1.setPosition(tryX, tryY, tryZ);
 	        var1.type = 2;
 	        
-	        entSource.worldObj.spawnEntityInWorld(var1);
+	        entSource.world.spawnEntity(var1);
         }
         
         if (debug) System.out.println("WP: " + entSource + " - range: " + var1.getRange());
@@ -1010,7 +1010,7 @@ public class ZAUtil {
     		sense.type = type.ordinal();
 	        sense.setPosition(parPos.xCoord, parPos.yCoord, parPos.zCoord);
     		sense.setStrengthPeak(strength);
-	        world.spawnEntityInWorld(sense);
+	        world.spawnEntity(sense);
     	} else if (frequentSoundMultiply) {
     		//instead of amplifying current strength, amp the base value, but only if current strength is weaker than param
     		float str = sense.getStrengthPeak();
@@ -1040,15 +1040,15 @@ public class ZAUtil {
 
 		//added max dist and blocks loaded check due to https://github.com/Corosauce/ZombieAwareness/issues/11
 		double distMaxCancel = 75;
-    	if (!lookupLastAlertTime.containsKey(entAlerted) || lookupLastAlertTime.get(entAlerted) + alertDelay < entAlerted.worldObj.getTotalWorldTime()) {
+    	if (!lookupLastAlertTime.containsKey(entAlerted) || lookupLastAlertTime.get(entAlerted) + alertDelay < entAlerted.world.getTotalWorldTime()) {
 			if (entAlerted.getDistanceToEntity(entTargetted) < distMaxCancel
                     && entAlerted.getEntityWorld().provider.getDimension() == entTargetted.getEntityWorld().provider.getDimension()
 					&& entAlerted.getEntityWorld().isBlockLoaded(entAlerted.getPosition())
 					&& entTargetted.getEntityWorld().isBlockLoaded(entTargetted.getPosition())) {
 				if (entAlerted.canEntityBeSeen(entTargetted)) {
-					//entAlerted.worldObj.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("target"), SoundCategory.HOSTILE, 3F, 0.8F + (entAlerted.worldObj.rand.nextFloat() * 0.2F));
-					entAlerted.worldObj.playSound(null, entTargetted.posX, entTargetted.posY, entTargetted.posZ, ZAConfigFeatures.soundUseAlternateAlertNoise ? SoundRegistry.get("alert") : SoundRegistry.get("target"), SoundCategory.HOSTILE, (float) ZAConfigFeatures.soundVolumeAlertTarget, ZAConfigFeatures.soundUseAlternateAlertNoise ? 1F : 0.8F + (entAlerted.worldObj.rand.nextFloat() * 0.2F));
-					lookupLastAlertTime.put(entAlerted, entAlerted.worldObj.getTotalWorldTime());
+					//entAlerted.world.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("target"), SoundCategory.HOSTILE, 3F, 0.8F + (entAlerted.world.rand.nextFloat() * 0.2F));
+					entAlerted.world.playSound(null, entTargetted.posX, entTargetted.posY, entTargetted.posZ, ZAConfigFeatures.soundUseAlternateAlertNoise ? SoundRegistry.get("alert") : SoundRegistry.get("target"), SoundCategory.HOSTILE, (float) ZAConfigFeatures.soundVolumeAlertTarget, ZAConfigFeatures.soundUseAlternateAlertNoise ? 1F : 0.8F + (entAlerted.world.rand.nextFloat() * 0.2F));
+					lookupLastAlertTime.put(entAlerted, entAlerted.world.getTotalWorldTime());
 					//ZombieAwareness.dbg("!!! alert play for ent: " + entAlerted.getEntityId() + ", lookupSize: " + lookupLastAlertTime.size());
 				} else {
 					//likely due to new call for help routine in vanilla, so treat it like investigating until line of sight is made
@@ -1067,9 +1067,9 @@ public class ZAUtil {
 
 		if (!ZombieAwareness.canProcessEntity(entAlerted)) return;
 
-    	if (!lookupLastInvestigateTime.containsKey(entAlerted) || lookupLastInvestigateTime.get(entAlerted) + investigateDelay < entAlerted.worldObj.getTotalWorldTime()) {
-			entAlerted.worldObj.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("investigate"), SoundCategory.HOSTILE, (float)ZAConfigFeatures.soundVolumeInvestigate, 0.7F + (entAlerted.worldObj.rand.nextFloat() * 0.3F));
-			lookupLastInvestigateTime.put(entAlerted, entAlerted.worldObj.getTotalWorldTime());
+    	if (!lookupLastInvestigateTime.containsKey(entAlerted) || lookupLastInvestigateTime.get(entAlerted) + investigateDelay < entAlerted.world.getTotalWorldTime()) {
+			entAlerted.world.playSound(null, pos.xCoord, pos.yCoord, pos.zCoord, SoundRegistry.get("investigate"), SoundCategory.HOSTILE, (float)ZAConfigFeatures.soundVolumeInvestigate, 0.7F + (entAlerted.world.rand.nextFloat() * 0.3F));
+			lookupLastInvestigateTime.put(entAlerted, entAlerted.world.getTotalWorldTime());
 			//ZombieAwareness.dbg("!!! investigate play for ent: " + entAlerted.getEntityId() + ", lookupSize: " + lookupLastInvestigateTime.size());
 		}
     }

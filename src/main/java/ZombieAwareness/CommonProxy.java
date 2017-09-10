@@ -2,6 +2,7 @@ package ZombieAwareness;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.IGuiHandler;
@@ -20,7 +21,7 @@ public class CommonProxy implements IGuiHandler
     public void init(ZombieAwareness pMod)
     {
         mod = pMod;
-    	EntityRegistry.registerModEntity(EntityScent.class, "EntityScent", entityId++, pMod, 32, 20, false);
+    	EntityRegistry.registerModEntity(new ResourceLocation(ZombieAwareness.modID, "EntityScent"), EntityScent.class, "EntityScent", entityId++, pMod, 32, 20, false);
     }
 
     public int getUniqueTextureLoc()

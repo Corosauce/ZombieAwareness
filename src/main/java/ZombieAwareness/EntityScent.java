@@ -123,23 +123,23 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     	int age = this.dataManager.get(AGE);
     	this.dataManager.set(AGE, --age);
         
-        if(!worldObj.isRemote && age <= 0) {
+        if(!world.isRemote && age <= 0) {
         	this.setDead();
         }
         
         boolean scentDebug = ZAConfigClient.client_debugSensesVisual;
         if (scentDebug) {
-	        if (worldObj.isRemote) {
-	        	if (worldObj.getTotalWorldTime()/*+this.getEntityId()*/ % 5 == 0) {
+	        if (world.isRemote) {
+	        	if (world.getTotalWorldTime()/*+this.getEntityId()*/ % 5 == 0) {
 	        		for (int i = 0; i < getStrengthScaled() / 10; i++) {
 	        			double range = 1D;
-	        			double x = posX - worldObj.rand.nextDouble() / 2 + worldObj.rand.nextDouble();
-	        			double y = posY - worldObj.rand.nextDouble() / 2 + worldObj.rand.nextDouble();
-	        			double z = posZ - worldObj.rand.nextDouble() / 2 + worldObj.rand.nextDouble();
+	        			double x = posX - world.rand.nextDouble() / 2 + world.rand.nextDouble();
+	        			double y = posY - world.rand.nextDouble() / 2 + world.rand.nextDouble();
+	        			double z = posZ - world.rand.nextDouble() / 2 + world.rand.nextDouble();
 	        			if (type == 0) {
-	        				worldObj.spawnParticle(EnumParticleTypes.HEART, true, x, y, z, 0, 0, 0);
+	        				world.spawnParticle(EnumParticleTypes.HEART, true, x, y, z, 0, 0, 0);
 	        			} else if (type == 1) {
-	        				worldObj.spawnParticle(EnumParticleTypes.NOTE, true, x, y, z, 0, 0, 0);
+	        				world.spawnParticle(EnumParticleTypes.NOTE, true, x, y, z, 0, 0, 0);
 	        			}
 	        			
 	        		}
