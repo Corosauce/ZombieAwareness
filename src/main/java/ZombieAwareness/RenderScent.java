@@ -3,7 +3,7 @@ package ZombieAwareness;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.VertexBuffer;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -114,7 +114,7 @@ public class RenderScent extends Render {
         double d3 = y - d0;
         double d4 = z - d1;
         Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder vertexbuffer = tessellator.getBuffer();
+        VertexBuffer vertexbuffer = tessellator.getBuffer();
         vertexbuffer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
 
         for (BlockPos blockpos : BlockPos.getAllInBoxMutable(new BlockPos(i, k, i1), new BlockPos(j, l, j1)))
@@ -142,7 +142,7 @@ public class RenderScent extends Render {
         if (state.isFullCube())
         {
             Tessellator tessellator = Tessellator.getInstance();
-            BufferBuilder vertexbuffer = tessellator.getBuffer();
+            VertexBuffer vertexbuffer = tessellator.getBuffer();
             double d0 = p_188299_9_;//((double)p_188299_9_ - (p_188299_4_ - ((double)p_188299_8_.getY() + p_188299_13_)) / 2.0D) * 1D/*0.5D*/ * (double)this.getWorldFromRenderManager().getLightBrightness(p_188299_8_);
 
             if (d0 >= 0.0D)

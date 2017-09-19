@@ -60,6 +60,23 @@ public class CommonProxy implements IGuiHandler
         return null;
     }
 
+    public World getServerWorld()
+    {
+        if (FMLCommonHandler.instance().getMinecraftServerInstance() != null)
+        {
+            return FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(0);
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    public World getSidesWorld()
+    {
+        return FMLCommonHandler.instance().getMinecraftServerInstance().worldServerForDimension(0);
+    }
+
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world,
             int x, int y, int z)

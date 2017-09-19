@@ -140,13 +140,13 @@ public class ZombieAwareness implements IPFCallback {
     	
         if (worldTemp != null) {
             
-            worldTemp = mc.getWorld(0);
+            worldTemp = mc.worldServerForDimension(0);
             if (worldTemp != null) {
             	worldTick(worldTemp);
             }
             
         } else {
-        	worldRef = mc.getWorld(0);
+        	worldRef = mc.worldServerForDimension(0);
         	//worldRef.addWorldAccess(new ZAWorldAccess());
         }
 
