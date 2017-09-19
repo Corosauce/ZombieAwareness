@@ -12,6 +12,7 @@ import net.minecraft.entity.monster.EntitySkeleton;
 import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.MobEffects;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemRecord;
@@ -312,7 +313,7 @@ public class ZAUtil {
     public static boolean isEnemy(Entity ent, Entity targ, boolean omniTarget) {
     	if (targ instanceof EntityLivingBase) {
 			if (targ instanceof EntityPlayer) {
-				if (!((EntityPlayer) targ).capabilities.isCreativeMode) {
+				if (!((EntityPlayer) targ).capabilities.isCreativeMode && ((EntityPlayer) targ).getActivePotionEffect(MobEffects.INVISIBILITY) == null) {
 					if (!omniTarget) {
 						return true;
 					} else if (ZAConfigPlayerLists.whiteListUsedOmniscient) {
