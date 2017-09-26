@@ -485,7 +485,7 @@ public class ZAUtil {
 			boolean found = false;
 			Entity clEnt = null;
 			float closest = 9999F;
-	    	List list = ent.world.getEntitiesWithinAABBExcludingEntity(ent, ent.getEntityBoundingBox().expand(huntRange, huntRange/2, huntRange));
+	    	List list = ent.world.getEntitiesWithinAABBExcludingEntity(ent, ent.getEntityBoundingBox().grow(huntRange, huntRange/2, huntRange));
 	        for(int j = 0; j < list.size(); j++)
 	        {
 	            Entity entity1 = (Entity)list.get(j);
@@ -525,7 +525,7 @@ public class ZAUtil {
      * @return
      */
     public static EntityScent getSenseNearEntity(Entity entSource) {
-        List<Entity> listEnts = entSource.world.getEntitiesWithinAABBExcludingEntity(entSource, entSource.getEntityBoundingBox().expand((double)ZAConfig.maxPFRangeSense, (double)ZAConfig.maxPFRangeSense, (double)ZAConfig.maxPFRangeSense));
+        List<Entity> listEnts = entSource.world.getEntitiesWithinAABBExcludingEntity(entSource, entSource.getEntityBoundingBox().grow((double)ZAConfig.maxPFRangeSense, (double)ZAConfig.maxPFRangeSense, (double)ZAConfig.maxPFRangeSense));
         
         EntityScent entBest = null;
         //double distBest = 999999;
@@ -972,7 +972,7 @@ public class ZAUtil {
     	if (ZAConfig.extraScentCutoffRange == -1) return null;
     	
     	AxisAlignedBB aabb = new AxisAlignedBB(parPos.x, parPos.y, parPos.z, parPos.x + 1, parPos.y + 1, parPos.z + 1);
-    	aabb = aabb.expand(ZAConfig.extraScentCutoffRange, ZAConfig.extraScentCutoffRange, ZAConfig.extraScentCutoffRange);
+    	aabb = aabb.grow(ZAConfig.extraScentCutoffRange, ZAConfig.extraScentCutoffRange, ZAConfig.extraScentCutoffRange);
     	
     	List list = parWorld.getEntitiesWithinAABB(EntityScent.class, aabb);
     	
