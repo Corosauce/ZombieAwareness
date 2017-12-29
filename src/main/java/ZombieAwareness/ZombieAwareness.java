@@ -367,7 +367,14 @@ public class ZombieAwareness implements IPFCallback {
 		if (canConfigEntity(ent)) {
 			if (!pregen) config.load();
 			boolean canProcess = getDefaultForEntity(ent);
-			result = config.get(configCategory, entName, canProcess).getBoolean(canProcess);
+			try {
+				//prevent crash for case where mod entity can be null or blank
+				if (entName != null && !entName.equals("")) {
+					result = config.get(configCategory, entName, canProcess).getBoolean(canProcess);
+				}
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
 			if (!pregen) config.save();
 			ZAUtil.lookupTickableEntities.put(ent, result);
 		}
