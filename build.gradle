@@ -9,7 +9,7 @@ buildscript {
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
-
+apply plugin: 'maven-publish'
 
 version = "1.0"
 group= "zombieawareness" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
@@ -89,5 +89,21 @@ processResources {
     // copy everything else except the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
+    }
+}
+
+publishing {
+    tasks.publish.dependsOn 'build'
+    publications {
+        mavenJava(MavenPublication) {
+            groupId 'com.corosus'
+            artifactId 'zombieawareness'
+            artifact jar
+            artifact sourceJar
+        }
+    }
+
+    repositories {
+        maven { url "$buildDir/../../maven" }
     }
 }
