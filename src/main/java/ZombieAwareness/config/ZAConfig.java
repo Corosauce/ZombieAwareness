@@ -48,6 +48,18 @@ public class ZAConfig implements IConfigCategory {
 	@ConfigComment("Days before all of the mods features will be activated")
 	public static double daysBeforeFeaturesActivate = 0;
 
+	@ConfigComment("Block breaks cause sound senses to spawn")
+	public static boolean blockBreakEvent_Active = true;
+
+	@ConfigComment("Block mining before it breaks cause sound senses to spawn")
+	public static boolean blockHittingEvent_Active = true;
+
+	@ConfigComment("Odds of hitting a block causing a sound sense, rolled per tick")
+	public static int blockHittingEvent_OddsTo1 = 20;
+
+	@ConfigComment("Only spawn sound senses for players, if false, machines and other things will cause them too")
+	public static boolean blockBreakEvent_PlayersOnly = false;
+
 	@Override
 	public String getName() {
 		return "General";

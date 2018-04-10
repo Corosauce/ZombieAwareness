@@ -1,5 +1,6 @@
 package ZombieAwareness;
 
+import ZombieAwareness.config.ZAConfig;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
@@ -8,6 +9,7 @@ import net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.entity.player.PlayerEvent.HarvestCheck;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
@@ -46,17 +48,28 @@ public class ZAEventHandler {
 	public void breakSpeed(BreakSpeed event) {
 		if (!event.getEntityLiving().world.isRemote) {
 			if (!ZAUtil.isZombieAwarenessActive(event.getEntityLiving().world)) return;
-			//ZombieAwareness.dbg("breakSpeed event");
-			ZAUtil.hookBlockEvent(event, 20);
+			if (!ZAConfig.blockHittingEvent_Active) return;
+			//ZombieAwareness.dbg("BreakSpeed event");
+			ZAUtil.hookBlockEvent(event, ZAConfig.blockHittingEvent_OddsTo1);
 		}
 	}
-	
+
 	@SubscribeEvent
 	public void harvest(HarvestCheck event) {
 		if (!event.getEntityLiving().world.isRemote) {
-			if (!ZAUtil.isZombieAwarenessActive(event.getEntityLiving().world)) return;
-			ZombieAwareness.dbg("harvest event");
-			ZAUtil.hookBlockEvent(event, 3);
+			/*if (!ZAUtil.isZombieAwarenessActive(event.getEntityLiving().world)) return;
+			ZombieAwareness.dbg("HarvestCheck event");
+			ZAUtil.hookBlockEvent(event, 3);*/
+		}
+	}
+
+	@SubscribeEvent
+	public void breakBlock(BlockEvent.HarvestDropsEvent event) {
+		if (!event.getWorld().isRemote) {
+			if (!ZAUtil.isZombieAwarenessActive(event.getWorld())) return;
+			if (!ZAConfig.blockBreakEvent_Active) return;
+			ZombieAwareness.dbg("HarvestDrops event");
+			ZAUtil.handleBlockBasedEvent(event.getHarvester(), event.getWorld(), event.getPos(), 3);
 		}
 	}
 	

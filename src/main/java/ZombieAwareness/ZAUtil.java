@@ -681,9 +681,39 @@ public class ZAUtil {
 	    		
 	    		EntityScent scent = spawnOrBuffSenseAtPos(event.getEntity().world, pos, EnumSenseType.SOUND, strength);
 	    		
-	    		ZombieAwareness.dbg("spawned or buffed sound sense from blockEvent: " + scent.getStrengthPeak());
+	    		ZombieAwareness.dbg("spawned or buffed sound sense from PlayerEvent: " + scent.getStrengthPeak());
 	    	}
     }
+
+	/**
+	 * Player can be null
+	 *
+	 * @param player
+	 * @param chance
+	 */
+	public static void handleBlockBasedEvent(EntityPlayer player, World world, BlockPos pos, int chance) {
+		if (player == null && ZAConfig.blockBreakEvent_PlayersOnly) {
+			return;
+		}
+
+		if (!ZAConfigFeatures.awareness_Sound) return;
+
+		if (world.provider.getDimension() != 0 && world.provider.getDimension() != -127) return;
+
+		if (player != null && ZAConfigPlayerLists.whiteListUsedSenses) {
+			if (ZAConfigPlayerLists.whitelistSenses.contains(CoroUtilEntity.getName(player))) return;
+		}
+
+		if (!world.isRemote && world.rand.nextInt(chance) == 0) {
+
+			int strength = ZAConfig.soundStrength;
+			Vec3d posVec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
+
+			EntityScent scent = spawnOrBuffSenseAtPos(world, posVec, EnumSenseType.SOUND, strength);
+
+			ZombieAwareness.dbg("spawned or buffed sound sense from BlockBasedEvent: " + scent.getStrengthPeak());
+		}
+	}
     
     public static void hookSetAttackTarget(LivingSetAttackTargetEvent event) {
     	
