@@ -755,11 +755,14 @@ public class ZAUtil {
         int range = maxDist * 2;
         
         for (int tries = 0; tries < 5; tries++) {
-	        int tryX = (int)player.posX - (range/2) + (rand.nextInt(range));
-	        int tryZ = (int)player.posZ - (range/2) + (rand.nextInt(range));
+	        int tryX = (int)Math.floor(player.posX - (range/2) + (rand.nextInt(range)));
+	        int tryZ = (int)Math.floor(player.posZ - (range/2) + (rand.nextInt(range)));
 	        int tryY = player.world.getHeight(new BlockPos(tryX, 0, tryZ)).getY();
 	
-	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist || !canSpawnMob(player.world, tryX, tryY, tryZ) || player.world.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
+	        if (player.getDistance(tryX, tryY, tryZ) < minDist ||
+					player.getDistance(tryX, tryY, tryZ) > maxDist ||
+					!canSpawnMobOnGround(player.world, tryX, tryY - 1, tryZ) ||
+					player.world.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
 	            continue;
 	        }
 	
@@ -791,12 +794,14 @@ public class ZAUtil {
         //System.out.println("try");
         
         for (int tries = 0; tries < ZAConfigSpawning.extraSpawningCavesTryCount; tries++) {
-	        int tryX = (int)player.posX - (range/2) + (rand.nextInt(range));
-	        int tryY = (int)player.posY - (range/2) + (rand.nextInt(range));
-	        int tryZ = (int)player.posZ - (range/2) + (rand.nextInt(range));
+	        int tryX = (int)Math.floor(player.posX - (range/2) + (rand.nextInt(range)));
+	        int tryY = (int)Math.floor(player.posY - (range/2) + (rand.nextInt(range)));
+	        int tryZ = (int)Math.floor(player.posZ - (range/2) + (rand.nextInt(range)));
 	        
-	        if (player.getDistance(tryX, tryY, tryZ) < minDist || player.getDistance(tryX, tryY, tryZ) > maxDist
-	        		|| !isInDarkCave(player.world, tryX, tryY, tryZ, true)) {
+	        if (player.getDistance(tryX, tryY, tryZ) < minDist ||
+					player.getDistance(tryX, tryY, tryZ) > maxDist ||
+					!canSpawnMobOnGround(player.world, tryX, tryY - 1, tryZ) ||
+					!isInDarkCave(player.world, tryX, tryY, tryZ, true)) {
 	            continue;
 	        }
 	
@@ -893,15 +898,25 @@ public class ZAUtil {
     	}
     	return false;
     }
-    
-    public static boolean canSpawnMob(World world, int x, int y, int z) {
-    	IBlockState state = world.getBlockState(new BlockPos(x-1,y,z));
-        Block id = state.getBlock();//Block.pressurePlatePlanks.blockID;
+
+	/**
+	 * x y z coords are expected to be the ground the mob is going to spawn on
+	 *
+	 * @param world
+	 * @param x
+	 * @param y
+	 * @param z
+	 * @return
+	 */
+    public static boolean canSpawnMobOnGround(World world, int x, int y, int z) {
+    	BlockPos pos = new BlockPos(x, y, z);
+    	IBlockState state = world.getBlockState(pos);
+        Block block = state.getBlock();//Block.pressurePlatePlanks.blockID;
 
         /*if (id == Block.grass.blockID || id == Block.stone.blockID || id == Block.tallGrass.blockID || id == Block.grass.blockID || id == Block.sand.blockID) {
             return true;
         }*/
-        if (!CoroUtilBlock.isAir(id) && state.getMaterial() == Material.LEAVES) {
+        if (CoroUtilBlock.isAir(block) || !block.canCreatureSpawn(state, world, pos, EntityLiving.SpawnPlacementType.ON_GROUND)) {
         	return false;
         }
         return true;
