@@ -411,7 +411,10 @@ public class ZombieAwareness implements IPFCallback {
 
 		boolean result = false;
 		if (canConfigEntity(ent)) {
-			if (ent.isAssignableFrom(EntityZombie.class) || ent.isAssignableFrom(EntitySkeleton.class) || ent.isAssignableFrom(EntityWitch.class) || ent.isAssignableFrom(EntitySpider.class)) {
+			if (EntityZombie.class.isAssignableFrom(ent) ||
+					EntitySkeleton.class.isAssignableFrom(ent) ||
+					EntityWitch.class.isAssignableFrom(ent) ||
+					EntitySpider.class.isAssignableFrom(ent)) {
 				result = true;
 			} else {
 				result = false;
