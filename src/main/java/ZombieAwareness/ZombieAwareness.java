@@ -12,12 +12,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.IEntityLivingData;
-import net.minecraft.entity.monster.EntityMob;
-import net.minecraft.entity.monster.EntitySkeleton;
-import net.minecraft.entity.monster.EntitySpider;
-import net.minecraft.entity.monster.EntityWitch;
-import net.minecraft.entity.monster.EntityZombie;
-import net.minecraft.entity.monster.IMob;
+import net.minecraft.entity.monster.*;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.server.MinecraftServer;
@@ -411,6 +406,9 @@ public class ZombieAwareness implements IPFCallback {
 
 		boolean result = false;
 		if (canConfigEntity(ent)) {
+
+			if (EntityPigZombie.class.isAssignableFrom(ent)) return false;
+
 			if (EntityZombie.class.isAssignableFrom(ent) ||
 					EntitySkeleton.class.isAssignableFrom(ent) ||
 					EntityWitch.class.isAssignableFrom(ent) ||
