@@ -877,9 +877,10 @@ public class ZAUtil {
      * @return
      */
     public static boolean isInDarkCave(World world, int x, int y, int z, boolean checkSpaceToSpawn) {
-    	IBlockState state = world.getBlockState(new BlockPos(x, y, z));
-    	Block block = state.getBlock();
-    	if (!world.canSeeSky(new BlockPos(x, y, z)) && world.getLightFromNeighbors(new BlockPos(x, y, z)) < 5) {
+		BlockPos pos = new BlockPos(x, y, z);
+		IBlockState state = world.getBlockState(pos);
+		Block block = state.getBlock();
+		if (!world.canSeeSky(pos) && world.getLightFromNeighbors(pos) < 5) {
     		if (!CoroUtilBlock.isAir(block) && state.getMaterial() == Material.ROCK/*(block != Blocks.grass || block.getMaterial() != Material.grass)*/) {
     		
     			if (!checkSpaceToSpawn) {
