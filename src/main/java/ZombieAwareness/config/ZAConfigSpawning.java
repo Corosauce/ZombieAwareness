@@ -8,7 +8,7 @@ import modconfig.IConfigCategory;
 public class ZAConfigSpawning implements IConfigCategory {
 
 	@ConfigComment("The max count of zombies active in loaded chunks for duplicating zombie at a location")
-	public static int maxZombiesNight = 50;
+	public static int maxZombiesNight = 10;
 	@ConfigComment("Odds to 1 of duplicating extra zombies")
 	public static int maxZombiesNightBaseRarity = 100;
 	@ConfigComment("Delay rate of spawning extra zombies")

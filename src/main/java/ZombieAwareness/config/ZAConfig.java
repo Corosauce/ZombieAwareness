@@ -40,7 +40,7 @@ public class ZAConfig implements IConfigCategory {
 	public static boolean debugConsoleSuperDetailed = false;
 	
 	@ConfigComment("Minimum distance required between active sense sources, prevents spamming sources [performance sensitive]")
-	public static double extraScentCutoffRange = 1;
+	public static double extraScentCutoffRange = 3;
 	
 	@ConfigComment("Max strength allowed for a sense, in case senses get a super high base strength or large buff")
 	public static int senseMaxStrength = 300;
