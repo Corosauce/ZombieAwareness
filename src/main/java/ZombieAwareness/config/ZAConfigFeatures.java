@@ -42,6 +42,9 @@ public class ZAConfigFeatures implements IConfigCategory {
 	@ConfigComment("Uses a different kind of mob alert noise, might break immersion a bit ;)")
 	public static boolean soundUseAlternateAlertNoise = false;
 
+	@ConfigComment("Only spawn sound sense entities in Overworld")
+	public static boolean awareness_Sound_OverworldOnly = false;
+
 	@Override
 	public String getName() {
 		return "Features";

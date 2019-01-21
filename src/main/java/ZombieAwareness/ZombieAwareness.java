@@ -43,14 +43,6 @@ public class ZombieAwareness implements IPFCallback {
 	public static final String modID = "zombieawareness";
 	public static final String version = "${version}";
     
-    /*public static int lastZombieCount;
-    public static int lastMobsCountSurface;
-    public static int lastMobsCountCaves;
-    public static long lastSpawnTime;
-    public static long lastSpawnSysTime;*/
-    
-    //public static HashMap<Class, Boolean> lookupClassToEntityTick = new HashMap<Class, Boolean>();
-    
     @SidedProxy(clientSide = "ZombieAwareness.ClientProxy", serverSide = "ZombieAwareness.CommonProxy")
     public static CommonProxy proxy;
 
@@ -275,11 +267,6 @@ public class ZombieAwareness implements IPFCallback {
 			for (int i = 0; i < list.size(); i++) {
 				PFCallbackItem item = list.get(i);
 				
-				//lazy fix
-				/*if (item.speed == 0.23F) {
-					item.speed = 1F;
-				}*/
-				
 				if (!item.ent.isDead && OldUtil.chunkExists(item.ent.world, MathHelper.floor(item.ent.posX / 16), MathHelper.floor(item.ent.posZ / 16))) {
 					item.ent.getNavigator().setPath(item.pe, item.speed);
 				}
@@ -398,11 +385,6 @@ public class ZombieAwareness implements IPFCallback {
 
 			boolean tickEnt = canProcessEntity(entry.getValue().getEntityClass(), true);
 		}
-
-		//pre 1.11.2 way
-		/*for (Map.Entry<Class<? extends Entity >, String> entry : EntityList.CLASS_TO_NAME.entrySet()) {
-			boolean tickEnt = canProcessEntity(entry.getKey(), true);
-    	}*/
 		config.save();
 	}
 	
@@ -423,7 +405,6 @@ public class ZombieAwareness implements IPFCallback {
 		try {
 
 			return getClassToOldName(ent);
-			//return EntityList.getEntityStringFromClass(ent);
 		} catch (Exception ex) {
 			if (ZAConfig.debugConsole) {
 				ex.printStackTrace();

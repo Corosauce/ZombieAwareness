@@ -5,6 +5,8 @@ import java.util.*;
 import CoroUtil.forge.CULog;
 import CoroUtil.util.*;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockButton;
+import net.minecraft.block.BlockLever;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.*;
@@ -81,18 +83,11 @@ public class ZAUtil {
 	 * 
 	 * 
 	 */
-	
-	//these 2 are only used for each player, but i cant exactly backtrack to the player that makes the sound so its shared, shouldnt be too horrible...
-	//moving to system that looks for previously made sense, and adds to its current strength, requires no player reference
-    //public static long lastSoundTime;
-    //public static float lastMultiply = 1.0F;
     
     public static Random rand = new Random();
     
     public static HashMap<String, Integer> lastHealths = new HashMap();
     public static HashMap<String, Long> lastBleedTimes = new HashMap();
-    //public static HashMap<String, Long> lastSoundTimes;
-    //public static HashMap<String, Integer> lastMultiplies;
     
     //amplified/debuffed sounds, also entries in here are exempt from the vague blacklist
     @Deprecated
@@ -176,8 +171,10 @@ public class ZAUtil {
     	
     	//covers all note block sounds
     	listSoundProfiles.add(new SoundProfileEntry("block.note", noisyInteractBuff).setDistanceMax(64));
-    	
-    	//TODO: buttons levers
+
+		listSoundProfiles.add(new SoundProfileEntry("lever.click", noisyInteractBuff).setDistanceMax(noisyInteractRange));
+		listSoundProfiles.add(new SoundProfileEntry("pressureplate.click", noisyInteractBuff).setDistanceMax(noisyInteractRange));
+		listSoundProfiles.add(new SoundProfileEntry("button.click", noisyInteractBuff).setDistanceMax(noisyInteractRange));
     	
     	//long dist ones
     	if (ZAConfigFeatures.noisyZombies) listSoundProfiles.add(new SoundProfileEntry(SoundEvents.ENTITY_ZOMBIE_AMBIENT, 0.8D, 8*20).setDistanceMax(48));
@@ -559,8 +556,11 @@ public class ZAUtil {
         }
     	
     	if (world.isRemote || sound == null) return;
-    	
-    	if (world.provider.getDimension() != 0 && world.provider.getDimension() != -127) return;
+
+		if (ZAConfigFeatures.awareness_Sound_OverworldOnly) {
+			if (world.provider.getDimension() != 0 && world.provider.getDimension() != -127) return;
+		}
+
     	
         if (!canSpawnTrace(world, x, y, z)) {
             return;
@@ -587,6 +587,9 @@ public class ZAUtil {
 	        	}
 	        }
         }*/
+
+
+
         
         double strength = ZAConfig.soundStrength;
     	
@@ -672,8 +675,10 @@ public class ZAUtil {
     public static void hookBlockEvent(PlayerEvent event, int chance) {
     	
     	if (!ZAConfigFeatures.awareness_Sound) return;
-    	
-    	if (event.getEntity().world.provider.getDimension() != 0 && event.getEntity().world.provider.getDimension() != -127) return;
+
+		if (ZAConfigFeatures.awareness_Sound_OverworldOnly) {
+			if (event.getEntity().world.provider.getDimension() != 0 && event.getEntity().world.provider.getDimension() != -127) return;
+		}
     	
     	if (event.getEntityPlayer() == null || (ZAConfigPlayerLists.whiteListUsedSenses && !ZAConfigPlayerLists.whitelistSenses.contains(CoroUtilEntity.getName(event.getEntityPlayer())))) return;
     	
@@ -701,7 +706,9 @@ public class ZAUtil {
 
 		if (!ZAConfigFeatures.awareness_Sound) return;
 
-		if (world.provider.getDimension() != 0 && world.provider.getDimension() != -127) return;
+		if (ZAConfigFeatures.awareness_Sound_OverworldOnly) {
+			if (world.provider.getDimension() != 0 && world.provider.getDimension() != -127) return;
+		}
 
 		if (player != null && ZAConfigPlayerLists.whiteListUsedSenses) {
 			if (ZAConfigPlayerLists.whitelistSenses.contains(CoroUtilEntity.getName(player))) return;
@@ -740,6 +747,7 @@ public class ZAUtil {
 	public static void hookPlayEvent(World world, int type,
 			BlockPos blockPosIn, int data) {
 		//if event type is for playing a record
+		if (world.isRemote) return;
 		if (type == 1010) {
 			//if putting in a record and not taking out
 			if (Item.getItemById(data) instanceof ItemRecord) {
@@ -971,7 +979,8 @@ public class ZAUtil {
     	BlockPos pos = new BlockPos(x,y,z);
     	if (!world.isBlockLoaded(pos)) return false;
     	IBlockState state = world.getBlockState(pos);
-        if (state.getMaterial() == Material.CIRCUITS) {
+    	//iirc circuits check was to prevent senses spawning on pressure plates and triggering them, but there should be better ways to stop that...
+        if (state.getMaterial() == Material.CIRCUITS && (!(state.getBlock() instanceof BlockButton) && !(state.getBlock() instanceof BlockLever))) {
             return false;
         }
         return true;
