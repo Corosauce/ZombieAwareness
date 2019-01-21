@@ -23,29 +23,17 @@ import ZombieAwareness.config.ZAConfigClient;
 public class RenderScent extends Render {
     
     public static ResourceLocation TEXTURE64 = new ResourceLocation(ZombieAwareness.modID + ":textures/entities/bloodx64.png");
-    //public static ResourceLocation TEXTURE32 = new ResourceLocation(ZombieAwareness.modID + ":textures/entities/bloodx32.png");
 
     protected RenderScent(RenderManager renderManager) {
 		super(renderManager);
-		//shadowSize = 0F;
 	}
 
     public void doRenderNode(Entity var1, double var2, double var4, double var6, float var8, float var9) {
-        //System.out.println("1");
 
-    	boolean TEMP = false;
-    	
-        //System.out.println("2");
-        if (TEMP || ((EntityScent)var1).type == 0) {
-        	//renderImage(var1, var2, var4, var6, var8, var9);
-            //renderImage(var1, var2, var4, var6, var8, var9, "/misc/shadow.png");
+        if (((EntityScent)var1).type == 0) {
         	float str = (float)((EntityScent)var1).getAgeScale();
         	renderBlood(var1, var2, var4, var6, str, var9);
-        } else {
-            
         }
-
-        //}
     }
 
 	@Override
@@ -59,21 +47,13 @@ public class RenderScent extends Render {
 
     @Override
     public void doRender(Entity var1, double var2, double var4, double var6, float var8, float var9) {
-    	//call texture set
     	bindEntityTexture(var1);
-    	//if (!ZAConfig.client_renderBlood) return;
-    	
-        //if (((EntityScent)var1).type == 0) {
-        
-        //System.out.println("!!!!!!!!!!!!!! - " + (double)(((double)((EntityScent)var1).strength)/100.0D));
-        //}
     	shadowSize = 1.0F;
         GL11.glPushMatrix();
         if (ZAConfigClient.client_renderBlood) {
         	this.doRenderNode(var1, var2, var4, var6, var8, var9);
         }
         shadowSize = 0.0F;
-        //
         GL11.glPopMatrix();
     }
 
@@ -123,11 +103,7 @@ public class RenderScent extends Render {
 
             if (iblockstate.getRenderType() != EnumBlockRenderType.INVISIBLE && world.getLightFromNeighbors(blockpos) > 3)
             {
-            	//for (int ii = 0; ii < 100; ii++) {
-            		//double xx = entityIn.world.rand.nextDouble() * 10D;
-            		//double zz = entityIn.world.rand.nextDouble() * 10D;
-            		this.renderBloodSingle(iblockstate, x, y, z, blockpos, shadowAlpha, f, d2, d3, d4);
-            	//}
+                this.renderBloodSingle(iblockstate, x, y, z, blockpos, shadowAlpha, f, d2, d3, d4);
             }
         }
 
@@ -143,7 +119,7 @@ public class RenderScent extends Render {
         {
             Tessellator tessellator = Tessellator.getInstance();
             BufferBuilder vertexbuffer = tessellator.getBuffer();
-            double d0 = p_188299_9_;//((double)p_188299_9_ - (p_188299_4_ - ((double)p_188299_8_.getY() + p_188299_13_)) / 2.0D) * 1D/*0.5D*/ * (double)this.getWorldFromRenderManager().getLightBrightness(p_188299_8_);
+            double d0 = p_188299_9_;
 
             if (d0 >= 0.0D)
             {

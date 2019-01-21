@@ -75,19 +75,8 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
 
     public float getRange() {
     	float range = (float)getStrengthScaled() / 100.0F * (float)ZAConfig.maxPFRangeSense;
-    	
-    	//System.out.println("ranges: " + range);
-    	
+
     	return range;
-    	
-    	/*if (this.type == EnumSenseType.WAYPOINT.ordinal()) {
-    		return (float)getStrengthScaled() / 100.0F * 128;
-    	} else if (this.type == EnumSenseType.SOUND.ordinal()) {
-    		return (float)getStrengthScaled() / 100.0F * (float)ZAConfig.maxPFRangeSense / 2.0F;
-    	} else {
-    		return (float)getStrengthScaled() / 100.0F * (float)ZAConfig.maxPFRangeSense;
-    	}*/
-        
     }
 
     public void setStrengthPeak(int strength) {

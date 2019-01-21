@@ -88,16 +88,8 @@ public class ZAUtil {
     
     public static HashMap<String, Integer> lastHealths = new HashMap();
     public static HashMap<String, Long> lastBleedTimes = new HashMap();
-    
-    //amplified/debuffed sounds, also entries in here are exempt from the vague blacklist
-    @Deprecated
-    public static HashMap<SoundEvent, Double> lookupSoundToStrengthMultiplier = new HashMap<SoundEvent, Double>();
+
     public static List<SoundProfileEntry> listSoundProfiles = new ArrayList<SoundProfileEntry>();
-    
-    @Deprecated
-    public static List<SoundEvent> listSoundBlacklistExact = new ArrayList<SoundEvent>();
-    @Deprecated
-    public static List<String> listSoundBlacklistVague = new ArrayList<String>();
     
     public static WeakHashMap<Entity, Long> lookupLastAlertTime = new WeakHashMap<Entity, Long>();
     public static long alertDelay = 60*20;
@@ -118,49 +110,13 @@ public class ZAUtil {
     public static boolean debug = false;
     
     static {
-    	    	
-    	listSoundBlacklistExact.add(SoundEvents.ENTITY_ARROW_SHOOT);
-    	listSoundBlacklistExact.add(SoundRegistry.get("alert"));
-    	
-    	//walking
-    	listSoundBlacklistVague.add(".step");
-    	//picking up exp
-    	listSoundBlacklistVague.add(".touch");
-    	//picking up items
-    	listSoundBlacklistVague.add(".pickup");
-    	//weird eating based sound
-    	listSoundBlacklistVague.add(".equip");
-    	//listSoundBlacklistVague.add(".attack.crit");
-    	listSoundBlacklistVague.add("player.attack");
-    	listSoundBlacklistVague.add(".hurt");
-    	listSoundBlacklistVague.add(".death");
-    	
-    	listSoundBlacklistVague.add(".ambient");
-    	
-    	listSoundBlacklistVague.add("generic.eat");
-    	
-    	
-    	lookupSoundToStrengthMultiplier.put(SoundEvents.ENTITY_GENERIC_EXPLODE, 3D);
-    	lookupSoundToStrengthMultiplier.put(SoundEvents.BLOCK_PISTON_EXTEND, 2D);
-    	lookupSoundToStrengthMultiplier.put(SoundEvents.ENTITY_ARROW_HIT_PLAYER, 1.1D);
-    	lookupSoundToStrengthMultiplier.put(SoundEvents.ENTITY_ARROW_HIT, 1.1D);
-    	lookupSoundToStrengthMultiplier.put(SoundEvents.ENTITY_ZOMBIE_AMBIENT, 0.8D);
-    	
-    	//make distant triggers
-    	lookupSoundToStrengthMultiplier.put(SoundEvents.BLOCK_CHEST_CLOSE, 1.3D);
-    	lookupSoundToStrengthMultiplier.put(SoundEvents.BLOCK_WOODEN_DOOR_CLOSE, 1.3D);
-    	lookupSoundToStrengthMultiplier.put(SoundEvents.BLOCK_IRON_DOOR_CLOSE, 1.3D);
-    	lookupSoundToStrengthMultiplier.put(SoundEvents.BLOCK_WOODEN_TRAPDOOR_CLOSE, 1.3D);
-    	
     	int noisyInteractRange = 30;
     	double noisyInteractBuff = 1.3D;
     	
     	//short dist ones
     	listSoundProfiles.add(new SoundProfileEntry(SoundEvents.ENTITY_ARROW_HIT_PLAYER, 1.1D));
     	listSoundProfiles.add(new SoundProfileEntry(SoundEvents.ENTITY_ARROW_HIT, 1.1D));
-    	
-    	
-    	
+
     	listSoundProfiles.add(new SoundProfileEntry(SoundEvents.BLOCK_CHEST_CLOSE, noisyInteractBuff).setDistanceMax(noisyInteractRange));
     	listSoundProfiles.add(new SoundProfileEntry(SoundEvents.BLOCK_WOODEN_DOOR_CLOSE, noisyInteractBuff).setDistanceMax(noisyInteractRange));
     	listSoundProfiles.add(new SoundProfileEntry(SoundEvents.BLOCK_IRON_DOOR_CLOSE, noisyInteractBuff).setDistanceMax(noisyInteractRange));
@@ -223,10 +179,6 @@ public class ZAUtil {
     	}
     	return null;
     }
-
-	/*public static void tickPlayerOverworldOnly(EntityPlayer player) {
-
-	}*/
 	
 	public static void tickPlayer(EntityPlayer player) {
 
@@ -357,14 +309,6 @@ public class ZAUtil {
 		if (PFQueue.instance == null) {
     		new PFQueue(ent.world);
     	}
-		/*long time = 0;
-		try {
-			if (PFQueue.pfDelays.containsKey(ent)) {
-				time = (Long)PFQueue.pfDelays.get(ent);
-			}
-		} catch (Exception ex) {
-			
-		}*/
 		
 		EntityScent senseTracked = null;
 		
@@ -481,7 +425,7 @@ public class ZAUtil {
     	
     	if (omniscient) huntRange = 512;
     	
-    	if (/*ent.getHealth() > ent.getMaxHealth() * 0.90F && */(ent.getAttackTarget() == null || ent.world.rand.nextInt(100) == 0)) {
+    	if ((ent.getAttackTarget() == null || ent.world.rand.nextInt(100) == 0)) {
 			boolean found = false;
 			Entity clEnt = null;
 			float closest = 9999F;
@@ -492,7 +436,7 @@ public class ZAUtil {
 	            if(isEnemy(ent, entity1, omniscient))
 	            {
 	            	if (omniscient || (ZAConfig.seeThroughWalls || ((EntityLivingBase) entity1).canEntityBeSeen(ent))) {
-	            		if (sanityCheck(ent, entity1)/* && entity1 instanceof EntityPlayer*/) {
+	            		if (sanityCheck(ent, entity1)) {
 	            			float dist = ent.getDistanceToEntity(entity1);
 	            			if (dist < closest) {
 	            				closest = dist;
@@ -506,14 +450,6 @@ public class ZAUtil {
 	        	huntTarget(ent, (EntityLivingBase)clEnt);
 	        	return true;
 	        }
-		} else {
-			
-			//if (ent.entityToAttack != null) {
-				//if (!ent.hasPath() && ent.getDistanceToEntity(ent.entityToAttack) > 5F) {
-					//PFQueue.getPath(ent, ent.entityToAttack, ent.maxPFRange);
-				//}
-			//}
-			
 		}
     	return false;
     }
@@ -528,7 +464,6 @@ public class ZAUtil {
         List<Entity> listEnts = entSource.world.getEntitiesWithinAABBExcludingEntity(entSource, entSource.getEntityBoundingBox().grow((double)ZAConfig.maxPFRangeSense, (double)ZAConfig.maxPFRangeSense, (double)ZAConfig.maxPFRangeSense));
         
         EntityScent entBest = null;
-        //double distBest = 999999;
 
         for(int i = 0; i < listEnts.size(); ++i) {
         	Entity entCheck = listEnts.get(i);
@@ -536,13 +471,11 @@ public class ZAUtil {
             if (entCheck instanceof EntityScent) {
             	
             	double dist = entSource.getDistanceToEntity(entCheck);
-            	
-            	//if (dist < distBest) {
-		            if (dist < ((EntityScent)entCheck).getRange() && dist > 5.0F && entSource.world.rand.nextInt(20) == 0) {
-		                entBest = (EntityScent) entCheck;
-		                return entBest;
-		            }
-            	//}
+
+				if (dist < ((EntityScent)entCheck).getRange() && dist > 5.0F && entSource.world.rand.nextInt(20) == 0) {
+					entBest = (EntityScent) entCheck;
+					return entBest;
+				}
             }
         }
 
@@ -561,51 +494,20 @@ public class ZAUtil {
 			if (world.provider.getDimension() != 0 && world.provider.getDimension() != -127) return;
 		}
 
-    	
         if (!canSpawnTrace(world, x, y, z)) {
             return;
         }
         
-        //EntityPlayer closePlayer = getClosestPlayer(world, x, y, z, 3D);
-        
         EntityPlayer closestPlayer = getClosestPlayer(world, x, y, z, 128);
-        
-        //int soundVolumeAdjusted = (int)(20.0F * volume);
-        
-        /*if (listSoundBlacklistExact.contains(sound)) {
-        	return;
-        }*/
-        
-        //required to prevent all the .step types without having to maintain a huge list of exact sound events
-        //we will also see if we buff a specific sound so we can exempt it from vague blacklist
-        //eg: player.hurt exempt but all mobs hurt blacklisted
-        String soundName = SoundProfileEntry.getSoundEventName(sound);
-        /*if (!lookupSoundToStrengthMultiplier.containsKey(sound)) {
-	        for (String soundFilter : listSoundBlacklistVague) {
-	        	if (soundName.contains(soundFilter)) {
-	        		return;
-	        	}
-	        }
-        }*/
 
+		String soundName = SoundProfileEntry.getSoundEventName(sound);
 
-
-        
         double strength = ZAConfig.soundStrength;
-    	
-    	//specific buff for sound
-    	/*if (lookupSoundToStrengthMultiplier.containsKey(sound)) {
-    		strength *= lookupSoundToStrengthMultiplier.get(sound);
-    	}*/
     	
     	Vec3d pos = new Vec3d(x, y, z);
         
     	if (closestPlayer != null) {
     		double distToPlayer = closestPlayer.getDistance(x, y, z);
-        	
-        	//custom cases for sounds we want to trigger that can be further away
-        	
-        	//new
         	
         	SoundProfileEntry entry = getFirstEntry(soundName);
         	
@@ -618,58 +520,9 @@ public class ZAUtil {
                 		
                 		ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent, sound: " + soundName + ", str: " + scent.getStrengthPeak() + ", vol: " + volume);
             		}
-        		} else {
-        			//ZombieAwareness.dbg("too far: " + soundName + " - " + distToPlayer);
-        		}
-        	} else {
-        		//debug what we could add
-        		if (distToPlayer <= 3) {
-        			//ZombieAwareness.dbg("didnt spawn for: " + soundName);
         		}
         	}
     	}
-    	
-    	
-        /*if((closePlayer != null)) {
-        	
-    		EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength);
-    		
-    		ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent, sound: " + soundName + ", str: " + scent.getStrengthPeak() + ", vol: " + volume);
-        	
-        } else {
-        	//previously used 128 range, lowering for sake of mob despawn concerns
-        	//EntityPlayer farPlayer = getClosestPlayer(world, x, y, z, 128);
-        	
-            
-            if (farPlayer != null) {
-            	
-            	
-            	
-            	//old
-            	
-            	if (ZAConfigFeatures.noisyZombies && sound == SoundEvents.ENTITY_ZOMBIE_AMBIENT && distToPlayer <= 48) {
-            		if (rand.nextInt(1 + (ZombieAwareness.lastZombieCount * 8)) == 0) {
-            			
-            			EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength, false);
-            			
-            			ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent for noisyZombies, sound: " + soundName + ", str: " + scent.getStrengthPeak());
-                	}
-            	} else if (ZAConfigFeatures.noisyPistons && sound == SoundEvents.BLOCK_PISTON_EXTEND) {
-        			if (rand.nextInt(20) == 0) {
-        				
-        				EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength);
-        				
-        				ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent for noisyPistons, sound: " + soundName + ", str: " + scent.getStrengthPeak());
-        			}
-            	} else if (sound == SoundEvents.ENTITY_GENERIC_EXPLODE) {
-            		
-            		EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength);
-    				
-    				ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent for distant sounds, sound: " + soundName + ", str: " + scent.getStrengthPeak());
-            	}
-            	
-            }
-        }*/
     }
     
     public static void hookBlockEvent(PlayerEvent event, int chance) {
@@ -682,15 +535,15 @@ public class ZAUtil {
     	
     	if (event.getEntityPlayer() == null || (ZAConfigPlayerLists.whiteListUsedSenses && !ZAConfigPlayerLists.whitelistSenses.contains(CoroUtilEntity.getName(event.getEntityPlayer())))) return;
     	
-	    	if (!event.getEntity().world.isRemote && event.getEntity().world.rand.nextInt(chance) == 0) {
-		    	
-	    		int strength = ZAConfig.soundStrength;
-	    		Vec3d pos = new Vec3d(event.getEntityPlayer().posX, event.getEntityPlayer().posY, event.getEntityPlayer().posZ);
-	    		
-	    		EntityScent scent = spawnOrBuffSenseAtPos(event.getEntity().world, pos, EnumSenseType.SOUND, strength);
-	    		
-	    		ZombieAwareness.dbg("spawned or buffed sound sense from PlayerEvent: " + scent.getStrengthPeak());
-	    	}
+		if (!event.getEntity().world.isRemote && event.getEntity().world.rand.nextInt(chance) == 0) {
+
+			int strength = ZAConfig.soundStrength;
+			Vec3d pos = new Vec3d(event.getEntityPlayer().posX, event.getEntityPlayer().posY, event.getEntityPlayer().posZ);
+
+			EntityScent scent = spawnOrBuffSenseAtPos(event.getEntity().world, pos, EnumSenseType.SOUND, strength);
+
+			ZombieAwareness.dbg("spawned or buffed sound sense from PlayerEvent: " + scent.getStrengthPeak());
+		}
     }
 
 	/**
@@ -776,11 +629,6 @@ public class ZAUtil {
 					player.world.getLightFromNeighbors(new BlockPos(tryX, tryY, tryZ)) >= 6) {
 	            continue;
 	        }
-	
-	        /*EntityZombie entZ = new EntityZombie(player.world);
-			entZ.setPosition(tryX, tryY, tryZ);
-			entZ.onSpawnWithEgg((IEntityLivingData)null);
-			player.world.spawnEntityInWorld(entZ);*/
 
 			int randSize = player.world.rand.nextInt(ZAConfigSpawning.extraSpawningSurfaceMaxGroupSize) + 1;
 			WorldServer world = (WorldServer) player.world;
@@ -801,8 +649,6 @@ public class ZAUtil {
         int minDist = ZAConfigSpawning.extraSpawningCavesDistMin;
         int maxDist = ZAConfigSpawning.extraSpawningCavesDistMax;
         int range = maxDist * 2;
-        
-        //System.out.println("try");
         
         for (int tries = 0; tries < ZAConfigSpawning.extraSpawningCavesTryCount; tries++) {
 	        int tryX = (int)Math.floor(player.posX - (range/2) + (rand.nextInt(range)));
@@ -842,7 +688,6 @@ public class ZAUtil {
 	        	ZombieAwareness.dbg("spawnNewMob: " + tryX + ", " + tryY + ", " + tryZ);
 	        }
     	} else {
-    		//WorldServer world = (WorldServer) player.world;
     		SpawnListEntry spawnlistentry = world.getSpawnListEntryForTypeAt(EnumCreatureType.MONSTER, new BlockPos(tryX, tryY, tryZ));
     		
     		EntityLiving entityliving;
@@ -873,8 +718,6 @@ public class ZAUtil {
             {
                 exception.printStackTrace();
             }
-
-            
     	}
     }
     
@@ -946,11 +789,7 @@ public class ZAUtil {
             return;
         }
 
-        double height = entSource.posY/* - (double)var0.yOffset*/ + 0.0D;
-        /*if (var0 instanceof EntityPlayer) {
-          height -= 1.0D;
-        }*/
-        //System.out.println(height);
+        double height = entSource.posY;
         
         EntityScent var1 = getSenseNodeAtPos(entSource.world, new Vec3d(tryX, tryY, tryZ), EnumSenseType.WAYPOINT);
         
@@ -971,8 +810,6 @@ public class ZAUtil {
         }
         
         if (debug) System.out.println("WP: " + entSource + " - range: " + var1.getRange());
-        //System.out.println("?!?!?! - " + var1.type);
-        //System.out.println(var1.getRange());
     }
 
     public static boolean canSpawnTrace(World world, double x, double y, double z) {
@@ -980,6 +817,7 @@ public class ZAUtil {
     	if (!world.isBlockLoaded(pos)) return false;
     	IBlockState state = world.getBlockState(pos);
     	//iirc circuits check was to prevent senses spawning on pressure plates and triggering them, but there should be better ways to stop that...
+		//might be redundant since AABB and canTriggerWalking and canBeCollidedWith fix
         if (state.getMaterial() == Material.CIRCUITS && (!(state.getBlock() instanceof BlockButton) && !(state.getBlock() instanceof BlockLever))) {
             return false;
         }
