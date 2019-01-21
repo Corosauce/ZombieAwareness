@@ -1,5 +1,6 @@
 package ZombieAwareness;
 
+import CoroUtil.forge.CULog;
 import ZombieAwareness.config.ZAConfig;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
@@ -11,6 +12,7 @@ import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.entity.player.PlayerEvent.HarvestCheck;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -18,8 +20,6 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 
 public class ZAEventHandler {
-	
-	public static World lastWorld = null;
 	
 	@SubscribeEvent
 	public void soundEvent(PlaySoundAtEntityEvent event) {
@@ -95,19 +95,15 @@ public class ZAEventHandler {
 
 			if (!ZAUtil.isZombieAwarenessActive(DimensionManager.getWorld(0))) return;
 
-			if (lastWorld != DimensionManager.getWorld(0)) {
-	    		lastWorld = DimensionManager.getWorld(0);
-	    		
-	    		World worlds[] = DimensionManager.getWorlds();
-	    		for (int i = 0; i < worlds.length; i++) {
-	    			World world = worlds[i];
-	    			world.addEventListener(new WorldEventListener(world.provider.getDimension()));
-	    		}
-	    	}
-			
-			//System.out.println("tick ZA");
 			ZombieAwareness.instance.onTick();
 		}
+	}
+
+	@SubscribeEvent
+	public void worldLoad(WorldEvent.Load event) {
+		int dimID = event.getWorld().provider.getDimension();
+		CULog.dbg("adding ZA world listener for dimID: " + dimID + ", remote?: " + event.getWorld().isRemote);
+		event.getWorld().addEventListener(new WorldEventListener(dimID));
 	}
 
 	@SubscribeEvent
