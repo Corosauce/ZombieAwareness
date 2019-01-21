@@ -138,9 +138,11 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
 	        			double z = posZ - world.rand.nextDouble() / 2 + world.rand.nextDouble();
 	        			if (type == 0) {
 	        				world.spawnParticle(EnumParticleTypes.HEART, true, x, y, z, 0, 0, 0);
-	        			} else if (type == 1) {
-	        				world.spawnParticle(EnumParticleTypes.NOTE, true, x, y, z, 0, 0, 0);
-	        			}
+                        } else if (type == 1) {
+                            world.spawnParticle(EnumParticleTypes.NOTE, true, x, y, z, 0, 0, 0);
+                        } else if (type == 2) {
+                            world.spawnParticle(EnumParticleTypes.REDSTONE, true, x, y, z, 0, 0, 0);
+                        }
 	        			
 	        		}
 	        	}

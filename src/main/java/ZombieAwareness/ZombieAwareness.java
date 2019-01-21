@@ -3,23 +3,21 @@ package ZombieAwareness;
 import java.io.File;
 import java.util.*;
 
+import CoroUtil.forge.CULog;
 import ZombieAwareness.config.*;
 import modconfig.ConfigMod;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.ServerCommandManager;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityList;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.IEntityLivingData;
+import net.minecraft.entity.*;
 import net.minecraft.entity.monster.*;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -44,17 +42,12 @@ public class ZombieAwareness implements IPFCallback {
 	public static ZombieAwareness instance;
 	public static final String modID = "zombieawareness";
 	public static final String version = "${version}";
-
-	//Usefull references
-    public static MinecraftServer mc;
-    public static World worldRef;
-    public static boolean ingui;
     
-    public static int lastZombieCount;
+    /*public static int lastZombieCount;
     public static int lastMobsCountSurface;
     public static int lastMobsCountCaves;
     public static long lastSpawnTime;
-    public static long lastSpawnSysTime;
+    public static long lastSpawnSysTime;*/
     
     //public static HashMap<Class, Boolean> lookupClassToEntityTick = new HashMap<Class, Boolean>();
     
@@ -123,176 +116,146 @@ public class ZombieAwareness implements IPFCallback {
     	
     }
     
-    public void onTick(MinecraftServer var1) {
-    	onTickInGame(var1);
+    public void onTick() {
+    	onTickInGame();
     }
 
-    public void onTickInGame(MinecraftServer var1) {
-        
-    	mc = var1;
+    public void onTickInGame() {
     	
-    	World worldTemp = this.worldRef;
+    	World world = DimensionManager.getWorld(0);
     	
-        if (worldTemp != null) {
-            
-            worldTemp = mc.getWorld(0);
-            if (worldTemp != null) {
-            	worldTick(worldTemp);
-            }
-            
-        } else {
-        	worldRef = mc.getWorld(0);
-        	//worldRef.addWorldAccess(new ZAWorldAccess());
+        if (world != null) {
+			tickOverworld(world);
         }
 
-        ingui = false;
+
+
     }
+
+    public static void tickWorld(World world) {
+
+		int lastCountZombies = 0;
+		int lastCountMobsSurface = 0;
+		int lastCountMobsCaves = 0;
+
+		int dimID = world.provider.getDimension();
+
+		//calculate entity counts needed for some features
+
+		if (world.getTotalWorldTime() % 40 == 0) {
+			for (int i = 0; i < world.loadedEntityList.size(); i++) {
+				Entity ent = world.loadedEntityList.get(i);
+
+				int x = MathHelper.floor(ent.posX);
+				int y = MathHelper.floor(ent.posY);
+				int z = MathHelper.floor(ent.posZ);
+
+				if (ent instanceof EntityZombie || (ZAConfigSpawning.extraSpawningUseNaturalSpawnList && ent instanceof IMob)) {
+					if (ent instanceof EntityZombie) {
+						lastCountZombies++;
+					}
+
+					//not subtracting 0.5 incase of slab
+					if (ZAUtil.isInDarkCave(world, x, (int)(ent.getEntityBoundingBox().minY - 0.3D), z, false)) {
+						lastCountMobsCaves++;
+					} else {
+						lastCountMobsSurface++;
+					}
+				}
+
+			}
+
+			/*CULog.dbg("lastCountZombies: " + lastCountZombies + ", dimID: " + dimID);
+			CULog.dbg("lastCountMobsSurface: " + lastCountMobsSurface);
+			CULog.dbg("lastCountMobsCaves: " + lastCountMobsCaves);*/
+
+			ZAUtil.getWorldData(dimID).lastZombieCount = lastCountZombies;
+			ZAUtil.getWorldData(dimID).lastMobsCountSurface = lastCountMobsSurface;
+			ZAUtil.getWorldData(dimID).lastMobsCountCaves = lastCountMobsCaves;
+		}
+	}
     
-    public void worldTick(World world) {
-    	//Only run on master
-    	if (!world.isRemote) {
-    		
-    		manageCallbackQueue();
-    		
-    		int lastCountZombies = 0;
-    		int lastCountMobsSurface = 0;
-    		int lastCountMobsCaves = 0;
-    		
-    		boolean spawned = false;
-    		
-    		Random rand = new Random();
-    		
-    		//time reset fix
-    		if (lastSpawnTime - 1000 > world.getTotalWorldTime()) {
-    			lastSpawnTime = 0;
-    		}
-    		
-        	//AI Processing
-    		if (world.getTotalWorldTime() % ZAConfig.tickRateAILoop == 0) {
-	        	List ents = world.loadedEntityList;
-	        	for (int i = 0; i < world.loadedEntityList.size(); i++) {
-	        		Entity ent = world.loadedEntityList.get(i);
-	        		
-	        		if (canProcessEntity(ent) && ent instanceof EntityLiving) {
-	        			
-	        			//if (EntityList.getEntityString(ent) != null) System.out.println(EntityList.getEntityString(ent).toLowerCase());
-	        			
-	        			ZAUtil.tickAI((EntityLiving)ent);
-	        			
-	        			if (!((EntityLiving)ent).getNavigator().noPath() && ent.onGround && ent.isCollidedHorizontally) {
-	        				//ent.motionY = 0.41999998688697815D;
-	        			}
-	        			
-	        			if ((world.provider.getDimension() == 0) && ent instanceof IMob) {
-	        				
-	        				int x = MathHelper.floor(ent.posX);
-	        				int y = MathHelper.floor(ent.posY);
-	        				int z = MathHelper.floor(ent.posZ);
-	        				
-	        				//not subtracting 0.5 incase of slab
-	        				if (ZAUtil.isInDarkCave(world, x, (int)(ent.getEntityBoundingBox().minY - 0.3D), z, false)) {
-	        					lastCountMobsCaves++;
-	        				} else {
-	        					lastCountMobsSurface++;
-	        				}
-	        				
-	        				if (ent instanceof EntityZombie) {
-	        					lastCountZombies++;
-		        				if (lastSpawnTime < ent.world.getTotalWorldTime() && !spawned && ent.world.getClosestPlayerToEntity(ent, 32) == null && rand.nextInt(ZAConfigSpawning.maxZombiesNightBaseRarity + (lastZombieCount * 4 / (Math.max(1, ZAConfig.tickRateAILoop)))) == 0) {
-		        					if (!ent.world.isDaytime() && lastZombieCount < ZAConfigSpawning.maxZombiesNight && ent.world.canSeeSky(new BlockPos(x, y, z)) && ent.world.getLightFromNeighbors(new BlockPos(x, y, z)) < 5) {
-			    						
-		        						EntityZombie entZ = new EntityZombie(ent.world);
-			    						entZ.setPosition(ent.posX, ent.posY, ent.posZ);
-			    						entZ.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(entZ)), (IEntityLivingData)null);
-			    						ZAUtil.giveRandomSpeedBoost(entZ);
-			    						ent.world.spawnEntity(entZ);
-			    						//lastZombieCount = ++lastCount;
-			    						
-			    						spawned = true;
-			    						lastSpawnTime = ZAConfigSpawning.zombieSpawnTickDelay + ent.world.getTotalWorldTime();
-			    						lastSpawnSysTime = System.currentTimeMillis();
-			    						
-			    						if (ZAConfig.debugConsoleSpawns) dbg("Spawned new surface zombie at: " + ent.posX + ", " + ent.posY + ", " + ent.posZ);
-		        					} else if (ZAConfigFeatures.extraSpawningCave && lastZombieCount < ZAConfigSpawning.maxZombiesNight/*lastZombieCountCaves < ZAConfigSpawning.extraSpawningCavesMaxCount*/) {
-		        						EntityPlayer closestPlayer = ent.world.getNearestAttackablePlayer(ent, ZAConfigSpawning.extraSpawningDistMax, ZAConfigSpawning.extraSpawningDistMax);
-			        					if (closestPlayer != null && (!ZAConfigPlayerLists.whiteListUsedExtraSpawning || ZAConfigPlayerLists.whitelistExtraSpawning.contains(CoroUtilEntity.getName(closestPlayer))) 
-			        							&& closestPlayer.getDistanceSqToEntity(ent) > ZAConfigSpawning.extraSpawningDistMin
-			        							&& !ent.world.canSeeSky(new BlockPos(x, y, z)) && ent.world.getLightFromNeighbors(new BlockPos(x, y, z)) < 5) {
-			        						
-			        						//Block id = 
-			        						IBlockState state = ent.world.getBlockState(new BlockPos(x, (int)(ent.getEntityBoundingBox().minY - 0.5D), z));
-			        						
-			        						if (!CoroUtilBlock.isAir(state.getBlock()) && (state.getBlock() != Blocks.GRASS || state.getMaterial() == Material.GRASS)) {
-				        						EntityZombie entZ = new EntityZombie(ent.world);
-					    						entZ.setPosition(ent.posX, ent.posY, ent.posZ);
-					    						entZ.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(entZ)), (IEntityLivingData)null);
-					    						ZAUtil.giveRandomSpeedBoost(entZ);
-					    						ent.world.spawnEntity(entZ);
-					    						
-					    						if (ZAConfigSpawning.extraSpawningAutoTarget) entZ.setAttackTarget(closestPlayer);
-					    						
-					    						//lastZombieCount = ++lastCount;
-					    						
-					    						spawned = true;
-					    						lastSpawnTime = ZAConfigSpawning.zombieSpawnTickDelay + ent.world.getTotalWorldTime();
-					    						lastSpawnSysTime = System.currentTimeMillis();
-				        						
-				        						if (ZAConfig.debugConsoleSpawns) dbg("Spawned new cave zombie at: " + ent.posX + ", " + ent.posY + ", " + ent.posZ);
-			        						}
-			        					}
-			        				}
-		        				}
-	        				}
-	        				
-	        			}
-	        		}
-	        	}
-	        	
-	        	
-	        	
-	        	//if (lastZombieCount != lastCount) System.out.println("lastZombieCount: " + lastZombieCount);
-	        	
-	        	if (world.provider.getDimension() == 0) {
-	        		lastZombieCount = lastCountZombies;
-	        		lastMobsCountSurface = lastCountMobsSurface;
-	        		lastMobsCountCaves = lastCountMobsCaves;
-	        	}
-    		}
-    	}
-    	
-    	
-    	
-    	//Player Processing - for blood visual
-    	if (world.getTotalWorldTime() % ZAConfig.tickRatePlayerLoop == 0) {
-			for(int i = 0; i < world.playerEntities.size(); i++) {
-				EntityPlayer player = (EntityPlayer)world.playerEntities.get(i);
-				if (player != null) { 
-					ZAUtil.tickPlayer(player);
+    public void tickOverworld(World world) {
+    	if (world.isRemote) return;
+
+    	manageCallbackQueue();
+
+		ZAUtil.trackProfile();
+    }
+
+    public static void tickEntity(EntityLivingBase ent) {
+
+		boolean spawned = false;
+
+		Random rand = new Random();
+
+		World world = ent.world;
+		int dimID = world.provider.getDimension();
+
+		//stagger ticking by entity id
+		if ((world.getTotalWorldTime() + ent.getEntityId()) % ZAConfig.tickRateAILoop == 0) {
+			if (canProcessEntity(ent) && ent instanceof EntityLiving) {
+
+				ZAUtil.tickAI((EntityLiving)ent);
+
+				if ((dimID == 0) && ent instanceof IMob) {
+
+					int x = MathHelper.floor(ent.posX);
+					int y = MathHelper.floor(ent.posY);
+					int z = MathHelper.floor(ent.posZ);
+
+					if (ent instanceof EntityZombie) {
+						if (ZAUtil.getWorldData(dimID).lastSpawnTime < ent.world.getTotalWorldTime() && !spawned && ent.world.getClosestPlayerToEntity(ent, 32) == null && rand.nextInt(ZAConfigSpawning.maxZombiesNightBaseRarity + (ZAUtil.getWorldData(dimID).lastZombieCount * 4 / (Math.max(1, ZAConfig.tickRateAILoop)))) == 0) {
+							if (!ent.world.isDaytime() && ZAUtil.getWorldData(dimID).lastZombieCount < ZAConfigSpawning.maxZombiesNight && ent.world.canSeeSky(new BlockPos(x, y, z)) && ent.world.getLightFromNeighbors(new BlockPos(x, y, z)) < 5) {
+
+								CULog.dbg("spawning extra zombie clone, dim " + dimID + ", last count: " + ZAUtil.getWorldData(dimID).lastZombieCount);
+
+								EntityZombie entZ = new EntityZombie(ent.world);
+								entZ.setPosition(ent.posX, ent.posY, ent.posZ);
+								entZ.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(entZ)), (IEntityLivingData)null);
+								ZAUtil.giveRandomSpeedBoost(entZ);
+								ent.world.spawnEntity(entZ);
+								//lastZombieCount = ++lastCount;
+
+								spawned = true;
+								ZAUtil.getWorldData(dimID).lastSpawnTime = ZAConfigSpawning.zombieSpawnTickDelay + ent.world.getTotalWorldTime();
+								ZAUtil.getWorldData(dimID).lastSpawnSysTime = System.currentTimeMillis();
+
+								if (ZAConfig.debugConsoleSpawns) dbg("Spawned new surface zombie at: " + ent.posX + ", " + ent.posY + ", " + ent.posZ);
+							} else if (ZAConfigFeatures.extraSpawningCave && ZAUtil.getWorldData(dimID).lastZombieCount < ZAConfigSpawning.maxZombiesNight/*lastZombieCountCaves < ZAConfigSpawning.extraSpawningCavesMaxCount*/) {
+								EntityPlayer closestPlayer = ent.world.getNearestAttackablePlayer(ent, ZAConfigSpawning.extraSpawningDistMax, ZAConfigSpawning.extraSpawningDistMax);
+								if (closestPlayer != null && (!ZAConfigPlayerLists.whiteListUsedExtraSpawning || ZAConfigPlayerLists.whitelistExtraSpawning.contains(CoroUtilEntity.getName(closestPlayer)))
+										&& closestPlayer.getDistanceSqToEntity(ent) > ZAConfigSpawning.extraSpawningDistMin
+										&& !ent.world.canSeeSky(new BlockPos(x, y, z)) && ent.world.getLightFromNeighbors(new BlockPos(x, y, z)) < 5) {
+
+									IBlockState state = ent.world.getBlockState(new BlockPos(x, (int)(ent.getEntityBoundingBox().minY - 0.5D), z));
+
+									if (!CoroUtilBlock.isAir(state.getBlock()) && (state.getBlock() != Blocks.GRASS || state.getMaterial() == Material.GRASS)) {
+										EntityZombie entZ = new EntityZombie(ent.world);
+										entZ.setPosition(ent.posX, ent.posY, ent.posZ);
+										entZ.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(entZ)), (IEntityLivingData)null);
+										ZAUtil.giveRandomSpeedBoost(entZ);
+										ent.world.spawnEntity(entZ);
+
+										if (ZAConfigSpawning.extraSpawningAutoTarget) entZ.setAttackTarget(closestPlayer);
+
+										//lastZombieCount = ++lastCount;
+
+										spawned = true;
+										ZAUtil.getWorldData(dimID).lastSpawnTime = ZAConfigSpawning.zombieSpawnTickDelay + ent.world.getTotalWorldTime();
+										ZAUtil.getWorldData(dimID).lastSpawnSysTime = System.currentTimeMillis();
+
+										if (ZAConfig.debugConsoleSpawns) dbg("Spawned new cave zombie at: " + ent.posX + ", " + ent.posY + ", " + ent.posZ);
+									}
+								}
+							}
+						}
+					}
+
 				}
 			}
-    	}
-    	
-    	ZAUtil.tickWorld(world);
-    }
-    
-    
-    public static int timeout;
-    public static String msg;
-    public static int color;
-    public static int defaultColor = 16777215;
-    
-    public static void displayMessage(String var0, int var1) {
-        msg = var0;
-        timeout = 85;
-        color = var1;
-    }
-
-    public static void displayMessage(String var0) {
-        displayMessage(var0, defaultColor);
-    }
-
-    public static boolean keyDownLastTick = false;
-    public static boolean heldItemLastTick = false;
+		}
+	}
 
     public static boolean toggle = false;
 

@@ -5,6 +5,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
+import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.entity.player.PlayerEvent.HarvestCheck;
@@ -12,6 +13,7 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 
@@ -104,7 +106,36 @@ public class ZAEventHandler {
 	    	}
 			
 			//System.out.println("tick ZA");
-			ZombieAwareness.instance.onTick(FMLCommonHandler.instance().getMinecraftServerInstance());
+			ZombieAwareness.instance.onTick();
 		}
+	}
+
+	@SubscribeEvent
+	public void tickEntity(LivingEvent.LivingUpdateEvent event) {
+		if (event.getEntityLiving().world.isRemote) return;
+
+		ZombieAwareness.tickEntity(event.getEntityLiving());
+	}
+
+	@SubscribeEvent
+	public void tickPlayer(TickEvent.PlayerTickEvent event) {
+		if (event.player.world.isRemote || event.phase == Phase.END) return;
+
+		if (event.player.world.getTotalWorldTime() % ZAConfig.tickRatePlayerLoop == 0) {
+
+			if (event.player.world.provider.getDimension() == 0) {
+				//ZAUtil.tickPlayerOverworldOnly(event.player);
+			}
+
+			ZAUtil.tickPlayer(event.player);
+		}
+
+	}
+
+	@SubscribeEvent
+	public void tickWorld(TickEvent.WorldTickEvent event) {
+		if (event.world.isRemote || event.phase == Phase.END) return;
+
+		ZombieAwareness.tickWorld(event.world);
 	}
 }

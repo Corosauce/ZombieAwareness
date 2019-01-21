@@ -2,6 +2,7 @@ package ZombieAwareness;
 
 import java.util.*;
 
+import CoroUtil.forge.CULog;
 import CoroUtil.util.*;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -17,7 +18,6 @@ import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemRecord;
 import net.minecraft.pathfinding.PathPoint;
-import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -117,6 +117,8 @@ public class ZAUtil {
 	public static boolean profileActive = false;
 	public static long profileStartTime = 0;
 	public static String profileForPlayer = "";
+
+	public static HashMap<Integer, WorldData> lookupWorldData = new HashMap<>();
     
     public static boolean debug = false;
     
@@ -224,40 +226,40 @@ public class ZAUtil {
     	}
     	return null;
     }
+
+	/*public static void tickPlayerOverworldOnly(EntityPlayer player) {
+
+	}*/
 	
 	public static void tickPlayer(EntityPlayer player) {
-    	
-		if (ZAConfigFeatures.wanderingHordes) {
-			if (rand.nextInt(100) == 0) {
-				spawnWaypoint(player);
-			}
-		}
-		
+
 		if (!ZAConfigPlayerLists.whiteListUsedExtraSpawning || ZAConfigPlayerLists.whitelistExtraSpawning.contains(CoroUtilEntity.getName(player))) {
 			if (ZAConfigFeatures.extraSpawningSurface) {
 				if (!player.world.isDaytime()) {
-					if (ZombieAwareness.lastMobsCountSurface < ZAConfigSpawning.extraSpawningSurfaceMaxCount) {
+					if (getWorldData(player.world.provider.getDimension()).lastMobsCountSurface < ZAConfigSpawning.extraSpawningSurfaceMaxCount) {
 						if (ZAConfigSpawning.extraSpawningSurfaceRandomPool <= 0 || rand.nextInt(ZAConfigSpawning.extraSpawningSurfaceRandomPool) == 0) {
 							spawnNewMobSurface(player);
 						}
 					}
 				}
 			}
-			
+
 			if (ZAConfigFeatures.extraSpawningCave) {
-				//we need existing zombies for this, caves always have something, for now depend on existing ones, do better cave spawning with hostile worlds tech
-				//code in ZombieAwareness class
-				
-				if (ZombieAwareness.lastMobsCountCaves < ZAConfigSpawning.extraSpawningCavesMaxCount) {
+				if (getWorldData(player.world.provider.getDimension()).lastMobsCountCaves < ZAConfigSpawning.extraSpawningCavesMaxCount) {
 					if (ZAConfigSpawning.extraSpawningCavesRandomPool <= 0 || rand.nextInt(ZAConfigSpawning.extraSpawningCavesRandomPool) == 0) {
 						spawnNewMobCave(player);
 					}
 				}
 			}
 		}
-		
+    	
+		if (ZAConfigFeatures.wanderingHordes) {
+			if (rand.nextInt(25) == 0) {
+				spawnWaypoint(player);
+			}
+		}
 
-        if (ZAConfigFeatures.awareness_Scent) {
+        if (ZAConfigFeatures.awareness_Scent && !player.isCreative()) {
         	int lastHealth = lastHealths.containsKey(CoroUtilEntity.getName(player)) ? lastHealths.get(CoroUtilEntity.getName(player)) : 0;
     		Long lastBleedTime = lastBleedTimes.containsKey(CoroUtilEntity.getName(player)) ? lastBleedTimes.get(CoroUtilEntity.getName(player)) : 0L;
     		
@@ -287,9 +289,7 @@ public class ZAUtil {
 		
 		if (ZAConfig.zombieRandSpeedBoost > 0) {
 			double randBoost = ent.world.rand.nextDouble() * ZAConfig.zombieRandSpeedBoost;
-			//TODO: uncomment/replace once CoroUtil gets released with this
-			//AttributeModifier speedBoostModifier = new AttributeModifier(CoroUtilAttributes.SPEED_BOOST_UUID, "ZA speed boost", randBoost, EnumAttribModifierType.INCREMENT_MULTIPLY_BASE.ordinal());
-			AttributeModifier speedBoostModifier = new AttributeModifier(UUID.fromString("8dd7fab2-5bf6-4d07-9c0f-22b3512c1494"), "ZA speed boost", randBoost, 1);
+			AttributeModifier speedBoostModifier = new AttributeModifier(CoroUtilAttributes.SPEED_BOOST_UUID, "ZA speed boost", randBoost, EnumAttribModifierType.INCREMENT_MULTIPLY_BASE.ordinal());
             if (!ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).hasModifier(speedBoostModifier)) {
                 ent.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).applyModifier(speedBoostModifier);
             }
@@ -371,11 +371,10 @@ public class ZAUtil {
 		
 		EntityScent senseTracked = null;
 		
-		if (ent.getAttackTarget() == null && (/*ent.world.rand.nextInt(5) == 0 && *//*time < System.currentTimeMillis() && */ent.getNavigator().noPath())) {
+		if (ent.getAttackTarget() == null && (ent.getNavigator().noPath())) {
 			//Find player made senses
 			if (!ZAConfig.awareness_Light_OnlyZombies || (ent instanceof EntityZombie)) {
 				if (!ZAConfigFeatures.awareness_Light || !ai_FindLightSource(ent)) {
-    				//TEMP CODE, THREAD ME SO I CAN SCAN FOR BLOCKS FASTER!!! - ended up designing with minimal scanning, this works ok for now
 					if (ent.world.rand.nextInt(3) == 0) {
 						senseTracked = ai_FindSense(ent, true);
 					}
@@ -418,8 +417,10 @@ public class ZAUtil {
     	
     	if (ent.world.isDaytime()) return false;
     	
-    	if (ent.world.rand.nextInt(1) == 0) {
-    		
+    	if (ent.world.rand.nextInt(3) == 0) {
+
+			int lightValueAtEntity = ent.world.getLightFromNeighbors(ent.getPosition());
+
     		Random rand = new Random();
     		
     		int size;
@@ -439,10 +440,12 @@ public class ZAUtil {
 					if (!ent.world.isBlockLoaded(pos)) continue;
 
 		    		int lightValue = entP.world.getLightFromNeighbors(pos);
-		    		
-		    		if (lightValue > 4) {
-		    			if ((ent.getDistanceToEntity(entP) > 64 && (ent.world.rand.nextInt(20) == 0) || 
+
+		    		//if bright enough and also as bright or brighter than where they are currently
+		    		if (lightValue > 4 && lightValue >= lightValueAtEntity) {
+		    			if (((ent.world.rand.nextInt(5) == 0 && ent.getDistanceToEntity(entP) > 64) ||
 		    					ent.world.rayTraceBlocks(new Vec3d(ent.posX, ent.posY + (double)ent.getEyeHeight(), ent.posZ), new Vec3d(rX, rY, rZ)) == null)) {
+							//CULog.dbg("path to light source");
 		    				if (CoroUtilPath.tryMoveToXYZLongDist(ent, rX, rY, rZ, 1)) {
 		    					//ZombieAwareness.dbg("pathing to lightsource at " + rX + ", " + rY + ", " + rZ + " - " + ent);
 			    			}
@@ -1121,15 +1124,6 @@ public class ZAUtil {
 		}
     }
 
-	public static void tickWorld(World world) {
-		if (!world.isRemote) {
-			trackProfile();
-		}
-		/*if (world.getTotalWorldTime() % 40 == 0) {
-			for (Entity ent : lookupLastAlertTime)
-		}*/
-	}
-
 	public static boolean isZombieAwarenessActive(World world) {
 		if (world == null) return false;
 		if (ZAConfig.daysBeforeFeaturesActivate <= 0) return true;
@@ -1138,5 +1132,12 @@ public class ZAUtil {
 		} else {
 			return false;
 		}
+	}
+
+	public static WorldData getWorldData(int dimID) {
+    	if (!lookupWorldData.containsKey(dimID)) {
+    		lookupWorldData.put(dimID, new WorldData());
+		}
+		return lookupWorldData.get(dimID);
 	}
 }

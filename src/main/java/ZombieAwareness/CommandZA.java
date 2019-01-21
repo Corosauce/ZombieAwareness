@@ -73,13 +73,13 @@ public class CommandZA extends CommandBase {
 		        	//if (var2[0] == "maxZombiesNight") ZombieAwareness.maxZombiesNight = Integer.valueOf(var2[1]);
 	        	} else if (var2[0].equalsIgnoreCase("get")) {
 	        		if (var2[1].equalsIgnoreCase("time")) {
-	        			if (ZombieAwareness.lastSpawnSysTime > 0) {
-	        				CoroUtilMisc.sendCommandSenderMsg(var1, "last ZA spawn: " + (int)((System.currentTimeMillis() - ZombieAwareness.lastSpawnSysTime) / 1000F) + "s");
+	        			if (ZAUtil.getWorldData(dimension).lastSpawnSysTime > 0) {
+	        				CoroUtilMisc.sendCommandSenderMsg(var1, "last ZA spawn: " + (int)((System.currentTimeMillis() - ZAUtil.getWorldData(dimension).lastSpawnSysTime) / 1000F) + "s");
 	        			} else {
 	        				CoroUtilMisc.sendCommandSenderMsg(var1, "none yet");
 	        			}
 	        		} else if (var2[1].equalsIgnoreCase("counts")) {
-	        			CoroUtilMisc.sendCommandSenderMsg(var1, "surface: " + ZombieAwareness.lastMobsCountSurface + ", caves: " + ZombieAwareness.lastMobsCountCaves);
+	        			CoroUtilMisc.sendCommandSenderMsg(var1, "surface: " + ZAUtil.getWorldData(dimension).lastMobsCountSurface + ", caves: " + ZAUtil.getWorldData(dimension).lastMobsCountCaves);
 	        		} else {
 	        			CoroUtilMisc.sendCommandSenderMsg(var1, var2[1] + " set to: " + OldUtil.getPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1]));
 	        		}
