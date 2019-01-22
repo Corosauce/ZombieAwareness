@@ -2,6 +2,7 @@ package ZombieAwareness;
 
 import java.util.*;
 
+import CoroUtil.difficulty.UtilEntityBuffs;
 import CoroUtil.forge.CULog;
 import CoroUtil.util.*;
 import net.minecraft.block.Block;
@@ -934,6 +935,11 @@ public class ZAUtil {
 		if (!ZAConfigFeatures.soundAlerts) return;
 
 		if (!ZombieAwareness.canProcessEntity(entAlerted)) return;
+
+		//prevent target spam sound from omniscient zombies
+		if (entAlerted.getEntityData().hasKey(UtilEntityBuffs.dataEntityBuffed_AI_Omniscience)) {
+			return;
+		}
 
 		//added max dist and blocks loaded check due to https://github.com/Corosauce/ZombieAwareness/issues/11
 		double distMaxCancel = 75;

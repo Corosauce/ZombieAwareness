@@ -360,7 +360,7 @@ public class ZombieAwareness implements IPFCallback {
 			if (EntityPigZombie.class.isAssignableFrom(ent)) return false;
 
 			if (EntityZombie.class.isAssignableFrom(ent) ||
-					EntitySkeleton.class.isAssignableFrom(ent) ||
+					AbstractSkeleton.class.isAssignableFrom(ent) ||
 					EntityWitch.class.isAssignableFrom(ent) ||
 					EntitySpider.class.isAssignableFrom(ent)) {
 				result = true;
