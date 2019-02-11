@@ -434,6 +434,13 @@ public class ZAUtil {
 	        for(int j = 0; j < list.size(); j++)
 	        {
 	            Entity entity1 = (Entity)list.get(j);
+
+	            //for new calmed zombies, keep them from targetting/pathing towards player
+				//just blacklisting all of them from this feature, not checking if calm currently
+	            if (ent.getClass().getSimpleName().equals("EntityZombiePlayer")) {
+	            	continue;
+				}
+
 	            if(isEnemy(ent, entity1, omniscient))
 	            {
 	            	if (omniscient || (ZAConfig.seeThroughWalls || ((EntityLivingBase) entity1).canEntityBeSeen(ent))) {
