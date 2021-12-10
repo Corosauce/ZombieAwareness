@@ -2,12 +2,11 @@ package ZombieAwareness;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.monster.EntityZombie;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.particles.ParticleTypes;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import ZombieAwareness.config.ZAConfig;
@@ -126,11 +125,11 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
 	        			double y = posY - world.rand.nextDouble() / 2 + world.rand.nextDouble();
 	        			double z = posZ - world.rand.nextDouble() / 2 + world.rand.nextDouble();
 	        			if (type == 0) {
-	        				world.spawnParticle(EnumParticleTypes.HEART, true, x, y, z, 0, 0, 0);
+	        				world.spawnParticle(ParticleTypes.HEART, true, x, y, z, 0, 0, 0);
                         } else if (type == 1) {
-                            world.spawnParticle(EnumParticleTypes.NOTE, true, x, y, z, 0, 0, 0);
+                            world.spawnParticle(ParticleTypes.NOTE, true, x, y, z, 0, 0, 0);
                         } else if (type == 2) {
-                            world.spawnParticle(EnumParticleTypes.REDSTONE, true, x, y, z, 0, 0, 0);
+                            world.spawnParticle(ParticleTypes.REDSTONE, true, x, y, z, 0, 0, 0);
                         }
 	        			
 	        		}
@@ -140,14 +139,14 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    public void writeEntityToNBT(NBTTagCompound var1) {
+    public void writeEntityToNBT(CompoundNBT var1) {
         var1.setInteger("age", this.dataManager.get(AGE));
         var1.setInteger("strengthpeak", this.dataManager.get(STRENGTH_PEAK));
         var1.setInteger("type", type);
     }
 
     @Override
-    public void readEntityFromNBT(NBTTagCompound var1) {
+    public void readEntityFromNBT(CompoundNBT var1) {
     	this.dataManager.set(AGE, var1.getInteger("age"));
     	this.dataManager.set(STRENGTH_PEAK, var1.getInteger("strengthpeak"));
         type = var1.getInteger("type");

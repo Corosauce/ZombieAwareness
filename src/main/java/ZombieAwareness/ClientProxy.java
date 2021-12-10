@@ -1,10 +1,11 @@
 package ZombieAwareness;
 
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-@SideOnly(Side.CLIENT)
+import net.minecraftforge.api.distmarker.Dist;
+
+@OnlyIn(Dist.CLIENT)
 public class ClientProxy extends CommonProxy
 {
     

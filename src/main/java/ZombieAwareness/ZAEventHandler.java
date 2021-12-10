@@ -2,8 +2,7 @@ package ZombieAwareness;
 
 import CoroUtil.forge.CULog;
 import ZombieAwareness.config.ZAConfig;
-import net.minecraft.util.EnumHand;
-import net.minecraft.world.World;
+import net.minecraft.util.Hand;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
@@ -78,7 +77,7 @@ public class ZAEventHandler {
 	@SubscribeEvent
 	public void interact(PlayerInteractEvent event) {
 		if (!event.getEntityLiving().world.isRemote) {
-			if (event.getHand() == EnumHand.MAIN_HAND) {
+			if (event.getHand() == Hand.MAIN_HAND) {
 				/**
 				 * event is way too spammy, since i have much greater sound play access now I am going to try and avoid using this event entirely
 				 */

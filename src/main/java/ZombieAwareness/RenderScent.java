@@ -1,15 +1,15 @@
 package ZombieAwareness;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockRenderType;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.util.EnumBlockRenderType;
+import net.minecraft.entity.MobEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -20,11 +20,11 @@ import org.lwjgl.opengl.GL11;
 
 import ZombieAwareness.config.ZAConfigClient;
 
-public class RenderScent extends Render {
+public class RenderScent extends EntityRenderer {
     
     public static ResourceLocation TEXTURE64 = new ResourceLocation(ZombieAwareness.modID + ":textures/entities/bloodx64.png");
 
-    protected RenderScent(RenderManager renderManager) {
+    protected RenderScent(EntityRendererManager renderManager) {
 		super(renderManager);
 	}
 
@@ -70,9 +70,9 @@ public class RenderScent extends Render {
         GlStateManager.depthMask(false);
         double f = 0.7D + (shadowAlpha * 0.3D);
 
-        if (entityIn instanceof EntityLiving)
+        if (entityIn instanceof MobEntity)
         {
-            EntityLiving entityliving = (EntityLiving)entityIn;
+            MobEntity entityliving = (MobEntity)entityIn;
             f *= entityliving.getRenderSizeModifier();
 
             if (entityliving.isChild())
@@ -99,9 +99,9 @@ public class RenderScent extends Render {
 
         for (BlockPos blockpos : BlockPos.getAllInBoxMutable(new BlockPos(i, k, i1), new BlockPos(j, l, j1)))
         {
-            IBlockState iblockstate = world.getBlockState(blockpos.down());
+            BlockState iblockstate = world.getBlockState(blockpos.down());
 
-            if (iblockstate.getRenderType() != EnumBlockRenderType.INVISIBLE && world.getLightFromNeighbors(blockpos) > 3)
+            if (iblockstate.getRenderType() != BlockRenderType.INVISIBLE && world.getLightFromNeighbors(blockpos) > 3)
             {
                 this.renderBloodSingle(iblockstate, x, y, z, blockpos, shadowAlpha, f, d2, d3, d4);
             }
@@ -113,7 +113,7 @@ public class RenderScent extends Render {
         GlStateManager.depthMask(true);
     }
 
-    private void renderBloodSingle(IBlockState state, double p_188299_2_, double p_188299_4_, double p_188299_6_, BlockPos p_188299_8_, float p_188299_9_, double p_188299_10_, double p_188299_11_, double p_188299_13_, double p_188299_15_)
+    private void renderBloodSingle(BlockState state, double p_188299_2_, double p_188299_4_, double p_188299_6_, BlockPos p_188299_8_, float p_188299_9_, double p_188299_10_, double p_188299_11_, double p_188299_13_, double p_188299_15_)
     {
         if (state.isFullCube())
         {

@@ -6,13 +6,13 @@ import java.util.*;
 import CoroUtil.forge.CULog;
 import ZombieAwareness.config.*;
 import modconfig.ConfigMod;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.command.ServerCommandManager;
 import net.minecraft.entity.*;
 import net.minecraft.entity.monster.*;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -142,8 +142,8 @@ public class ZombieAwareness implements IPFCallback {
 				int y = MathHelper.floor(ent.posY);
 				int z = MathHelper.floor(ent.posZ);
 
-				if (ent instanceof EntityZombie || (ZAConfigSpawning.extraSpawningUseNaturalSpawnList && ent instanceof IMob)) {
-					if (ent instanceof EntityZombie) {
+				if (ent instanceof ZombieEntity || (ZAConfigSpawning.extraSpawningUseNaturalSpawnList && ent instanceof IMob)) {
+					if (ent instanceof ZombieEntity) {
 						lastCountZombies++;
 					}
 
@@ -175,7 +175,7 @@ public class ZombieAwareness implements IPFCallback {
 		ZAUtil.trackProfile();
     }
 
-    public static void tickEntity(EntityLivingBase ent) {
+    public static void tickEntity(LivingEntity ent) {
 
 		boolean spawned = false;
 
@@ -186,9 +186,9 @@ public class ZombieAwareness implements IPFCallback {
 
 		//stagger ticking by entity id
 		if ((world.getTotalWorldTime() + ent.getEntityId()) % ZAConfig.tickRateAILoop == 0) {
-			if (canProcessEntity(ent) && ent instanceof EntityLiving) {
+			if (canProcessEntity(ent) && ent instanceof MobEntity) {
 
-				ZAUtil.tickAI((EntityLiving)ent);
+				ZAUtil.tickAI((MobEntity)ent);
 
 				if ((dimID == 0) && ent instanceof IMob) {
 
@@ -196,15 +196,15 @@ public class ZombieAwareness implements IPFCallback {
 					int y = MathHelper.floor(ent.posY);
 					int z = MathHelper.floor(ent.posZ);
 
-					if (ent instanceof EntityZombie) {
+					if (ent instanceof ZombieEntity) {
 						if (ZAUtil.getWorldData(dimID).lastSpawnTime < ent.world.getTotalWorldTime() && !spawned && ent.world.getClosestPlayerToEntity(ent, 32) == null && rand.nextInt(ZAConfigSpawning.maxZombiesNightBaseRarity + (ZAUtil.getWorldData(dimID).lastZombieCount * 4 / (Math.max(1, ZAConfig.tickRateAILoop)))) == 0) {
 							if (!ent.world.isDaytime() && ZAUtil.getWorldData(dimID).lastZombieCount < ZAConfigSpawning.maxZombiesNight && ent.world.canSeeSky(new BlockPos(x, y, z)) && ent.world.getLightFromNeighbors(new BlockPos(x, y, z)) < 5) {
 
 								CULog.dbg("spawning extra zombie clone, dim " + dimID + ", last count: " + ZAUtil.getWorldData(dimID).lastZombieCount);
 
-								EntityZombie entZ = new EntityZombie(ent.world);
+								ZombieEntity entZ = new ZombieEntity(ent.world);
 								entZ.setPosition(ent.posX, ent.posY, ent.posZ);
-								entZ.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(entZ)), (IEntityLivingData)null);
+								entZ.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(entZ)), (ILivingEntityData)null);
 								ZAUtil.giveRandomSpeedBoost(entZ);
 								ent.world.spawnEntity(entZ);
 								//lastZombieCount = ++lastCount;
@@ -215,17 +215,17 @@ public class ZombieAwareness implements IPFCallback {
 
 								if (ZAConfig.debugConsoleSpawns) dbg("Spawned new surface zombie at: " + ent.posX + ", " + ent.posY + ", " + ent.posZ);
 							} else if (ZAConfigFeatures.extraSpawningCave && ZAUtil.getWorldData(dimID).lastZombieCount < ZAConfigSpawning.maxZombiesNight/*lastZombieCountCaves < ZAConfigSpawning.extraSpawningCavesMaxCount*/) {
-								EntityPlayer closestPlayer = ent.world.getNearestAttackablePlayer(ent, ZAConfigSpawning.extraSpawningDistMax, ZAConfigSpawning.extraSpawningDistMax);
+								PlayerEntity closestPlayer = ent.world.getNearestAttackablePlayer(ent, ZAConfigSpawning.extraSpawningDistMax, ZAConfigSpawning.extraSpawningDistMax);
 								if (closestPlayer != null && (!ZAConfigPlayerLists.whiteListUsedExtraSpawning || ZAConfigPlayerLists.whitelistExtraSpawning.contains(CoroUtilEntity.getName(closestPlayer)))
 										&& closestPlayer.getDistanceSqToEntity(ent) > ZAConfigSpawning.extraSpawningDistMin
 										&& !ent.world.canSeeSky(new BlockPos(x, y, z)) && ent.world.getLightFromNeighbors(new BlockPos(x, y, z)) < 5) {
 
-									IBlockState state = ent.world.getBlockState(new BlockPos(x, (int)(ent.getEntityBoundingBox().minY - 0.5D), z));
+									BlockState state = ent.world.getBlockState(new BlockPos(x, (int)(ent.getEntityBoundingBox().minY - 0.5D), z));
 
 									if (!CoroUtilBlock.isAir(state.getBlock()) && (state.getBlock() != Blocks.GRASS || state.getMaterial() == Material.GRASS)) {
-										EntityZombie entZ = new EntityZombie(ent.world);
+										ZombieEntity entZ = new ZombieEntity(ent.world);
 										entZ.setPosition(ent.posX, ent.posY, ent.posZ);
-										entZ.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(entZ)), (IEntityLivingData)null);
+										entZ.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(entZ)), (ILivingEntityData)null);
 										ZAUtil.giveRandomSpeedBoost(entZ);
 										ent.world.spawnEntity(entZ);
 
@@ -349,7 +349,7 @@ public class ZombieAwareness implements IPFCallback {
 	 * @return
 	 */
 	public static boolean canConfigEntity(Class ent) {
-		return EntityMob.class.isAssignableFrom(ent) || IMob.class.isAssignableFrom(ent);
+		return MonsterEntity.class.isAssignableFrom(ent) || IMob.class.isAssignableFrom(ent);
 	}
 	
 	public static boolean getDefaultForEntity(Class ent) {
@@ -357,12 +357,12 @@ public class ZombieAwareness implements IPFCallback {
 		boolean result = false;
 		if (canConfigEntity(ent)) {
 
-			if (EntityPigZombie.class.isAssignableFrom(ent)) return false;
+			if (ZombiePigmanEntity.class.isAssignableFrom(ent)) return false;
 
-			if (EntityZombie.class.isAssignableFrom(ent) ||
-					AbstractSkeleton.class.isAssignableFrom(ent) ||
-					EntityWitch.class.isAssignableFrom(ent) ||
-					EntitySpider.class.isAssignableFrom(ent)) {
+			if (ZombieEntity.class.isAssignableFrom(ent) ||
+					AbstractSkeletonEntity.class.isAssignableFrom(ent) ||
+					WitchEntity.class.isAssignableFrom(ent) ||
+					SpiderEntity.class.isAssignableFrom(ent)) {
 				result = true;
 			} else {
 				result = false;

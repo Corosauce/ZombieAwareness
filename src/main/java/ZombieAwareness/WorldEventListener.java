@@ -1,8 +1,8 @@
 package ZombieAwareness;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
@@ -29,7 +29,7 @@ public class WorldEventListener implements IWorldEventListener {
 	
 	@Override
 	public void notifyBlockUpdate(World worldIn, BlockPos pos,
-			IBlockState oldState, IBlockState newState, int flags) {
+                                  BlockState oldState, BlockState newState, int flags) {
 
 	}
 
@@ -45,7 +45,7 @@ public class WorldEventListener implements IWorldEventListener {
 	}
 
 	@Override
-	public void playSoundToAllNearExcept(@Nullable EntityPlayer player,
+	public void playSoundToAllNearExcept(@Nullable PlayerEntity player,
 			SoundEvent soundIn, SoundCategory category, double x, double y,
 			double z, float volume, float pitch) {
 
@@ -85,8 +85,8 @@ public class WorldEventListener implements IWorldEventListener {
 	}
 
 	@Override
-	public void playEvent(EntityPlayer player, int type, BlockPos blockPosIn,
-			int data) {
+	public void playEvent(PlayerEntity player, int type, BlockPos blockPosIn,
+                          int data) {
 
 		//there is an edge case where world can be null during world load, just cancel the call
 		World world = DimensionManager.getWorld(dimID);

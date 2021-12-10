@@ -6,30 +6,30 @@ import CoroUtil.difficulty.UtilEntityBuffs;
 import CoroUtil.forge.CULog;
 import CoroUtil.util.*;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockButton;
-import net.minecraft.block.BlockLever;
+import net.minecraft.block.AbstractButtonBlock;
+import net.minecraft.block.LeverBlock;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.monster.EntitySkeleton;
-import net.minecraft.entity.monster.EntitySpider;
-import net.minecraft.entity.monster.EntityZombie;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.MobEffects;
-import net.minecraft.init.SoundEvents;
+import net.minecraft.entity.monster.ZombieEntity;
+import net.minecraft.entity.monster.SkeletonEntity;
+import net.minecraft.entity.monster.SpiderEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.MusicDiscItem;
+import net.minecraft.potion.Effects;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemRecord;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.ServerWorld;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome.SpawnListEntry;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.event.ForgeEventFactory;
@@ -152,10 +152,10 @@ public class ZAUtil {
 		if (profileActive) {
 			World world = DimensionManager.getWorld(0);
 			if (world.getTotalWorldTime() > profileStartTime + 10 * 20) {
-				EntityPlayer player = world.getPlayerEntityByName(profileForPlayer);
+				PlayerEntity player = world.getPlayerEntityByName(profileForPlayer);
 				if (player != null) {
 					for (Map.Entry<Class, Integer> entry : lookupProcessedEntityCounts.entrySet()) {
-						player.sendMessage(new TextComponentString(entry.getKey() + " : " + entry.getValue()));
+						player.sendMessage(new StringTextComponent(entry.getKey() + " : " + entry.getValue()));
 					}
 
 				}
@@ -181,7 +181,7 @@ public class ZAUtil {
     	return null;
     }
 	
-	public static void tickPlayer(EntityPlayer player) {
+	public static void tickPlayer(PlayerEntity player) {
 
 		if (!ZAConfigPlayerLists.whiteListUsedExtraSpawning || ZAConfigPlayerLists.whitelistExtraSpawning.contains(CoroUtilEntity.getName(player))) {
 			if (ZAConfigFeatures.extraSpawningSurface) {
@@ -213,7 +213,7 @@ public class ZAUtil {
         	int lastHealth = lastHealths.containsKey(CoroUtilEntity.getName(player)) ? lastHealths.get(CoroUtilEntity.getName(player)) : 0;
     		Long lastBleedTime = lastBleedTimes.containsKey(CoroUtilEntity.getName(player)) ? lastBleedTimes.get(CoroUtilEntity.getName(player)) : 0L;
     		
-    		Vec3d pos = new Vec3d(player.posX, player.posY, player.posZ);
+    		Vector3d pos = new Vector3d(player.posX, player.posY, player.posZ);
     		
             if((int)player.getHealth() != lastHealth) {
                 if(player.getHealth() < lastHealth) {
@@ -235,7 +235,7 @@ public class ZAUtil {
         }
     }
 	
-	public static void giveRandomSpeedBoost(EntityLiving ent) {
+	public static void giveRandomSpeedBoost(MobEntity ent) {
 		
 		if (ZAConfig.zombieRandSpeedBoost > 0) {
 			double randBoost = ent.world.rand.nextDouble() * ZAConfig.zombieRandSpeedBoost;
@@ -247,12 +247,12 @@ public class ZAUtil {
 		
 	}
     
-    public static void huntTarget(EntityLiving ent, EntityLivingBase targ, int pri) {
+    public static void huntTarget(MobEntity ent, LivingEntity targ, int pri) {
     	CoroUtilPath.tryMoveToEntityLivingLongDist(ent, targ, 1);
-		if (ent instanceof EntityLiving) (ent).setAttackTarget(targ);
+		if (ent instanceof MobEntity) (ent).setAttackTarget(targ);
 	}
 	
-	public static void huntTarget(EntityLiving ent, EntityLivingBase targ) {
+	public static void huntTarget(MobEntity ent, LivingEntity targ) {
 		huntTarget(ent, targ, 0);
 	}
     
@@ -261,14 +261,14 @@ public class ZAUtil {
 	}
 	
     public static boolean isEnemy(Entity ent, Entity targ, boolean omniTarget) {
-    	if (targ instanceof EntityLivingBase) {
-			if (targ instanceof EntityPlayer) {
-				if (!((EntityPlayer) targ).capabilities.isCreativeMode && ((EntityPlayer) targ).getActivePotionEffect(MobEffects.INVISIBILITY) == null) {
+    	if (targ instanceof LivingEntity) {
+			if (targ instanceof PlayerEntity) {
+				if (!((PlayerEntity) targ).capabilities.isCreativeMode && ((PlayerEntity) targ).getActivePotionEffect(Effects.INVISIBILITY) == null) {
 					if (!omniTarget) {
 						return true;
 					} else if (ZAConfigPlayerLists.whiteListUsedOmniscient) {
-						if (ZAConfigPlayerLists.whitelistOmniscientTargettedPlayers.contains(CoroUtilEntity.getName(((EntityPlayer) targ)))) {
-							if (ZAConfig.debugConsoleOmniscient) ZombieAwareness.dbg(CoroUtilEntity.getName((EntityPlayer) targ) + " targetting omnisciently by " + ent);
+						if (ZAConfigPlayerLists.whitelistOmniscientTargettedPlayers.contains(CoroUtilEntity.getName(((PlayerEntity) targ)))) {
+							if (ZAConfig.debugConsoleOmniscient) ZombieAwareness.dbg(CoroUtilEntity.getName((PlayerEntity) targ) + " targetting omnisciently by " + ent);
 							return true;
 						}
 					} else {
@@ -285,7 +285,7 @@ public class ZAUtil {
 		return true;
 	}
     
-    public static void tickAI(EntityLiving ent) {
+    public static void tickAI(MobEntity ent) {
 
 		if (profileActive) {
 			int val = 0;
@@ -315,7 +315,7 @@ public class ZAUtil {
 		
 		if (ent.getAttackTarget() == null && (ent.getNavigator().noPath())) {
 			//Find player made senses
-			if (!ZAConfig.awareness_Light_OnlyZombies || (ent instanceof EntityZombie)) {
+			if (!ZAConfig.awareness_Light_OnlyZombies || (ent instanceof ZombieEntity)) {
 				if (!ZAConfigFeatures.awareness_Light || !ai_FindLightSource(ent)) {
 					if (ent.world.rand.nextInt(3) == 0) {
 						senseTracked = ai_FindSense(ent, true);
@@ -330,10 +330,10 @@ public class ZAUtil {
 		if (senseTracked != null && ent.getNavigator().getPath() != null) {
 			PathPoint pathTo = ent.getNavigator().getPath().getFinalPathPoint();
 			if (pathTo != null) {
-				EntityPlayer player = getClosestPlayer(ent.world, pathTo.x, pathTo.y, pathTo.z, 6D);
+				PlayerEntity player = getClosestPlayer(ent.world, pathTo.x, pathTo.y, pathTo.z, 6D);
 				if (player != null) {
 					//tryPlayInvestigateSound(ent, new Vec3d(ent.posX, ent.posY, ent.posZ));
-					tryPlayInvestigateSound(ent, new Vec3d(pathTo.x, pathTo.y, pathTo.z));
+					tryPlayInvestigateSound(ent, new Vector3d(pathTo.x, pathTo.y, pathTo.z));
 				}
 				
 			}
@@ -343,10 +343,10 @@ public class ZAUtil {
 	    tickCustomMob(ent);
     }
     
-    public static void tickCustomMob(EntityLiving ent) {
+    public static void tickCustomMob(MobEntity ent) {
     	if (ZAConfigFeatures.wanderingHordes) {
-	    	if (ent instanceof EntitySpider) {
-	    		if (ent.getPassengers().size() > 0 && ent.getPassengers().get(0) instanceof EntitySkeleton) {
+	    	if (ent instanceof SpiderEntity) {
+	    		if (ent.getPassengers().size() > 0 && ent.getPassengers().get(0) instanceof SkeletonEntity) {
 	    			if (ent.world.rand.nextInt(100) == 0) {
 	    				spawnWaypoint(ent);
 	    			}
@@ -355,7 +355,7 @@ public class ZAUtil {
     	}
     }
     
-    public static boolean ai_FindLightSource(EntityLiving ent) {
+    public static boolean ai_FindLightSource(MobEntity ent) {
     	
     	if (ent.world.isDaytime()) return false;
     	
@@ -368,7 +368,7 @@ public class ZAUtil {
     		int size;
     		
     		for (int i = 0; i < 4; i++) {
-    			EntityPlayer entP = getClosestPlayerToEntity(ent.world, ent, 999);
+    			PlayerEntity entP = getClosestPlayerToEntity(ent.world, ent, 999);
         		if (entP != null) {
         			
         			size = 32 * (i+1);
@@ -386,7 +386,7 @@ public class ZAUtil {
 		    		//if bright enough and also as bright or brighter than where they are currently
 		    		if (lightValue > 4 && lightValue >= lightValueAtEntity) {
 		    			if (((ent.world.rand.nextInt(5) == 0 && ent.getDistanceToEntity(entP) > 64) ||
-		    					ent.world.rayTraceBlocks(new Vec3d(ent.posX, ent.posY + (double)ent.getEyeHeight(), ent.posZ), new Vec3d(rX, rY, rZ)) == null)) {
+		    					ent.world.rayTraceBlocks(new Vector3d(ent.posX, ent.posY + (double)ent.getEyeHeight(), ent.posZ), new Vector3d(rX, rY, rZ)) == null)) {
 							//CULog.dbg("path to light source");
 		    				if (CoroUtilPath.tryMoveToXYZLongDist(ent, rX, rY, rZ, 1)) {
 		    					//ZombieAwareness.dbg("pathing to lightsource at " + rX + ", " + rY + ", " + rZ + " - " + ent);
@@ -401,11 +401,11 @@ public class ZAUtil {
     	return false;
     }
     
-    public static EntityScent ai_FindSense(EntityLiving ent) {
+    public static EntityScent ai_FindSense(MobEntity ent) {
     	return ai_FindSense(ent, true);
     }
     
-    public static EntityScent ai_FindSense(EntityLiving ent, boolean includeWaypoints) {
+    public static EntityScent ai_FindSense(MobEntity ent, boolean includeWaypoints) {
     	
     	EntityScent var3 = getSenseNearEntity(ent);
 
@@ -421,7 +421,7 @@ public class ZAUtil {
         return null;
     }
     
-    public static boolean ai_FindTarget(EntityLiving ent, boolean omniscient) {
+    public static boolean ai_FindTarget(MobEntity ent, boolean omniscient) {
     	long huntRange = ZAConfig.sightRange;
     	
     	if (omniscient) huntRange = 512;
@@ -443,7 +443,7 @@ public class ZAUtil {
 
 	            if(isEnemy(ent, entity1, omniscient))
 	            {
-	            	if (omniscient || (ZAConfig.seeThroughWalls || ((EntityLivingBase) entity1).canEntityBeSeen(ent))) {
+	            	if (omniscient || (ZAConfig.seeThroughWalls || ((LivingEntity) entity1).canEntityBeSeen(ent))) {
 	            		if (sanityCheck(ent, entity1)) {
 	            			float dist = ent.getDistanceToEntity(entity1);
 	            			if (dist < closest) {
@@ -455,7 +455,7 @@ public class ZAUtil {
 	            }
 	        }
 	        if (clEnt != null) {
-	        	huntTarget(ent, (EntityLivingBase)clEnt);
+	        	huntTarget(ent, (LivingEntity)clEnt);
 	        	return true;
 	        }
 		}
@@ -506,13 +506,13 @@ public class ZAUtil {
             return;
         }
         
-        EntityPlayer closestPlayer = getClosestPlayer(world, x, y, z, 128);
+        PlayerEntity closestPlayer = getClosestPlayer(world, x, y, z, 128);
 
 		String soundName = SoundProfileEntry.getSoundEventName(sound);
 
         double strength = ZAConfig.soundStrength;
     	
-    	Vec3d pos = new Vec3d(x, y, z);
+    	Vector3d pos = new Vector3d(x, y, z);
         
     	if (closestPlayer != null) {
     		double distToPlayer = closestPlayer.getDistance(x, y, z);
@@ -546,7 +546,7 @@ public class ZAUtil {
 		if (!event.getEntity().world.isRemote && event.getEntity().world.rand.nextInt(chance) == 0) {
 
 			int strength = ZAConfig.soundStrength;
-			Vec3d pos = new Vec3d(event.getEntityPlayer().posX, event.getEntityPlayer().posY, event.getEntityPlayer().posZ);
+			Vector3d pos = new Vector3d(event.getEntityPlayer().posX, event.getEntityPlayer().posY, event.getEntityPlayer().posZ);
 
 			EntityScent scent = spawnOrBuffSenseAtPos(event.getEntity().world, pos, EnumSenseType.SOUND, strength);
 
@@ -560,7 +560,7 @@ public class ZAUtil {
 	 * @param player
 	 * @param chance
 	 */
-	public static void handleBlockBasedEvent(EntityPlayer player, World world, BlockPos pos, int chance) {
+	public static void handleBlockBasedEvent(PlayerEntity player, World world, BlockPos pos, int chance) {
 		if (player == null && ZAConfig.blockBreakEvent_PlayersOnly) {
 			return;
 		}
@@ -578,7 +578,7 @@ public class ZAUtil {
 		if (!world.isRemote && world.rand.nextInt(chance) == 0) {
 
 			int strength = ZAConfig.soundStrength;
-			Vec3d posVec = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
+			Vector3d posVec = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
 
 			EntityScent scent = spawnOrBuffSenseAtPos(world, posVec, EnumSenseType.SOUND, strength);
 
@@ -590,10 +590,10 @@ public class ZAUtil {
     	
     	//ZombieAwareness.dbg(event.getEntityLiving().getEntityId() + " targetting " + event.getTarget());
     	
-    	if (event.getEntityLiving() instanceof EntityLiving) {
-    		if (event.getTarget() instanceof EntityPlayer) {
+    	if (event.getEntityLiving() instanceof MobEntity) {
+    		if (event.getTarget() instanceof PlayerEntity) {
 	    		//tryPlayAlertSound((EntityLiving)event.getEntityLiving(), new Vec3d(event.getTarget().posX, event.getTarget().posY, event.getTarget().posZ));
-	    		tryPlayTargetSound((EntityLiving)event.getEntityLiving(), (EntityLivingBase)event.getTarget(), new Vec3d(event.getEntityLiving().posX, event.getEntityLiving().posY, event.getEntityLiving().posZ));
+	    		tryPlayTargetSound((MobEntity)event.getEntityLiving(), (LivingEntity)event.getTarget(), new Vector3d(event.getEntityLiving().posX, event.getEntityLiving().posY, event.getEntityLiving().posZ));
     		} else if (event.getTarget() == null) {
     			//dont use, AI stupidly detargets when resetting tasks despite still chasing player, causing double alert noise if this code is used
     			/*if (lookupLastAlertTime.containsKey(event.getEntityLiving())) {
@@ -611,15 +611,15 @@ public class ZAUtil {
 		if (world.isRemote) return;
 		if (type == 1010) {
 			//if putting in a record and not taking out
-			if (Item.getItemById(data) instanceof ItemRecord) {
-				Vec3d pos = new Vec3d(blockPosIn.getX(), blockPosIn.getY(), blockPosIn.getZ());
+			if (Item.getItemById(data) instanceof MusicDiscItem) {
+				Vector3d pos = new Vector3d(blockPosIn.getX(), blockPosIn.getY(), blockPosIn.getZ());
 				EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, 300);
 				ZombieAwareness.dbg("spawned or buffed sound sense from playEvent: " + scent.getStrengthPeak());
 			}
 		}
 	}
     
-    public static void spawnNewMobSurface(EntityPlayer player) {
+    public static void spawnNewMobSurface(PlayerEntity player) {
         
         
         int minDist = ZAConfigSpawning.extraSpawningDistMin;
@@ -639,7 +639,7 @@ public class ZAUtil {
 	        }
 
 			int randSize = player.world.rand.nextInt(ZAConfigSpawning.extraSpawningSurfaceMaxGroupSize) + 1;
-			WorldServer world = (WorldServer) player.world;
+			ServerWorld world = (ServerWorld) player.world;
 	        for (int i = 0; i < randSize; i++) {
 	        	spawnMobsAllowed(player, world, tryX, tryY, tryZ);
 	        }
@@ -652,7 +652,7 @@ public class ZAUtil {
         }
     }
     
-    public static void spawnNewMobCave(EntityPlayer player) {
+    public static void spawnNewMobCave(PlayerEntity player) {
         
         int minDist = ZAConfigSpawning.extraSpawningCavesDistMin;
         int maxDist = ZAConfigSpawning.extraSpawningCavesDistMax;
@@ -671,7 +671,7 @@ public class ZAUtil {
 	        }
 	
 	        int randSize = player.world.rand.nextInt(ZAConfigSpawning.extraSpawningCavesMaxGroupSize) + 1;
-	        WorldServer world = (WorldServer) player.world;
+	        ServerWorld world = (ServerWorld) player.world;
 	        for (int i = 0; i < randSize; i++) {
 	        	spawnMobsAllowed(player, world, tryX, tryY, tryZ);
 	        }
@@ -682,11 +682,11 @@ public class ZAUtil {
         }
     }
     
-    public static void spawnMobsAllowed(EntityPlayer player, WorldServer world, int tryX, int tryY, int tryZ) {
+    public static void spawnMobsAllowed(PlayerEntity player, ServerWorld world, int tryX, int tryY, int tryZ) {
     	if (!ZAConfigSpawning.extraSpawningUseNaturalSpawnList) {
-	        EntityZombie entZ = new EntityZombie(world);
+	        ZombieEntity entZ = new ZombieEntity(world);
 			entZ.setPosition(tryX + 0.5F, tryY + 1.1F, tryZ + 0.5F);
-			entZ.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(entZ)), (IEntityLivingData)null);
+			entZ.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(entZ)), (ILivingEntityData)null);
 			giveRandomSpeedBoost(entZ);
 			world.spawnEntity(entZ);
 			
@@ -696,13 +696,13 @@ public class ZAUtil {
 	        	ZombieAwareness.dbg("spawnNewMob: " + tryX + ", " + tryY + ", " + tryZ);
 	        }
     	} else {
-    		SpawnListEntry spawnlistentry = world.getSpawnListEntryForTypeAt(EnumCreatureType.MONSTER, new BlockPos(tryX, tryY, tryZ));
+    		SpawnListEntry spawnlistentry = world.getSpawnListEntryForTypeAt(EntityClassification.MONSTER, new BlockPos(tryX, tryY, tryZ));
     		
-    		EntityLiving entityliving;
+    		MobEntity entityliving;
 
             try
             {
-                entityliving = (EntityLiving)spawnlistentry.entityClass.getConstructor(new Class[] {World.class}).newInstance(new Object[] {world});
+                entityliving = (MobEntity)spawnlistentry.entityClass.getConstructor(new Class[] {World.class}).newInstance(new Object[] {world});
                 entityliving.setLocationAndAngles(tryX + 0.5F, tryY + 1.1F, tryZ + 0.5F, world.rand.nextFloat() * 360.0F, 0.0F);
 
                 Result canSpawn = ForgeEventFactory.canEntitySpawn(entityliving, world, tryX + 0.5F, tryY + 1.1F, tryZ + 0.5F);
@@ -711,7 +711,7 @@ public class ZAUtil {
                     world.spawnEntity(entityliving);
                     if (!ForgeEventFactory.doSpecialSpawn(entityliving, world, tryX + 0.5F, tryY + 1.1F, tryZ + 0.5F))
                     {
-                        entityliving.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(entityliving)), (IEntityLivingData) null);
+                        entityliving.onInitialSpawn(world.getDifficultyForLocation(new BlockPos(entityliving)), (ILivingEntityData) null);
                     }
                     giveRandomSpeedBoost(entityliving);
                     if (ZAConfig.debugConsoleSpawns) {
@@ -740,7 +740,7 @@ public class ZAUtil {
      */
     public static boolean isInDarkCave(World world, int x, int y, int z, boolean checkSpaceToSpawn) {
 		BlockPos pos = new BlockPos(x, y, z);
-		IBlockState state = world.getBlockState(pos);
+		BlockState state = world.getBlockState(pos);
 		Block block = state.getBlock();
 		if (!world.canSeeSky(pos) && world.getLightFromNeighbors(pos) < 5) {
     		if (!CoroUtilBlock.isAir(block) && state.getMaterial() == Material.ROCK/*(block != Blocks.grass || block.getMaterial() != Material.grass)*/) {
@@ -773,13 +773,13 @@ public class ZAUtil {
 	 */
     public static boolean canSpawnMobOnGround(World world, int x, int y, int z) {
     	BlockPos pos = new BlockPos(x, y, z);
-    	IBlockState state = world.getBlockState(pos);
+    	BlockState state = world.getBlockState(pos);
         Block block = state.getBlock();//Block.pressurePlatePlanks.blockID;
 
         /*if (id == Block.grass.blockID || id == Block.stone.blockID || id == Block.tallGrass.blockID || id == Block.grass.blockID || id == Block.sand.blockID) {
             return true;
         }*/
-        if (CoroUtilBlock.isAir(block) || !block.canCreatureSpawn(state, world, pos, EntityLiving.SpawnPlacementType.ON_GROUND)) {
+        if (CoroUtilBlock.isAir(block) || !block.canCreatureSpawn(state, world, pos, MobEntity.SpawnPlacementType.ON_GROUND)) {
         	return false;
         }
         return true;
@@ -799,7 +799,7 @@ public class ZAUtil {
 
         double height = entSource.posY;
         
-        EntityScent var1 = getSenseNodeAtPos(entSource.world, new Vec3d(tryX, tryY, tryZ), EnumSenseType.WAYPOINT);
+        EntityScent var1 = getSenseNodeAtPos(entSource.world, new Vector3d(tryX, tryY, tryZ), EnumSenseType.WAYPOINT);
         
         boolean newNode = false;
     	
@@ -823,16 +823,16 @@ public class ZAUtil {
     public static boolean canSpawnTrace(World world, double x, double y, double z) {
     	BlockPos pos = new BlockPos(x,y,z);
     	if (!world.isBlockLoaded(pos)) return false;
-    	IBlockState state = world.getBlockState(pos);
+    	BlockState state = world.getBlockState(pos);
     	//iirc circuits check was to prevent senses spawning on pressure plates and triggering them, but there should be better ways to stop that...
 		//might be redundant since AABB and canTriggerWalking and canBeCollidedWith fix
-        if (state.getMaterial() == Material.CIRCUITS && (!(state.getBlock() instanceof BlockButton) && !(state.getBlock() instanceof BlockLever))) {
+        if (state.getMaterial() == Material.CIRCUITS && (!(state.getBlock() instanceof AbstractButtonBlock) && !(state.getBlock() instanceof LeverBlock))) {
             return false;
         }
         return true;
     }
     
-    public static EntityPlayer getClosestPlayerToEntity(World world, Entity par1Entity, double par2)
+    public static PlayerEntity getClosestPlayerToEntity(World world, Entity par1Entity, double par2)
     {
         return getClosestPlayer(world, par1Entity.posX, par1Entity.posY, par1Entity.posZ, par2);
     }
@@ -841,14 +841,14 @@ public class ZAUtil {
      * Gets the closest player to the point within the specified distance (distance can be set to less than 0 to not
      * limit the distance). Args: x, y, z, dist
      */
-    public static EntityPlayer getClosestPlayer(World world, double par1, double par3, double par5, double par7)
+    public static PlayerEntity getClosestPlayer(World world, double par1, double par3, double par5, double par7)
     {
         double d4 = -1.0D;
-        EntityPlayer entityplayer = null;
+        PlayerEntity entityplayer = null;
 
         for (int i = 0; i < world.playerEntities.size(); ++i)
         {
-            EntityPlayer entityplayer1 = (EntityPlayer)world.playerEntities.get(i);
+            PlayerEntity entityplayer1 = (PlayerEntity)world.playerEntities.get(i);
             if (!ZAConfigPlayerLists.whiteListUsedSenses || ZAConfigPlayerLists.whitelistSenses.contains(CoroUtilEntity.getName(entityplayer1))) {
             	double d5 = entityplayer1.getDistanceSq(par1, par3, par5);
 
@@ -871,7 +871,7 @@ public class ZAUtil {
      * @param type
      * @return
      */
-    public static EntityScent getSenseNodeAtPos(World parWorld, Vec3d parPos, EnumSenseType type) {
+    public static EntityScent getSenseNodeAtPos(World parWorld, Vector3d parPos, EnumSenseType type) {
     	
     	if (ZAConfig.extraScentCutoffRange == -1) return null;
     	
@@ -893,7 +893,7 @@ public class ZAUtil {
     	return null;
     }
     
-    public static EntityScent spawnOrBuffSenseAtPos(World world, Vec3d parPos, EnumSenseType type, int strength) {
+    public static EntityScent spawnOrBuffSenseAtPos(World world, Vector3d parPos, EnumSenseType type, int strength) {
     	return spawnOrBuffSenseAtPos(world, parPos, type, strength, true);
     }
     
@@ -906,7 +906,7 @@ public class ZAUtil {
      * @param strength
      * @return
      */
-    public static EntityScent spawnOrBuffSenseAtPos(World world, Vec3d parPos, EnumSenseType type, int strength, boolean frequentSoundMultiply) {
+    public static EntityScent spawnOrBuffSenseAtPos(World world, Vector3d parPos, EnumSenseType type, int strength, boolean frequentSoundMultiply) {
 		
     	EntityScent sense = getSenseNodeAtPos(world, parPos, type);
     	
@@ -937,7 +937,7 @@ public class ZAUtil {
         return sense;
     }
     
-    public static void tryPlayTargetSound(EntityLiving entAlerted, EntityLivingBase entTargetted, Vec3d pos) {
+    public static void tryPlayTargetSound(MobEntity entAlerted, LivingEntity entTargetted, Vector3d pos) {
 
 		if (!ZAConfigFeatures.soundAlerts) return;
 
@@ -971,7 +971,7 @@ public class ZAUtil {
 		}
     }
     
-    public static void tryPlayInvestigateSound(EntityLiving entAlerted, Vec3d pos) {
+    public static void tryPlayInvestigateSound(MobEntity entAlerted, Vector3d pos) {
 
 		if (!ZAConfigFeatures.soundInvestigates) return;
 

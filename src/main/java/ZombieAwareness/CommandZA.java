@@ -3,12 +3,11 @@ package ZombieAwareness;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
 import CoroUtil.OldUtil;
 import CoroUtil.pathfinding.PFQueue;
@@ -29,14 +28,14 @@ public class CommandZA extends CommandBase {
 	@Override
 	public void execute(MinecraftServer server, ICommandSender var1, String[] var2) {
 		
-		EntityPlayer player = null;
-		if (var1 instanceof EntityPlayer) {
-			player = (EntityPlayer) var1;
+		PlayerEntity player = null;
+		if (var1 instanceof PlayerEntity) {
+			player = (PlayerEntity) var1;
 		}
 		World world = var1.getEntityWorld();
 		int dimension = world.provider.getDimension();
 		BlockPos posBlock = var1.getPosition();
-		Vec3d posVec = var1.getPositionVector();
+		Vector3d posVec = var1.getPositionVector();
 		
 		try {
 			if (var2.length < 1)
@@ -84,10 +83,10 @@ public class CommandZA extends CommandBase {
 	        			CoroUtilMisc.sendCommandSenderMsg(var1, var2[1] + " set to: " + OldUtil.getPrivateValueBoth(ZombieAwareness.class, ZombieAwareness.instance, var2[1], var2[1]));
 	        		}
 				} else if (var2[0].equalsIgnoreCase("isActive")) {
-					var1.sendMessage(new TextComponentString((ZAUtil.isZombieAwarenessActive(world) ? "true" : "false")));
+					var1.sendMessage(new StringTextComponent((ZAUtil.isZombieAwarenessActive(world) ? "true" : "false")));
 				} else if (var2[0].equalsIgnoreCase("profile") && player != null) {
 					ZAUtil.startProfile(player.getName());
-					player.sendMessage(new TextComponentString("ZA Profile started"));
+					player.sendMessage(new StringTextComponent("ZA Profile started"));
 				}
 	        	
 	        }
