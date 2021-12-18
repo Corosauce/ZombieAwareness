@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "com.corosus.timeout_fixes.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "refmap": "timeout_fixes.refmap.json",
+  "mixins": ["ChannelInitializerMixin", "ServerLoginNetHandlerMixin", "ServerPlayNetHandlerKeepAliveMixin"],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8"
+}
