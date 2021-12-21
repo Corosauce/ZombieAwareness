@@ -2,10 +2,6 @@ package ZombieAwareness.config;
 
 import java.io.File;
 
-import modconfig.ConfigComment;
-import modconfig.IConfigCategory;
-import net.minecraftforge.common.ForgeModContainer;
-
 public class ZAConfigFeatures implements IConfigCategory {
 
 	@ConfigComment("Spawn sound sense sources for monsters to track")
@@ -67,8 +63,8 @@ public class ZAConfigFeatures implements IConfigCategory {
 
 	@Override
 	public void hookUpdatedValues() {
-		if (zombieBabyChance != -1) ForgeModContainer.zombieBabyChance = (float) zombieBabyChance;
-		if (zombieSummonHelpBaseChance != -1) ForgeModContainer.zombieSummonBaseChance = zombieSummonHelpBaseChance;
+		/*if (zombieBabyChance != -1) ForgeModContainer.zombieBabyChance = (float) zombieBabyChance;
+		if (zombieSummonHelpBaseChance != -1) ForgeModContainer.zombieSummonBaseChance = zombieSummonHelpBaseChance;*/
 	}
 
 }

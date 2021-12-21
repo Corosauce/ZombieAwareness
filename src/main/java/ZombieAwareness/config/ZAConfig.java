@@ -2,9 +2,6 @@ package ZombieAwareness.config;
 
 import java.io.File;
 
-import modconfig.ConfigComment;
-import modconfig.IConfigCategory;
-
 public class ZAConfig implements IConfigCategory {
 
 	/*@ConfigComment("[Not used for now] Max pathfind range for zombies [performance sensitive]")

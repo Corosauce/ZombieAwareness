@@ -4,8 +4,7 @@ import java.util.HashMap;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
-import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class SoundRegistry {
 
@@ -21,7 +20,7 @@ public class SoundRegistry {
 	}
 
 	public static void register(String soundPath) {
-		ResourceLocation resLoc = new ResourceLocation(ZombieAwareness.modID, soundPath);
+		ResourceLocation resLoc = new ResourceLocation(ZombieAwarenessOld.modID, soundPath);
 		SoundEvent event = new SoundEvent(resLoc).setRegistryName(resLoc);
 		ForgeRegistries.SOUND_EVENTS.register(event);
 		if (lookupStringToEvent.containsKey(soundPath)) {

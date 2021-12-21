@@ -1,32 +1,22 @@
 package CoroUtil.util;
 
-import java.util.Random;
-
 import CoroUtil.config.ConfigCoroUtil;
-import CoroUtil.forge.CULog;
-import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.pathfinding.Path;
-import net.minecraft.pathfinding.PathPoint;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.pathfinding.PathType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraft.world.gen.Heightmap;
+
+import java.util.Random;
 
 public class CoroUtilPath {
-
-	public static Path getSingleNodePath(BlockCoord coords) {
-		PathPoint points[] = new PathPoint[1];
-        points[0] = new PathPoint(coords.posX, coords.posY, coords.posZ);
-		Path pe = new Path(points);
-		return pe;
-	}
 	
-	public static boolean tryMoveToEntityLivingLongDist(EntityLiving entSource, Entity entityTo, double moveSpeedAmp) {
-		return tryMoveToXYZLongDist(entSource, entityTo.posX, entityTo.getEntityBoundingBox().minY, entityTo.posZ, moveSpeedAmp);
+	public static boolean tryMoveToEntityLivingLongDist(MobEntity entSource, Entity entityTo, double moveSpeedAmp) {
+		return tryMoveToXYZLongDist(entSource, entityTo.getX(), entityTo.getBoundingBox().minY, entityTo.getZ(), moveSpeedAmp);
 	}
 	
 	/**
@@ -39,18 +29,18 @@ public class CoroUtilPath {
 	 * @param moveSpeedAmp
 	 * @return
 	 */
-	public static boolean tryMoveToXYZLongDist(EntityLiving ent, double x, double y, double z, double moveSpeedAmp) {
+	public static boolean tryMoveToXYZLongDist(MobEntity ent, double x, double y, double z, double moveSpeedAmp) {
 		
-		World world = ent.world;
+		World world = ent.level;
 		
 		boolean success = false;
 
 		try {
-			if (ent.getNavigator().noPath()) {
+			if (ent.getNavigation().isDone()) {
 
-				double distToPlayer = ent.getDistance(x, y, z);//ent.getDistanceToEntity(player);
+				double distToPlayer = Math.sqrt(ent.distanceToSqr(x, y, z));//ent.getDistanceToEntity(player);
 
-				double followDist = ent.getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE).getAttributeValue();
+				double followDist = ent.getAttribute(Attributes.FOLLOW_RANGE).getValue();
 
 				if (distToPlayer <= followDist) {
 					//boolean success = ent.getNavigator().tryMoveToEntityLiving(player, moveSpeedAmp);
@@ -62,10 +52,10 @@ public class CoroUtilPath {
 					int y = MathHelper.floor(player.posY);
 					int z = MathHelper.floor(player.posZ);*/
 
-					double d = x + 0.5F - ent.posX;
-					double d2 = z + 0.5F - ent.posZ;
+					double d = x + 0.5F - ent.getX();
+					double d2 = z + 0.5F - ent.getZ();
 					double d1;
-					d1 = y + 0.5F - (ent.posY + (double) ent.getEyeHeight());
+					d1 = y + 0.5F - (ent.getY() + (double) ent.getEyeHeight());
 
 					double d3 = MathHelper.sqrt(d * d + d2 * d2);
 					float f2 = (float) ((Math.atan2(d2, d) * 180D) / 3.1415927410125732D) - 90F;
@@ -73,29 +63,29 @@ public class CoroUtilPath {
 					float rotationPitch = -f3;//-ent.updateRotation(rotationPitch, f3, 180D);
 					float rotationYaw = f2;//updateRotation(rotationYaw, f2, 180D);
 
-					EntityLiving center = ent;
+					MobEntity center = ent;
 
-					Random rand = world.rand;
+					Random rand = world.random;
 
 					float randLook = rand.nextInt(90) - 45;
 					//int height = 10;
 					double dist = (followDist * 0.75D) + rand.nextInt((int) followDist / 2);//rand.nextInt(26)+(queue.get(0).retryState * 6);
-					int gatherX = (int) Math.floor(center.posX + ((double) (-Math.sin((rotationYaw + randLook) / 180.0F * 3.1415927F)/* * Math.cos(center.rotationPitch / 180.0F * 3.1415927F)*/) * dist));
-					int gatherY = (int) center.posY;//Math.floor(center.posY-0.5 + (double)(-MathHelper.sin(center.rotationPitch / 180.0F * 3.1415927F) * dist) - 0D); //center.posY - 0D;
-					int gatherZ = (int) Math.floor(center.posZ + ((double) (Math.cos((rotationYaw + randLook) / 180.0F * 3.1415927F)/* * Math.cos(center.rotationPitch / 180.0F * 3.1415927F)*/) * dist));
+					int gatherX = (int) Math.floor(center.getX() + ((double) (-Math.sin((rotationYaw + randLook) / 180.0F * 3.1415927F)/* * Math.cos(center.rotationPitch / 180.0F * 3.1415927F)*/) * dist));
+					int gatherY = (int) center.getY();//Math.floor(center.posY-0.5 + (double)(-MathHelper.sin(center.rotationPitch / 180.0F * 3.1415927F) * dist) - 0D); //center.posY - 0D;
+					int gatherZ = (int) Math.floor(center.getZ() + ((double) (Math.cos((rotationYaw + randLook) / 180.0F * 3.1415927F)/* * Math.cos(center.rotationPitch / 180.0F * 3.1415927F)*/) * dist));
 
 					BlockPos pos = new BlockPos(gatherX, gatherY, gatherZ);
 
-					if (!world.isBlockLoaded(pos)) return false;
+					if (!world.isLoaded(pos)) return false;
 
-					IBlockState state = world.getBlockState(pos);
+					BlockState state = world.getBlockState(pos);
 					//Block block = state.getBlock();
 					int tries = 0;
 					if (!CoroUtilBlock.isAir(state.getBlock())) {
 						int offset = -5;
 
 						while (tries < 30) {
-							if (CoroUtilBlock.isAir(state.getBlock()) || !state.isSideSolid(world, pos, EnumFacing.UP)) {
+							if (CoroUtilBlock.isAir(state.getBlock()) || !state.isPathfindable(ent.level, pos, PathType.LAND)) {
 								break;
 							}
 							gatherY += offset++;
@@ -106,7 +96,7 @@ public class CoroUtilPath {
 					} else {
 						//int offset = 0;
 						while (tries < 30) {
-							if (!CoroUtilBlock.isAir(state.getBlock()) && state.isSideSolid(world, pos, EnumFacing.UP)) {
+							if (!CoroUtilBlock.isAir(state.getBlock()) && state.isPathfindable(ent.level, pos, PathType.LAND)) {
 								break;
 							}
 							gatherY -= 1;//offset++;
@@ -123,12 +113,12 @@ public class CoroUtilPath {
 					} else {
 						//fallback for extreme y differences, just path to topmost block, hopefully wont break much for inside structures etc
 
-						pos = world.getHeight(pos).down();
+						pos = new BlockPos(pos.getX(), world.getHeight(Heightmap.Type.MOTION_BLOCKING, pos.getX(), pos.getZ()), pos.getZ()).below();
 
-						if (!world.isBlockLoaded(pos)) return false;
+						if (!world.isLoaded(pos)) return false;
 
 						state = world.getBlockState(pos);
-						if (state.isSideSolid(world, pos, EnumFacing.UP)) {
+						if (state.isPathfindable(ent.level, pos, PathType.LAND)) {
 							success = CoroUtilCompatibility.tryPathToXYZModCompat(ent, pos.getX(), pos.getY(), pos.getZ(), moveSpeedAmp);
 						}
 					}

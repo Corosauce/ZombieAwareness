@@ -1,19 +1,22 @@
 package ZombieAwareness;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
 
 import org.lwjgl.opengl.GL11;
@@ -22,9 +25,14 @@ import ZombieAwareness.config.ZAConfigClient;
 
 public class RenderScent extends EntityRenderer {
     
-    public static ResourceLocation TEXTURE64 = new ResourceLocation(ZombieAwareness.modID + ":textures/entities/bloodx64.png");
+    public static ResourceLocation TEXTURE64 = new ResourceLocation(ZombieAwarenessOld.modID + ":textures/entities/bloodx64.png");
+    private static final RenderType SHADOW_RENDER_TYPE = RenderType.entityShadow(TEXTURE64);
 
-    protected RenderScent(EntityRendererManager renderManager) {
+    protected RenderScent(EntityRendererManager p_i46179_1_) {
+        super(p_i46179_1_);
+    }
+
+    /*protected RenderScent(EntityRendererManager renderManager) {
 		super(renderManager);
 	}
 
@@ -34,34 +42,103 @@ public class RenderScent extends EntityRenderer {
         	float str = (float)((EntityScent)var1).getAgeScale();
         	renderBlood(var1, var2, var4, var6, str, var9);
         }
-    }
-
-	@Override
-
-	/**
-	 * Returns the location of an entity's texture. Doesn't seem to be called unless you call Render.bindEntityTexture.
-	 */
-	protected ResourceLocation getEntityTexture(Entity entity) {
-		return TEXTURE64;
-	}
+    }*/
 
     @Override
-    public void doRender(Entity var1, double var2, double var4, double var6, float var8, float var9) {
-    	bindEntityTexture(var1);
-    	shadowSize = 1.0F;
+    public ResourceLocation getTextureLocation(Entity p_110775_1_) {
+        return TEXTURE64;
+    }
+
+    @Override
+    public void render(Entity p_225623_1_, float p_225623_2_, float p_225623_3_, MatrixStack p_225623_4_, IRenderTypeBuffer p_225623_5_, int p_225623_6_) {
+        super.render(p_225623_1_, p_225623_2_, p_225623_3_, p_225623_4_, p_225623_5_, p_225623_6_);
+        //bindEntityTexture(var1);
+        float shadowSize = 1.0F;
+        float shadowStrength = 1.0F;
         GL11.glPushMatrix();
         if (ZAConfigClient.client_renderBlood) {
-        	this.doRenderNode(var1, var2, var4, var6, var8, var9);
+            //this.doRenderNode(var1, var2, var4, var6, var8, var9);
+            renderBlood(p_225623_4_, p_225623_5_, p_225623_1_, shadowStrength, p_225623_3_, p_225623_1_.level, shadowSize);
         }
-        shadowSize = 0.0F;
+        //shadowSize = 0.0F;
         GL11.glPopMatrix();
     }
 
-    private World getWorldFromRenderManager() {
-        return this.renderManager.world;
+    private static void renderBlood(MatrixStack p_229096_0_, IRenderTypeBuffer p_229096_1_, Entity p_229096_2_, float p_229096_3_, float p_229096_4_, IWorldReader p_229096_5_, float p_229096_6_) {
+        float f = p_229096_6_;
+        if (p_229096_2_ instanceof MobEntity) {
+            MobEntity mobentity = (MobEntity)p_229096_2_;
+            if (mobentity.isBaby()) {
+                f = p_229096_6_ * 0.5F;
+            }
+        }
+
+        double d2 = MathHelper.lerp((double)p_229096_4_, p_229096_2_.xOld, p_229096_2_.getX());
+        double d0 = MathHelper.lerp((double)p_229096_4_, p_229096_2_.yOld, p_229096_2_.getY());
+        double d1 = MathHelper.lerp((double)p_229096_4_, p_229096_2_.zOld, p_229096_2_.getZ());
+        int i = MathHelper.floor(d2 - (double)f);
+        int j = MathHelper.floor(d2 + (double)f);
+        int k = MathHelper.floor(d0 - (double)f);
+        int l = MathHelper.floor(d0);
+        int i1 = MathHelper.floor(d1 - (double)f);
+        int j1 = MathHelper.floor(d1 + (double)f);
+        MatrixStack.Entry matrixstack$entry = p_229096_0_.last();
+        IVertexBuilder ivertexbuilder = p_229096_1_.getBuffer(SHADOW_RENDER_TYPE);
+
+        for(BlockPos blockpos : BlockPos.betweenClosed(new BlockPos(i, k, i1), new BlockPos(j, l, j1))) {
+            renderBlockShadow(matrixstack$entry, ivertexbuilder, p_229096_5_, blockpos, d2, d0, d1, f, p_229096_3_);
+        }
+
     }
+
+    private static void renderBlockShadow(MatrixStack.Entry p_229092_0_, IVertexBuilder p_229092_1_, IWorldReader p_229092_2_, BlockPos p_229092_3_, double p_229092_4_, double p_229092_6_, double p_229092_8_, float p_229092_10_, float p_229092_11_) {
+        BlockPos blockpos = p_229092_3_.below();
+        BlockState blockstate = p_229092_2_.getBlockState(blockpos);
+        if (blockstate.getRenderShape() != BlockRenderType.INVISIBLE && p_229092_2_.getMaxLocalRawBrightness(p_229092_3_) > 3) {
+            if (blockstate.isCollisionShapeFullBlock(p_229092_2_, blockpos)) {
+                VoxelShape voxelshape = blockstate.getShape(p_229092_2_, p_229092_3_.below());
+                if (!voxelshape.isEmpty()) {
+                    float f = (float)(((double)p_229092_11_ - (p_229092_6_ - (double)p_229092_3_.getY()) / 2.0D) * 0.5D * (double)p_229092_2_.getBrightness(p_229092_3_));
+                    if (f >= 0.0F) {
+                        if (f > 1.0F) {
+                            f = 1.0F;
+                        }
+
+                        AxisAlignedBB axisalignedbb = voxelshape.bounds();
+                        double d0 = (double)p_229092_3_.getX() + axisalignedbb.minX;
+                        double d1 = (double)p_229092_3_.getX() + axisalignedbb.maxX;
+                        double d2 = (double)p_229092_3_.getY() + axisalignedbb.minY;
+                        double d3 = (double)p_229092_3_.getZ() + axisalignedbb.minZ;
+                        double d4 = (double)p_229092_3_.getZ() + axisalignedbb.maxZ;
+                        float f1 = (float)(d0 - p_229092_4_);
+                        float f2 = (float)(d1 - p_229092_4_);
+                        float f3 = (float)(d2 - p_229092_6_);
+                        float f4 = (float)(d3 - p_229092_8_);
+                        float f5 = (float)(d4 - p_229092_8_);
+                        float f6 = -f1 / 2.0F / p_229092_10_ + 0.5F;
+                        float f7 = -f2 / 2.0F / p_229092_10_ + 0.5F;
+                        float f8 = -f4 / 2.0F / p_229092_10_ + 0.5F;
+                        float f9 = -f5 / 2.0F / p_229092_10_ + 0.5F;
+                        shadowVertex(p_229092_0_, p_229092_1_, f, f1, f3, f4, f6, f8);
+                        shadowVertex(p_229092_0_, p_229092_1_, f, f1, f3, f5, f6, f9);
+                        shadowVertex(p_229092_0_, p_229092_1_, f, f2, f3, f5, f7, f9);
+                        shadowVertex(p_229092_0_, p_229092_1_, f, f2, f3, f4, f7, f8);
+                    }
+
+                }
+            }
+        }
+    }
+
+    private static void shadowVertex(MatrixStack.Entry p_229091_0_, IVertexBuilder p_229091_1_, float p_229091_2_, float p_229091_3_, float p_229091_4_, float p_229091_5_, float p_229091_6_, float p_229091_7_) {
+        p_229091_1_.vertex(p_229091_0_.pose(), p_229091_3_, p_229091_4_, p_229091_5_).color(1.0F, 1.0F, 1.0F, p_229091_2_).uv(p_229091_6_, p_229091_7_).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(15728880).normal(p_229091_0_.normal(), 0.0F, 1.0F, 0.0F).endVertex();
+    }
+
+    /*private World getWorldFromRenderManager() {
+        return this.renderManager.world;
+    }*/
     
-    private void renderBlood(Entity entityIn, double x, double y, double z, float shadowAlpha, float partialTicks)
+    /*private void renderBlood(Entity entityIn, double x, double y, double z, float shadowAlpha, float partialTicks)
     {
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
@@ -144,6 +221,6 @@ public class RenderScent extends EntityRenderer {
                 vertexbuffer.pos(d2, d3, d4).tex((double)f1, (double)f2).color(1.0F, 1.0F, 1.0F, (float)d0).endVertex();
             }
         }
-    }
+    }*/
 
 }

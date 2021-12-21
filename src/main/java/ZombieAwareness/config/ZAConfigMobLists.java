@@ -1,8 +1,5 @@
 package ZombieAwareness.config;
 
-import modconfig.ConfigComment;
-import modconfig.IConfigCategory;
-
 import java.io.File;
 
 public class ZAConfigMobLists implements IConfigCategory {

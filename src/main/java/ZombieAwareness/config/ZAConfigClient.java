@@ -2,9 +2,6 @@ package ZombieAwareness.config;
 
 import java.io.File;
 
-import modconfig.ConfigComment;
-import modconfig.IConfigCategory;
-
 public class ZAConfigClient implements IConfigCategory {
 
 	

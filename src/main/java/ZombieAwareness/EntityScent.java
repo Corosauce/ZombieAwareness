@@ -1,8 +1,10 @@
 package ZombieAwareness;
 
-import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.IPacket;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
@@ -11,6 +13,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import ZombieAwareness.config.ZAConfig;
 import ZombieAwareness.config.ZAConfigClient;
+
+import java.util.logging.Level;
 
 public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
 
@@ -26,24 +30,22 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     public int type = 0;
     public boolean isUsed = false;
     
-    private static final DataParameter<Integer> STRENGTH_PEAK = EntityDataManager.<Integer>createKey(EntityScent.class, DataSerializers.VARINT);
-    private static final DataParameter<Integer> AGE = EntityDataManager.<Integer>createKey(EntityScent.class, DataSerializers.VARINT);
+    private static final DataParameter<Integer> STRENGTH_PEAK = EntityDataManager.defineId(EntityScent.class, DataSerializers.INT);
+    private static final DataParameter<Integer> AGE = EntityDataManager.defineId(EntityScent.class, DataSerializers.INT);
     
     public long lastBuffTime = 0;
     public float lastMultiply = 1F;
     
     public static int MAX_AGE = 30*20;
 
-    public EntityScent(World var1) {
-        super(var1);
-        this.isImmuneToFire = true;
-        this.setSize(0.0F, 0.0F);
+    public EntityScent(EntityType<EntityScent> entityScentEntityType, World var1) {
+        super(entityScentEntityType, var1);
     }
 
     @Override
-    protected void entityInit() {
-    	this.getDataManager().register(STRENGTH_PEAK, Integer.valueOf(0));
-    	this.getDataManager().register(AGE, Integer.valueOf(0));
+    protected void defineSynchedData() {
+    	this.getEntityData().define(STRENGTH_PEAK, Integer.valueOf(0));
+    	this.getEntityData().define(AGE, Integer.valueOf(0));
     }
     
     @Override
@@ -52,24 +54,18 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    public void setDead() {
-        super.setDead();
-    }
-
-    @Override
-    protected boolean canTriggerWalking() {
-        return false;
-    }
-
-    @Override
-    public boolean isInRangeToRenderDist(double var1) {
+    public boolean isSteppingCarefully() {
         return true;
     }
-    
+
     @Override
-    public boolean isInRangeToRender3d(double p_145770_1_, double p_145770_3_,
-    		double p_145770_5_) {
-    	return true;
+    public boolean shouldRender(double p_145770_1_, double p_145770_3_, double p_145770_5_) {
+        return true;
+    }
+
+    @Override
+    public boolean shouldRenderAtSqrDistance(double p_70112_1_) {
+        return true;
     }
 
     public float getRange() {
@@ -83,53 +79,53 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
         if (strTry > ZAConfig.senseMaxStrength) {
         	strTry = ZAConfig.senseMaxStrength;
         }
-        this.dataManager.set(STRENGTH_PEAK, strTry);
+        this.getEntityData().set(STRENGTH_PEAK, strTry);
         this.resetAge();
     }
     
     public void resetAge() {
-    	this.dataManager.set(AGE, MAX_AGE);
+    	this.getEntityData().set(AGE, MAX_AGE);
     }
     
     public int getStrengthPeak() {
-    	return this.dataManager.get(STRENGTH_PEAK);
+    	return this.getEntityData().get(STRENGTH_PEAK);
     }
     
     public int getStrengthScaled() {
-    	return (int)((double)this.dataManager.get(this.STRENGTH_PEAK) * getAgeScale());
+    	return (int)((double)this.getEntityData().get(this.STRENGTH_PEAK) * getAgeScale());
     }
     
     public double getAgeScale() {
-    	return (double)this.dataManager.get(this.AGE) / (double)MAX_AGE;
+    	return (double)this.getEntityData().get(this.AGE) / (double)MAX_AGE;
     }
 
     @Override
-    public void onUpdate() {
+    public void tick() {
     	
     	//TODO: if raining, age smell sense much faster
     	
-    	int age = this.dataManager.get(AGE);
-    	this.dataManager.set(AGE, --age);
+    	int age = this.getEntityData().get(AGE);
+    	this.getEntityData().set(AGE, --age);
         
-        if(!world.isRemote && age <= 0) {
-        	this.setDead();
+        if(!level.isClientSide() && age <= 0) {
+        	this.kill();
         }
         
         boolean scentDebug = ZAConfigClient.client_debugSensesVisual;
         if (scentDebug) {
-	        if (world.isRemote) {
-	        	if (world.getTotalWorldTime()/*+this.getEntityId()*/ % 5 == 0) {
+	        if (level.isClientSide()) {
+	        	if (level.getGameTime()/*+this.getEntityId()*/ % 5 == 0) {
 	        		for (int i = 0; i < getStrengthScaled() / 10; i++) {
 	        			double range = 1D;
-	        			double x = posX - world.rand.nextDouble() / 2 + world.rand.nextDouble();
-	        			double y = posY - world.rand.nextDouble() / 2 + world.rand.nextDouble();
-	        			double z = posZ - world.rand.nextDouble() / 2 + world.rand.nextDouble();
+	        			double x = getX() - level.random.nextDouble() / 2 + level.random.nextDouble();
+	        			double y = getY() - level.random.nextDouble() / 2 + level.random.nextDouble();
+	        			double z = getZ() - level.random.nextDouble() / 2 + level.random.nextDouble();
 	        			if (type == 0) {
-	        				world.spawnParticle(ParticleTypes.HEART, true, x, y, z, 0, 0, 0);
+	        				level.addParticle(ParticleTypes.HEART, true, x, y, z, 0, 0, 0);
                         } else if (type == 1) {
-                            world.spawnParticle(ParticleTypes.NOTE, true, x, y, z, 0, 0, 0);
+                            level.addParticle(ParticleTypes.NOTE, true, x, y, z, 0, 0, 0);
                         } else if (type == 2) {
-                            world.spawnParticle(ParticleTypes.REDSTONE, true, x, y, z, 0, 0, 0);
+                            level.addParticle(ParticleTypes.BUBBLE, true, x, y, z, 0, 0, 0);
                         }
 	        			
 	        		}
@@ -139,26 +135,36 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    public void writeEntityToNBT(CompoundNBT var1) {
-        var1.setInteger("age", this.dataManager.get(AGE));
-        var1.setInteger("strengthpeak", this.dataManager.get(STRENGTH_PEAK));
-        var1.setInteger("type", type);
+    protected void addAdditionalSaveData(CompoundNBT var1) {
+        var1.putInt("age", this.getEntityData().get(AGE));
+        var1.putInt("strengthpeak", this.getEntityData().get(STRENGTH_PEAK));
+        var1.putInt("type", type);
     }
 
     @Override
-    public void readEntityFromNBT(CompoundNBT var1) {
-    	this.dataManager.set(AGE, var1.getInteger("age"));
-    	this.dataManager.set(STRENGTH_PEAK, var1.getInteger("strengthpeak"));
-        type = var1.getInteger("type");
+    protected void readAdditionalSaveData(CompoundNBT var1) {
+    	this.getEntityData().set(AGE, var1.getInt("age"));
+    	this.getEntityData().set(STRENGTH_PEAK, var1.getInt("strengthpeak"));
+        type = var1.getInt("type");
     }
 
 	@Override
-	public void writeSpawnData(ByteBuf data) {
+	public void writeSpawnData(PacketBuffer data) {
 		data.writeInt(this.type);	
 	}
 
 	@Override
-	public void readSpawnData(ByteBuf data) {
+	public void readSpawnData(PacketBuffer data) {
 		type = data.readInt();
 	}
+
+    /*@Override
+    protected void defineSynchedData() {
+
+    }*/
+
+    @Override
+    public IPacket<?> getAddEntityPacket() {
+        return null;
+    }
 }
