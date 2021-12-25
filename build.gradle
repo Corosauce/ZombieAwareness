@@ -45,6 +45,7 @@ minecraft {
     runs {
         client {
             workingDirectory project.file('run')
+            arg "-mixin.config=zombieawareness.mixins.json"
 
             // Recommended logging data for a userdev environment
             // The markers can be changed as needed.
