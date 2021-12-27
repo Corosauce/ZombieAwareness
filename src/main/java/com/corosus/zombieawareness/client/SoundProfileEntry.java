@@ -1,7 +1,9 @@
 package com.corosus.zombieawareness.client;
 
 import net.minecraft.util.SoundEvent;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Accounts for all things we need deal with for sounds, range, amp, chance, matching, etc
@@ -13,6 +15,8 @@ public class SoundProfileEntry {
 
 	//for both partial matches and SoundEvents converted to resource string
 	private String soundName;
+	private List<Integer> listSoundEventTypes = new ArrayList<>();
+	private boolean isSoundType;
 	private double multiplier;
 	private double distanceMax = 3D;
 	private boolean partialMatchOnly = false;
@@ -20,7 +24,7 @@ public class SoundProfileEntry {
 	private int oddsTo1ToUse = 0;
 	
 	public static String getSoundEventName(SoundEvent soundEvent) {
-		return ObfuscationReflectionHelper.getPrivateValue(SoundEvent.class, soundEvent, "field_187506_b").toString();
+		return soundEvent.location.toString();
 	}
 
 	public SoundProfileEntry(SoundEvent soundEvent, double multiplier/*, double distanceMax*/) {
@@ -83,5 +87,26 @@ public class SoundProfileEntry {
 	public void setOddsTo1ToUse(int oddsTo1ToUse) {
 		this.oddsTo1ToUse = oddsTo1ToUse;
 	}
-	
+
+	public boolean containsSoundType(int soundType) {
+		return listSoundEventTypes.contains(soundType);
+	}
+
+	public List<Integer> getListSoundEventTypes() {
+		return listSoundEventTypes;
+	}
+
+	public SoundProfileEntry setListSoundEventTypes(List<Integer> listSoundEventTypes) {
+		this.listSoundEventTypes = listSoundEventTypes;
+		this.isSoundType = true;
+		return this;
+	}
+
+	public boolean isSoundType() {
+		return isSoundType;
+	}
+
+	public void setSoundType(boolean soundType) {
+		isSoundType = soundType;
+	}
 }

@@ -3,7 +3,7 @@
   "package": "com.corosus.zombieawareness.mixin",
   "compatibilityLevel": "JAVA_8",
   "refmap": "zombieawareness.refmap.json",
-  "client": ["MixinPlaySound"],
+  "client": ["MixinPlaySound", "MixinLevelEvent"],
   "injectors": {
     "defaultRequire": 1
   },

@@ -60,6 +60,8 @@ public class RenderScent extends EntityRenderer {
             //this.doRenderNode(var1, var2, var4, var6, var8, var9);
             renderBlood(pMatrixStack, pBuffer, pEntity, shadowStrength, pPartialTicks, pEntity.level, shadowSize);
         }
+        this.shadowStrength = 0;
+        this.shadowRadius = 0;
         //shadowSize = 0.0F;
         //GL11.glPopMatrix();
     }

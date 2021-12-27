@@ -20,6 +20,7 @@ import net.minecraft.entity.monster.SkeletonEntity;
 import net.minecraft.entity.monster.SpiderEntity;
 import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.pathfinding.PathPoint;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.*;
@@ -115,31 +116,71 @@ public class ZAUtil {
 
 		listSoundProfiles.add(new SoundProfileEntry(SoundEvents.ARROW_HIT_PLAYER, 1.1D));
 		listSoundProfiles.add(new SoundProfileEntry(SoundEvents.ARROW_HIT, 1.1D));
+		listSoundProfiles.add(new SoundProfileEntry(SoundEvents.CROSSBOW_HIT, 1.1D));
 
 		listSoundProfiles.add(new SoundProfileEntry(SoundEvents.CHEST_CLOSE, noisyInteractBuff).setDistanceMax(noisyInteractRange));
-		listSoundProfiles.add(new SoundProfileEntry(SoundEvents.WOODEN_DOOR_CLOSE, noisyInteractBuff).setDistanceMax(noisyInteractRange));
+
+		/*listSoundProfiles.add(new SoundProfileEntry(SoundEvents.WOODEN_DOOR_CLOSE, noisyInteractBuff).setDistanceMax(noisyInteractRange));
 		listSoundProfiles.add(new SoundProfileEntry(SoundEvents.IRON_DOOR_CLOSE, noisyInteractBuff).setDistanceMax(noisyInteractRange));
-		listSoundProfiles.add(new SoundProfileEntry(SoundEvents.WOODEN_TRAPDOOR_CLOSE, noisyInteractBuff).setDistanceMax(noisyInteractRange));
+		listSoundProfiles.add(new SoundProfileEntry(SoundEvents.WOODEN_TRAPDOOR_CLOSE, noisyInteractBuff).setDistanceMax(noisyInteractRange));*/
+
+		List<Integer> listDoorSoundEvents = new ArrayList<>();
+		//trap doors opening and close, metal and wood
+		listDoorSoundEvents.add(1037);
+		listDoorSoundEvents.add(1007);
+		listDoorSoundEvents.add(1036);
+		listDoorSoundEvents.add(1013);
+		//doors, opening and close, metal and wood
+		listDoorSoundEvents.add(1011);
+		listDoorSoundEvents.add(1012);
+		listDoorSoundEvents.add(1005);
+		listDoorSoundEvents.add(1006);
+		//fence gates
+		listDoorSoundEvents.add(1008);
+		listDoorSoundEvents.add(1014);
+		listSoundProfiles.add(new SoundProfileEntry("debug-doors", noisyInteractBuff).setListSoundEventTypes(listDoorSoundEvents));
+
+		//records
+		List<Integer> list = new ArrayList<>();
+		list.add(1010);
+		listSoundProfiles.add(new SoundProfileEntry("debug-records", 300).setListSoundEventTypes(list));
 
 		listSoundProfiles.add(new SoundProfileEntry(".place", noisyInteractBuff));
-		listSoundProfiles.add(new SoundProfileEntry("generic.eat", 0.3D));
+		//listSoundProfiles.add(new SoundProfileEntry("generic.eat", 0.3D));
+		listSoundProfiles.add(new SoundProfileEntry("player.burp", 1.1D));
 
 		//covers all note block sounds
 		listSoundProfiles.add(new SoundProfileEntry("block.note", noisyInteractBuff).setDistanceMax(64));
 
 		listSoundProfiles.add(new SoundProfileEntry("lever.click", noisyInteractBuff).setDistanceMax(noisyInteractRange));
-		listSoundProfiles.add(new SoundProfileEntry("pressureplate.click", noisyInteractBuff).setDistanceMax(noisyInteractRange));
+		listSoundProfiles.add(new SoundProfileEntry("pressure_plate", noisyInteractBuff).setDistanceMax(noisyInteractRange));
 		listSoundProfiles.add(new SoundProfileEntry("button.click", noisyInteractBuff).setDistanceMax(noisyInteractRange));
+
+		listSoundProfiles.add(new SoundProfileEntry("tripwire", noisyInteractBuff).setDistanceMax(noisyInteractRange));
+		listSoundProfiles.add(new SoundProfileEntry("block.barrel", noisyInteractBuff).setDistanceMax(noisyInteractRange));
 
 		//long dist ones
 		if (ZAConfigFeatures.noisyZombies) listSoundProfiles.add(new SoundProfileEntry(SoundEvents.ZOMBIE_AMBIENT, 0.8D, 8*20).setDistanceMax(48));
 		if (ZAConfigFeatures.noisyPistons) listSoundProfiles.add(new SoundProfileEntry(SoundEvents.PISTON_EXTEND, 2D, 20).setDistanceMax(128));
 
+		//TODO: fix
 		listSoundProfiles.add(new SoundProfileEntry(SoundEvents.GENERIC_EXPLODE, 3D).setDistanceMax(128));
+	}
+
+	public static SoundProfileEntry getFirstEntry(int soundType) {
+		for (SoundProfileEntry entry : listSoundProfiles) {
+			if (entry.isSoundType()) {
+				if (entry.containsSoundType(soundType)) {
+					return entry;
+				}
+			}
+		}
+		return null;
 	}
     
     public static SoundProfileEntry getFirstEntry(String sound) {
     	for (SoundProfileEntry entry : listSoundProfiles) {
+
     		if (entry.getSoundName().equals(sound)) {
     			return entry;
     		} else if (entry.isPartialMatchOnly() && sound.contains(entry.getSoundName())) {
@@ -466,45 +507,56 @@ public class ZAUtil {
         return entBest;
     }
 
+	public static void hookPlayEvent(int type, World world,
+									 double pX, double pY, double pZ, int data) {
+
+		addSoundHooks();
+
+		//if event type is for playing a record
+		if (world.isClientSide()) return;
+		if (!canSpawnTrace(world, pX, pY, pZ)) {
+			return;
+		}
+		SoundProfileEntry entry = getFirstEntry(type);
+		if (entry != null) {
+			PlayerEntity closestPlayer = getClosestPlayer(world, pX, pY, pZ, 128);
+			if (closestPlayer != null) {
+				Vector3d pos = new Vector3d(pX, pY, pZ);
+				handleSoundProfileEvent(world, entry, pos, closestPlayer);
+			}
+		}
+	}
+
     public static void hookSoundEvent(SoundEvent sound, World world, double x, double y, double z, float volume, float pitch) {
 
 		addSoundHooks();
-        
-    	if (!ZAConfigFeatures.awareness_Sound) {
-            return;
-        }
     	
     	if (world.isClientSide() || sound == null) return;
 
-		//System.out.println(SoundProfileEntry.getSoundEventName(sound));
-
-		if (ZAConfigFeatures.awareness_Sound_OverworldOnly) {
-			if (world.dimension() != World.OVERWORLD/* && world.provider.getDimension() != -127*/) return;
+		if (!canSpawnTrace(world, x, y, z)) {
+			y += 1;
+			if (!canSpawnTrace(world, x, y, z)) {
+				return;
+			}
 		}
 
-        if (!canSpawnTrace(world, x, y, z)) {
-            return;
-        }
-        
-        PlayerEntity closestPlayer = getClosestPlayer(world, x, y, z, 128);
-
 		String soundName = SoundProfileEntry.getSoundEventName(sound);
+		SoundProfileEntry entry = getFirstEntry(soundName);
 
-        double strength = ZAConfig.soundStrength;
-    	
-    	Vector3d pos = new Vector3d(x, y, z);
+        //double strength = ZAConfig.soundStrength;
         
-    	if (closestPlayer != null) {
-    		double distToPlayer = Math.sqrt(closestPlayer.distanceToSqr(x, y, z));
-        	
-        	SoundProfileEntry entry = getFirstEntry(soundName);
+    	if (entry != null) {
+    		//double distToPlayer = Math.sqrt(closestPlayer.distanceToSqr(x, y, z));
 
-			if (distToPlayer <= 5) {
+			/*if (distToPlayer <= 5) {
 				System.out.println(soundName);
-			}
-        	
-        	if (entry != null) {
-        		if (distToPlayer <= entry.getDistanceMax()) {
+			}*/
+
+			PlayerEntity closestPlayer = getClosestPlayer(world, x, y, z, 128);
+        	if (closestPlayer != null) {
+				Vector3d pos = new Vector3d(x, y, z);
+				handleSoundProfileEvent(world, entry, pos, closestPlayer);
+        		/*if (distToPlayer <= entry.getDistanceMax()) {
             		if (entry.getOddsTo1ToUse() <= 0 || rand.nextInt(entry.getOddsTo1ToUse()) == 0) {
             			strength *= entry.getMultiplier();
             			
@@ -512,10 +564,24 @@ public class ZAUtil {
                 		
                 		ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent, sound: " + soundName + ", str: " + scent.getStrengthPeak() + ", vol: " + volume);
             		}
-        		}
+        		}*/
         	}
     	}
     }
+
+	public static void handleSoundProfileEvent(World world, SoundProfileEntry entry, Vector3d pos, PlayerEntity closestPlayer) {
+		double distToPlayer = Math.sqrt(closestPlayer.distanceToSqr(pos.x, pos.y, pos.z));
+		double strength = ZAConfig.soundStrength;
+		if (distToPlayer <= entry.getDistanceMax()) {
+			if (entry.getOddsTo1ToUse() <= 0 || rand.nextInt(entry.getOddsTo1ToUse()) == 0) {
+				strength *= entry.getMultiplier();
+
+				EntityScent scent = spawnOrBuffSenseAtPos(world, pos, EnumSenseType.SOUND, (int)strength);
+
+				ZombieAwareness.dbg("spawned or buffed sound sense from soundEvent, sound: " + entry.getSoundName() + ", str: " + scent.getStrengthPeak()/* + ", vol: " + volume*/);
+			}
+		}
+	}
     
     public static void hookBlockEvent(PlayerEvent event, int chance) {
     	
@@ -801,6 +867,12 @@ public class ZAUtil {
     }
 
     public static boolean canSpawnTrace(World world, double x, double y, double z) {
+		if (!ZAConfigFeatures.awareness_Sound) {
+			return false;
+		}
+		if (ZAConfigFeatures.awareness_Sound_OverworldOnly) {
+			if (world.dimension() != World.OVERWORLD/* && world.provider.getDimension() != -127*/) return false;
+		}
     	BlockPos pos = new BlockPos(x,y,z);
     	if (!world.isLoaded(pos)) return false;
     	BlockState state = world.getBlockState(pos);

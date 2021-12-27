@@ -1,6 +1,10 @@
 package com.corosus.zombieawareness;
 
+import com.corosus.zombieawareness.client.SoundProfileEntry;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.SoundEvents;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.event.world.NoteBlockEvent;
 import com.corosus.zombieawareness.config.ZAConfig;
 import net.minecraft.entity.LivingEntity;
@@ -36,14 +40,10 @@ public class ZAEventHandler {
 			/*if (event.getSound().getSoundName().toString().contains("piston")) {
 				System.out.println(event.getSound().getSoundName().toString());
 			}*/
-			String str = event.getSound().getRegistryName().toString();
-			if (!str.contains("entity")) {
+			/*String str = event.getSound().getRegistryName().toString();
+			if (str.contains("tripwire")) {
 				System.out.println(str);
-			}
-
-			if (str.contains("chest")) {
-				System.out.println("ye");
-			}
+			}*/
 			
 			if (event.getEntity() != null && !event.getEntity().level.isClientSide()) {
 				ZAUtil.hookSoundEvent(event.getSound(), event.getEntity().level, event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ(), event.getVolume(), event.getPitch());
@@ -163,4 +163,16 @@ public class ZAEventHandler {
 
 		ZombieAwarenessOld.tickWorld(event.world);
 	}*/
+
+	@SubscribeEvent
+	public void explosion(ExplosionEvent.Detonate event) {
+		SoundProfileEntry entry = ZAUtil.getFirstEntry(SoundEvents.GENERIC_EXPLODE.location.toString());
+		if (entry != null) {
+			Vector3d pos = event.getExplosion().getPosition();
+			PlayerEntity closestPlayer = ZAUtil.getClosestPlayer(event.getWorld(), pos.x, pos.y, pos.z, 128);
+			if (closestPlayer != null) {
+				ZAUtil.handleSoundProfileEvent(event.getWorld(), entry, pos, closestPlayer);
+			}
+		}
+	}
 }
