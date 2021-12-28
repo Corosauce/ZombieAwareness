@@ -1,5 +1,6 @@
 package com.corosus.zombieawareness;
 
+import modconfig.ConfigMod;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
 import com.corosus.zombieawareness.client.ClientRegistry;
@@ -43,6 +44,8 @@ public class ZombieAwareness
         MinecraftForge.EVENT_BUS.register(new ZAEventHandler());
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, MobListsConfig.CONFIG);
+
+        ConfigMod.addConfigFile(new ZAConfig());
     }
 
     private void setup(final FMLCommonSetupEvent event) {

@@ -1,5 +1,8 @@
 package com.corosus.zombieawareness.config;
 
+import modconfig.ConfigComment;
+import modconfig.IConfigCategory;
+
 import java.io.File;
 
 public class ZAConfig implements IConfigCategory {

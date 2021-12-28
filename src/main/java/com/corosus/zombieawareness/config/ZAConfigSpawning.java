@@ -2,6 +2,9 @@ package com.corosus.zombieawareness.config;
 
 import java.io.File;
 
+import modconfig.ConfigComment;
+import modconfig.IConfigCategory;
+
 public class ZAConfigSpawning implements IConfigCategory {
 
 	@ConfigComment("The max count of zombies active in loaded chunks for duplicating zombie at a location, for 1 player, vanilla count is about 25, so this adds 10 extra")

@@ -2,6 +2,9 @@ package com.corosus.zombieawareness.config;
 
 import java.io.File;
 
+import modconfig.ConfigComment;
+import modconfig.IConfigCategory;
+
 public class ZAConfigFeatures implements IConfigCategory {
 
 	@ConfigComment("Spawn sound sense sources for monsters to track")

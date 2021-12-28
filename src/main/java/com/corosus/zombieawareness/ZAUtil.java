@@ -163,7 +163,6 @@ public class ZAUtil {
 		if (ZAConfigFeatures.noisyZombies) listSoundProfiles.add(new SoundProfileEntry(SoundEvents.ZOMBIE_AMBIENT, 0.8D, 8*20).setDistanceMax(48));
 		if (ZAConfigFeatures.noisyPistons) listSoundProfiles.add(new SoundProfileEntry(SoundEvents.PISTON_EXTEND, 2D, 20).setDistanceMax(128));
 
-		//TODO: fix
 		listSoundProfiles.add(new SoundProfileEntry(SoundEvents.GENERIC_EXPLODE, 3D).setDistanceMax(128));
 	}
 
@@ -397,7 +396,6 @@ public class ZAUtil {
 		    		if (lightValue > 0.2F && lightValue >= lightValueAtEntity) {
 						//adjusted to 32 from 64
 		    			if (((ent.level.random.nextInt(5) == 0 && ent.distanceTo(entP) > 64))) {
-							//TODO: test this works this way
 							boolean canSeePos = CoroUtilEntity.canSee(ent, new BlockPos(rX, rY, rZ));
 							if (canSeePos) {
 								//CULog.dbg("path to light source");
@@ -1032,7 +1030,7 @@ public class ZAUtil {
     	if (!lookupLastInvestigateTime.containsKey(entAlerted) || lookupLastInvestigateTime.get(entAlerted) + investigateDelay < entAlerted.level.getGameTime()) {
 			entAlerted.level.playSound(null, pos.x, pos.y, pos.z, SoundRegistry.get("investigate"), SoundCategory.HOSTILE, (float)ZAConfigFeatures.soundVolumeInvestigate, 0.7F + (entAlerted.level.random.nextFloat() * 0.3F));
 			lookupLastInvestigateTime.put(entAlerted, entAlerted.level.getGameTime());
-			//ZombieAwareness.dbg("!!! investigate play for ent: " + entAlerted.getEntityId() + ", lookupSize: " + lookupLastInvestigateTime.size());
+			ZombieAwareness.dbg("!!! investigate play for ent: " + entAlerted.getId() + ", lookupSize: " + lookupLastInvestigateTime.size());
 		}
     }
 

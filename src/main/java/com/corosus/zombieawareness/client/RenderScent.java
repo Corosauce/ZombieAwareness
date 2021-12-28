@@ -58,7 +58,9 @@ public class RenderScent extends EntityRenderer {
         //GL11.glPushMatrix();
         if (ZAConfigClient.client_renderBlood && (((EntityScent)pEntity).type == 0)) {
             //this.doRenderNode(var1, var2, var4, var6, var8, var9);
-            renderBlood(pMatrixStack, pBuffer, pEntity, shadowStrength, pPartialTicks, pEntity.level, shadowSize);
+            float scale = 0.7F + ((float)((EntityScent)pEntity).getAgeScale() * 0.3F);
+            float alpha = (float)((EntityScent)pEntity).getAgeScale();
+            renderBlood(pMatrixStack, pBuffer, pEntity, shadowStrength, pPartialTicks, pEntity.level, scale, alpha);
         }
         this.shadowStrength = 0;
         this.shadowRadius = 0;
@@ -66,7 +68,7 @@ public class RenderScent extends EntityRenderer {
         //GL11.glPopMatrix();
     }
 
-    private static void renderBlood(MatrixStack p_229096_0_, IRenderTypeBuffer p_229096_1_, Entity p_229096_2_, float p_229096_3_, float p_229096_4_, IWorldReader p_229096_5_, float p_229096_6_) {
+    private static void renderBlood(MatrixStack p_229096_0_, IRenderTypeBuffer p_229096_1_, Entity p_229096_2_, float p_229096_3_, float p_229096_4_, IWorldReader p_229096_5_, float p_229096_6_, float alpha) {
         float f = p_229096_6_;
         if (p_229096_2_ instanceof MobEntity) {
             MobEntity mobentity = (MobEntity)p_229096_2_;
@@ -94,7 +96,7 @@ public class RenderScent extends EntityRenderer {
         //((BufferBuilder) ivertexbuilder).begin(GL11.GL_QUADS, DefaultVertexFormats.NEW_ENTITY);
 
         for(BlockPos blockpos : BlockPos.betweenClosed(new BlockPos(i, k, i1), new BlockPos(j, l, j1))) {
-            renderBlockShadow(matrixstack$entry, ivertexbuilder, p_229096_5_, blockpos, d2, d0, d1, f, p_229096_3_);
+            renderBlockShadow(matrixstack$entry, ivertexbuilder, p_229096_5_, blockpos, d2, d0, d1, f, p_229096_3_, alpha);
         }
 
         ActiveRenderInfo camera = Minecraft.getInstance().gameRenderer.getMainCamera();
@@ -103,7 +105,7 @@ public class RenderScent extends EntityRenderer {
 
     }
 
-    private static void renderBlockShadow(MatrixStack.Entry p_229092_0_, IVertexBuilder p_229092_1_, IWorldReader p_229092_2_, BlockPos p_229092_3_, double p_229092_4_, double p_229092_6_, double p_229092_8_, float p_229092_10_, float p_229092_11_) {
+    private static void renderBlockShadow(MatrixStack.Entry p_229092_0_, IVertexBuilder p_229092_1_, IWorldReader p_229092_2_, BlockPos p_229092_3_, double p_229092_4_, double p_229092_6_, double p_229092_8_, float p_229092_10_, float p_229092_11_, float alpha) {
         BlockPos blockpos = p_229092_3_.below();
         BlockState blockstate = p_229092_2_.getBlockState(blockpos);
         //if (blockstate.getRenderShape() != BlockRenderType.INVISIBLE && p_229092_2_.getMaxLocalRawBrightness(p_229092_3_) > 3) {
@@ -111,6 +113,7 @@ public class RenderScent extends EntityRenderer {
                 VoxelShape voxelshape = blockstate.getShape(p_229092_2_, p_229092_3_.below());
                 if (!voxelshape.isEmpty()) {
                     float f = (float)(((double)p_229092_11_ - (p_229092_6_ - (double)p_229092_3_.getY()) / 2.0D) * 0.5D * (double)p_229092_2_.getBrightness(p_229092_3_));
+                    f = alpha;
                     if (f >= 0.0F) {
                         if (f > 1.0F) {
                             f = 1.0F;

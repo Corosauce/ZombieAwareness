@@ -1,4 +1,4 @@
-package com.corosus.zombieawareness.config;
+package modconfig;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,4 +1,4 @@
-package com.corosus.zombieawareness.config;
+package modconfig;
 
 public interface IConfigCategory {
 

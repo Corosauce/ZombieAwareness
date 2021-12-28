@@ -111,7 +111,7 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
         }
         
         boolean scentDebug = ZAConfigClient.client_debugSensesVisual;
-        if (true || scentDebug) {
+        if (scentDebug) {
 	        if (level.isClientSide()) {
 	        	if (level.getGameTime()/*+this.getEntityId()*/ % 5 == 0) {
 	        		for (int i = 0; i < getStrengthScaled() / 10; i++) {
