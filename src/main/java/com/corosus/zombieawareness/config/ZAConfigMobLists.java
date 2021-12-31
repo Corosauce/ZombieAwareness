@@ -1,9 +1,9 @@
 package com.corosus.zombieawareness.config;
 
-import java.io.File;
-
-import modconfig.ConfigComment;
+import com.corosus.zombieawareness.ZombieAwareness;
 import modconfig.IConfigCategory;
+
+import java.io.File;
 
 public class ZAConfigMobLists implements IConfigCategory {
 
@@ -21,7 +21,7 @@ public class ZAConfigMobLists implements IConfigCategory {
 
 	@Override
 	public String getConfigFileName() {
-		return "zombieawareness" + File.separator + getName();
+		return ZombieAwareness.MODID + File.separator + getName();
 	}
 
 	@Override

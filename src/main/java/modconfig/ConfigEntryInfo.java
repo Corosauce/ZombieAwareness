@@ -1,8 +1,5 @@
 package modconfig;
 
-import modconfig.gui.GuiBetterTextField;
-import net.minecraft.client.Minecraft;
-
 public class ConfigEntryInfo {
 	public int index;
 	public String name;

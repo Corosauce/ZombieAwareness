@@ -2,6 +2,7 @@ package com.corosus.zombieawareness.config;
 
 import java.io.File;
 
+import com.corosus.zombieawareness.ZombieAwareness;
 import modconfig.ConfigComment;
 import modconfig.IConfigCategory;
 
@@ -18,7 +19,7 @@ public class ZAConfigFeatures implements IConfigCategory {
 	@ConfigComment("Pistons cause sound sense sources attracting monsters")
 	public static boolean noisyPistons = true;
 	@ConfigComment("Causes monsters to horde up and wander the surface together to random points")
-	public static boolean wanderingHordes = false;
+	public static boolean wanderingHordes = false;/*
 	@ConfigComment("Spawn extra zombies randomly on the surface at night if dark and away from player until Spawning.extraSpawningMaxCount is reached")
 	public static boolean extraSpawningSurface = false;
 	@ConfigComment("Spawn extra zombies in caves where other zombies already are if dark and away from player until Spawning.extraSpawningMaxCount is reached")
@@ -26,7 +27,10 @@ public class ZAConfigFeatures implements IConfigCategory {
 	@ConfigComment("MC/Forge default is 0.1, this overrides that default, set to -1 to cause no override then restore forges default in their config")
 	public static double zombieSummonHelpBaseChance = 0D;
 	@ConfigComment("MC/Forge default is 0.05, this overrides that default, set to -1 to cause no override then restore forges default in their config")
-	public static double zombieBabyChance = 0.0F;
+	public static double zombieBabyChance = 0.0F;*/
+
+	@ConfigComment("How often in seconds we set a random point around a player for mobs to wander to from far away. Makes mobs path around more, dont use if you have TPS performance issues.")
+	public static int frequencyOfWanderingHordesPerPlayer = 30;
 	
 	@ConfigComment("How loud sounds should be when you are alerted that a mob is coming to investigate an area near you")
 	public static double soundVolumeInvestigate = 0.5D;
@@ -56,7 +60,7 @@ public class ZAConfigFeatures implements IConfigCategory {
 
 	@Override
 	public String getConfigFileName() {
-		return "zombieawareness" + File.separator + getName();
+		return ZombieAwareness.MODID + File.separator + getName();
 	}
 
 	@Override

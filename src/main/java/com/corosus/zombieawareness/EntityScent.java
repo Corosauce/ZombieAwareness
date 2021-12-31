@@ -1,5 +1,7 @@
 package com.corosus.zombieawareness;
 
+import modconfig.ConfigMod;
+import modconfig.ModConfigData;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundNBT;
@@ -109,9 +111,19 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
         if(!level.isClientSide() && age <= 0) {
         	this.kill();
         }
-        
+
+        /*try {
+            ModConfigData data = ConfigMod.lookupFilePathToConfig.get("zombieawareness/Features.toml");
+            if (data != null) {
+                System.out.println(data.valsBooleanConfig.get("soundUseAlternateAlertNoise").get());
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }*/
+
+
         boolean scentDebug = ZAConfigClient.client_debugSensesVisual;
-        if (scentDebug) {
+        if (true || scentDebug) {
 	        if (level.isClientSide()) {
 	        	if (level.getGameTime()/*+this.getEntityId()*/ % 5 == 0) {
 	        		for (int i = 0; i < getStrengthScaled() / 10; i++) {
@@ -124,7 +136,7 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
                         } else if (type == 1) {
                             level.addParticle(ParticleTypes.NOTE, true, x, y, z, 0, 0, 0);
                         } else if (type == 2) {
-                            level.addParticle(ParticleTypes.BUBBLE, true, x, y, z, 0, 0, 0);
+                            level.addParticle(ParticleTypes.ANGRY_VILLAGER, true, x, y, z, 0, 0, 0);
                         }
 	        			
 	        		}

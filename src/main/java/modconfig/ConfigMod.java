@@ -1,98 +1,79 @@
 package modconfig;
 
-import java.io.File;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import CoroUtil.config.ConfigCoroUtil;
-import CoroUtil.forge.CULog;
 import com.corosus.coroutil.util.CULog;
 import com.corosus.coroutil.util.OldUtil;
-import modconfig.forge.CommandModConfig;
-import modconfig.forge.EventHandlerPacket;
-import net.minecraft.command.ServerCommandManager;
-import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.fml.client.FMLClientHandler;
-import net.minecraftforge.fml.common.FMLCommonHandler;
+import com.corosus.zombieawareness.config.ZAConfig;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
-import net.minecraftforge.fml.common.network.FMLEventChannel;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-import CoroUtil.OldUtil;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
-@Mod(modid = "configmod", name="Extended Mod Config", version="v1.0", useMetadata=false)
+import java.lang.reflect.Field;
+import java.util.*;
+
+@Mod(ConfigMod.MODID)
 public class ConfigMod {
 
-	@Mod.Instance( value = "configmod" )
 	public static ConfigMod instance;
 	
-	//public static Class configFieldClass = ModConfigFields.class;
-	//public static ModConfigFields configFieldInstance = new ModConfigFields(); //upgrade to class.getConstructor later 
-	
-	public static List<ModConfigData> configs = new ArrayList<ModConfigData>();
-	public static List<ModConfigData> liveEditConfigs = new ArrayList<ModConfigData>();
-	public static HashMap<String, ModConfigData> configLookup = new HashMap<String, ModConfigData>();
-	
-	public static String eventChannelName = "modconfig";
-	public static final FMLEventChannel eventChannel = NetworkRegistry.INSTANCE.newEventDrivenChannel(eventChannelName);
+	public static List<ModConfigData> configs = new ArrayList<>();
+	public static List<ModConfigData> liveEditConfigs = new ArrayList<>();
+	public static HashMap<String, ModConfigData> lookupRegistryNameToConfig = new HashMap<>();
+
+    //for new forge config, routing reloaded config event to the class to update
+	public static HashMap<String, ModConfigData> lookupFilePathToConfig = new HashMap<>();
+
+    public static final String MODID = "modconfig";
 	
     public ConfigMod() {
-    	//instance = this;
+
+        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
+        //modBus.addListener(this::onLoad);
+        //modBus.addListener(this::onReload);
+        MinecraftForge.EVENT_BUS.addListener(this::serverStart);
     }
-    
-    @Mod.EventHandler
-    public void serverStart(FMLServerStartedEvent event) {
-    	((ServerCommandManager)FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager()).registerCommand(new CommandModConfig());
+
+
+
+    @SubscribeEvent
+    public void serverStart(FMLServerStartingEvent event) {
+        //force a full update right before server starts because forge file watching is unreliable
+        //itll randomly not invoke ModConfig.Reloading for configs and stick with old values
+        dbg("Performing a full config mod force sync");
+        updateAllConfigsFromForge();
     }
-    
-    @Mod.EventHandler
-    private static void preInit(FMLPreInitializationEvent event) {
-    	eventChannel.register(new EventHandlerPacket());
-    	//new ConfigMod();
-    	//instance.saveFilePath = event.getSuggestedConfigurationFile();
-    	//instance.initData();
-    	//instance.writeConfigFiles(false);
+
+    public static void onLoad(final ModConfig.Loading configEvent, String modID) {
+        System.out.println("filename1: " + configEvent.getConfig().getFileName());
+        ModConfigData configData = ConfigMod.lookupRegistryNameToConfig.get("zaconfig");
+        configData.updateConfigFieldValues();
+        System.out.println("maxPFRangeSense1: " + ZAConfig.maxPFRangeSense);
     }
-    
-    @Mod.EventHandler
-    private static void init(FMLInitializationEvent event) {
-    	
+
+
+    public static void onReload(final ModConfig.Reloading configEvent/*, String modID*/) {
+
+
+        //for new forge config, we set our simple configs field values based on what forge config loaded from file now that the file is fully loaded and ready
+        //we cant do this on the fly per field like we used to, forge complains the config builder isnt done yet
+        ModConfigData configData = ConfigMod.lookupFilePathToConfig.get(configEvent.getConfig().getFileName());
+        if (configData != null) {
+            dbg("Coro ConfigMod updating runtime values for file: " + configEvent.getConfig().getFileName());
+            configData.updateConfigFieldValues();
+            configData.configInstance.hookUpdatedValues();
+        } else {
+            dbg("ERROR, cannot find ModConfigData reference for filename: " + configEvent.getConfig().getFileName());
+        }
     }
-    
-    public static void populateData(String modid) {
 
-        try {
-            configLookup.get(modid).configData.clear();
-
-            ModConfigData data = configLookup.get(modid);
-
-            if (data != null) {
-                //int pos = 0;
-
-                processHashMap(modid, data.valsInteger);
-                processHashMap(modid, data.valsDouble);
-                processHashMap(modid, data.valsBoolean);
-                processHashMap(modid, data.valsString);
-            } else {
-                System.out.println("error: cant find config data for gui");
-            }
-
-            //sort it here!
-            Collections.sort(configLookup.get(modid).configData, new ConfigComparatorName());
-            //configLookup.get(modid).configData.
-        } catch (Exception ex) {
-            if (ConfigCoroUtil.useLoggingDebug) {
-                ex.printStackTrace();
-            }
+    public static void updateAllConfigsFromForge() {
+        for (ModConfigData configData : ConfigMod.lookupFilePathToConfig.values()) {
+            dbg("Coro ConfigMod updating runtime values for file: " + configData.saveFilePath);
+            configData.updateConfigFieldValues();
+            configData.configInstance.hookUpdatedValues();
         }
     }
     
@@ -103,8 +84,8 @@ public class ConfigMod {
 	        String name = (String)pairs.getKey();
 	        Object val = pairs.getValue();
 	        String comment = getComment(modid, name);
-	        ConfigEntryInfo info = new ConfigEntryInfo(configLookup.get(modid).configData.size(), name, val, comment);
-	        configLookup.get(modid).configData.add(info);
+	        ConfigEntryInfo info = new ConfigEntryInfo(lookupRegistryNameToConfig.get(modid).configData.size(), name, val, comment);
+	        lookupRegistryNameToConfig.get(modid).configData.add(info);
 	    }
     }
     
@@ -116,24 +97,9 @@ public class ConfigMod {
     	
     }
     
-    public static String getSaveFolderPath() {
-    	if (FMLCommonHandler.instance().getMinecraftServerInstance() == null || FMLCommonHandler.instance().getMinecraftServerInstance().isSinglePlayer()) {
-    		return getClientSidePath() + File.separator;
-    	} else {
-    		return new File(".").getAbsolutePath() + File.separator;
-    	}
-    	
-    }
-    
-    @SideOnly(Side.CLIENT)
-	public static String getClientSidePath() {
-		return FMLClientHandler.instance().getClient().mcDataDir.getPath();
-	}
-    
     public static void dbg(Object obj) {
 		if (true) {
 			System.out.println(obj);
-			//MinecraftServer.getServer().getLogAgent().logInfo(String.valueOf(obj));
 		}
 	}
     
@@ -141,31 +107,38 @@ public class ConfigMod {
     
     /* Main Inits */
 
-    public static void addConfigFile(IConfigCategory configCat) {
-    	addConfigFile(configCat.getRegistryName(), configCat, true);
+    public static void addConfigFile(String modID, IConfigCategory configCat) {
+    	addConfigFile(modID, configCat.getRegistryName(), configCat, true);
     }
     
-    public static void addConfigFile(String modID, IConfigCategory configCat, boolean liveEdit) {
+    public static void addConfigFile(String modID, String categoryName, IConfigCategory configCat, boolean liveEdit) {
     	//if (instance == null) init(event);
 
         //prevent adding twice
-        if (configLookup.containsKey(configCat.getRegistryName())) {
+        if (lookupRegistryNameToConfig.containsKey(configCat.getRegistryName())) {
             return;
         }
     	
-    	ModConfigData configData = new ModConfigData(configCat.getConfigFileName()/*new File(getSaveFolderPath() + "config" + File.separator + configCat.getConfigFileName() + ".cfg")*/, modID, configCat.getClass(), configCat);
+    	ModConfigData configData = new ModConfigData(configCat.getConfigFileName()/*new File(getSaveFolderPath() + "config" + File.separator + configCat.getConfigFileName() + ".cfg")*/, categoryName, configCat.getClass(), configCat);
     	
     	configs.add(configData);
     	if (liveEdit) liveEditConfigs.add(configData);
-    	configLookup.put(modID, configData);
-    	
+    	lookupRegistryNameToConfig.put(categoryName, configData);
+        System.out.println("adding: " + configCat.getConfigFileName() + ".toml");
+        lookupFilePathToConfig.put(configCat.getConfigFileName() + ".toml", configData);
+
     	configData.initData();
     	configData.writeConfigFile(false);
+
+        //for new forge config, we set our simple configs field values based on what forge config loaded from file now that the file is fully loaded and ready
+        //we cant do this on the fly per field like we used to, forge complains the config builder isnt done yet
+        //no work here, values not updated yet
+        //configData.updateConfigFieldValues();
     }
     
     /* Get Inner Field value */
     public static Object getField(String configID, String name) {
-    	try { return OldUtil.getPrivateValue(configLookup.get(configID).configClass, instance, name);
+    	try { return OldUtil.getPrivateValue(lookupRegistryNameToConfig.get(configID).configClass, instance, name);
     	} catch (Exception ex) { ex.printStackTrace(); }
     	return null;
     }
@@ -178,7 +151,7 @@ public class ConfigMod {
      */
     public static String getComment(String configID, String name) {    	
         try {
-            Field field = configLookup.get(configID).configClass.getDeclaredField(name);
+            Field field = lookupRegistryNameToConfig.get(configID).configClass.getDeclaredField(name);
             ConfigComment anno_comment = field.getAnnotation(ConfigComment.class);
             return anno_comment == null ? null : anno_comment.value()[0];
         } catch (NoSuchFieldException e) {
@@ -192,9 +165,9 @@ public class ConfigMod {
     
     /* Update Config Field Entirely */
     public static boolean updateField(String configID, String name, Object obj) {
-    	if (configLookup.get(configID).setFieldBasedOnType(name, obj)) {
+    	if (lookupRegistryNameToConfig.get(configID).setFieldBasedOnType(name, obj)) {
         	//writeHashMapsToFile();
-    		configLookup.get(configID).writeConfigFile(true);
+    		lookupRegistryNameToConfig.get(configID).writeConfigFile(true);
         	return true;
     	}
     	return false;
@@ -202,14 +175,14 @@ public class ConfigMod {
 
     public static void forceSaveAllFilesFromRuntimeSettings() {
         CULog.dbg("forceSaveAllFilesFromRuntimeSettings invoked");
-        for (ModConfigData data : configLookup.values()) {
+        for (ModConfigData data : lookupRegistryNameToConfig.values()) {
             data.writeConfigFile(true);
         }
     }
 
     public static void forceLoadRuntimeSettingsFromFile() {
         CULog.dbg("forceSaveAllFilesFromRuntimeSettings invoked");
-        for (ModConfigData data : configLookup.values()) {
+        for (ModConfigData data : lookupRegistryNameToConfig.values()) {
             //data.reloadRuntimeFromFile();
             data.writeConfigFile(false);
         }

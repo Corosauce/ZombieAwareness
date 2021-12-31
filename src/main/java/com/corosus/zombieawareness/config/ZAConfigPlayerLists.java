@@ -2,6 +2,7 @@ package com.corosus.zombieawareness.config;
 
 import java.io.File;
 
+import com.corosus.zombieawareness.ZombieAwareness;
 import modconfig.ConfigComment;
 import modconfig.IConfigCategory;
 
@@ -39,7 +40,7 @@ public class ZAConfigPlayerLists implements IConfigCategory {
 
 	@Override
 	public String getConfigFileName() {
-		return "zombieawareness" + File.separator + getName();
+		return ZombieAwareness.MODID + File.separator + getName();
 	}
 
 	@Override

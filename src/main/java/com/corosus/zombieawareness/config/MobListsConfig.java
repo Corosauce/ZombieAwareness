@@ -12,6 +12,7 @@ import java.util.List;
 public class MobListsConfig {
 
     public static List<String> enhancedMobsDefaults = new ArrayList<>();
+    //public static List<String> listEnhancedMobsParsedConfig = new ArrayList<>();
 
     static {
         String mc = "minecraft:";
@@ -33,8 +34,6 @@ public class MobListsConfig {
         public final ForgeConfigSpec.ConfigValue<List<? extends String>> enhancedMobs;
 
         private CategoryGeneral() {
-
-            ZombieAwareness.generateEntityTickList();
 
             BUILDER.comment("General mod settings").push("general");
 

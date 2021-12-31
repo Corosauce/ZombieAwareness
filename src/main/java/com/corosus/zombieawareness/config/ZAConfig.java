@@ -1,5 +1,6 @@
 package com.corosus.zombieawareness.config;
 
+import com.corosus.zombieawareness.ZombieAwareness;
 import modconfig.ConfigComment;
 import modconfig.IConfigCategory;
 
@@ -32,10 +33,10 @@ public class ZAConfig implements IConfigCategory {
 	@ConfigComment("The amount of delay in game ticks between processing mobs with enhanced AI, less is more frequent [performance sensitive]")
 	public static int tickRateAILoop = 5;
 	@ConfigComment("how frequently the mod iterates all players, effects rates, less is more frequent")
-	public static int tickRatePlayerLoop = 1;
+	public static int tickRatePlayerLoop = 20;
 	
 	public static boolean debugConsole = false;
-	public static boolean debugConsoleSpawns = false;
+	/*public static boolean debugConsoleSpawns = false;*/
 	public static boolean debugConsoleOmniscient = false;
 	public static boolean debugConsoleSuperDetailed = false;
 	
@@ -72,7 +73,7 @@ public class ZAConfig implements IConfigCategory {
 
 	@Override
 	public String getConfigFileName() {
-		return "zombieawareness" + File.separator + getName();
+		return ZombieAwareness.MODID + File.separator + getName();
 	}
 
 	@Override

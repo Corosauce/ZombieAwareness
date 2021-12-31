@@ -10,3 +10,12 @@ authors="Corosus"
 description='''
 They smellz
 '''
+
+[[mods]]
+modId="modconfig"
+version="${file.jarVersion}"
+displayName="modconfig"
+authors="Corosus"
+description='''
+
+'''
