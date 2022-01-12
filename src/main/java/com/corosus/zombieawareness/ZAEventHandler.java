@@ -1,18 +1,18 @@
 package com.corosus.zombieawareness;
 
 import com.corosus.zombieawareness.client.SoundProfileEntry;
-import modconfig.ConfigMod;
-import modconfig.ModConfigData;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.SoundEvents;
-import net.minecraft.util.math.vector.Vector3d;
+import com.mojang.math.Vector3d;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.event.entity.living.LivingSpawnEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.event.world.NoteBlockEvent;
 import com.corosus.zombieawareness.config.ZAConfig;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
@@ -23,15 +23,14 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
 
 @Mod.EventBusSubscriber(modid = ZombieAwareness.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ZAEventHandler {
 
 	@SubscribeEvent
 	public void noteBlockEvent(NoteBlockEvent.Play event) {
-		if (event.getWorld() instanceof World) {
-			ZAUtil.hookSoundEvent(SoundEvents.NOTE_BLOCK_BASS, (World) event.getWorld(), event.getPos().getX(), event.getPos().getY(), event.getPos().getZ(), 1, 1);
+		if (event.getWorld() instanceof Level) {
+			ZAUtil.hookSoundEvent(SoundEvents.NOTE_BLOCK_BASS, (Level) event.getWorld(), event.getPos().getX(), event.getPos().getY(), event.getPos().getZ(), 1, 1);
 		}
 	}
 	
@@ -97,18 +96,18 @@ public class ZAEventHandler {
 
 	@SubscribeEvent
 	public void breakBlock(BlockEvent.BreakEvent event) {
-		if (!event.getWorld().isClientSide() && event.getWorld() instanceof World) {
-			if (!ZAUtil.isZombieAwarenessActive((World)event.getWorld())) return;
+		if (!event.getWorld().isClientSide() && event.getWorld() instanceof Level) {
+			if (!ZAUtil.isZombieAwarenessActive((Level)event.getWorld())) return;
 			if (!ZAConfig.blockBreakEvent_Active) return;
 			ZombieAwareness.dbg("HarvestDrops event");
-			ZAUtil.handleBlockBasedEvent(event.getPlayer(), (World)event.getWorld(), event.getPos(), 3);
+			ZAUtil.handleBlockBasedEvent(event.getPlayer(), (Level)event.getWorld(), event.getPos(), 3);
 		}
 	}
 	
 	@SubscribeEvent
 	public void interact(PlayerInteractEvent event) {
 		if (!event.getEntityLiving().level.isClientSide) {
-			if (event.getHand() == Hand.MAIN_HAND) {
+			if (event.getHand() == InteractionHand.MAIN_HAND) {
 				/**
 				 * event is way too spammy, since i have much greater sound play access now I am going to try and avoid using this event entirely
 				 */
@@ -143,10 +142,18 @@ public class ZAEventHandler {
 
 		//ZombieAwarenessOld.tickEntity(ent);
 		if ((ent.level.getGameTime() + ent.getId()) % ZAConfig.tickRateAILoop == 0) {
-			if (ZombieAwareness.canProcessEntity(ent) && ent instanceof MobEntity) {
-				ZAUtil.tickAI((MobEntity) ent);
+			if (ZombieAwareness.canProcessEntity(ent) && ent instanceof Mob) {
+				ZAUtil.tickAI((Mob) ent);
 			}
 		}
+	}
+
+	@SubscribeEvent
+	public void spawnEntity(LivingSpawnEvent.SpecialSpawn event) {
+		LivingEntity ent = event.getEntityLiving();
+		if (ent.level.isClientSide) return;
+
+		ZAUtil.processMobSpawn(event);
 	}
 
 	@SubscribeEvent
@@ -169,12 +176,12 @@ public class ZAEventHandler {
 
 	@SubscribeEvent
 	public void explosion(ExplosionEvent.Detonate event) {
-		SoundProfileEntry entry = ZAUtil.getFirstEntry(SoundEvents.GENERIC_EXPLODE.location.toString());
+		SoundProfileEntry entry = ZAUtil.getSoundIDEntry(SoundEvents.GENERIC_EXPLODE.location.toString());
 		if (entry != null) {
-			Vector3d pos = event.getExplosion().getPosition();
-			PlayerEntity closestPlayer = ZAUtil.getClosestPlayer(event.getWorld(), pos.x, pos.y, pos.z, 128);
+			Vec3 pos = event.getExplosion().getPosition();
+			Player closestPlayer = ZAUtil.getClosestPlayer(event.getWorld(), pos.x, pos.y, pos.z, 128);
 			if (closestPlayer != null) {
-				ZAUtil.handleSoundProfileEvent(event.getWorld(), entry, pos, closestPlayer);
+				ZAUtil.handleSoundProfileEvent(event.getWorld(), entry, new Vector3d(pos.x, pos.y, pos.z), closestPlayer);
 			}
 		}
 	}

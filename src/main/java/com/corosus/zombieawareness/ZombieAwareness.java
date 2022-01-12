@@ -2,19 +2,20 @@ package com.corosus.zombieawareness;
 
 import com.corosus.zombieawareness.client.ClientRegistry;
 import com.corosus.zombieawareness.config.*;
-import modconfig.ConfigMod;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityClassification;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.RegistryKey;
+import com.corosus.modconfig.ConfigMod;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.FileUtils;
@@ -58,13 +59,13 @@ public class ZombieAwareness
     }
 
     @SubscribeEvent
-    public void onReload(final ModConfig.Reloading configEvent) {
+    public void onReload(final ModConfigEvent.Reloading configEvent) {
         clearConfigCache();
         ConfigMod.onReload(configEvent);
     }
 
     @SubscribeEvent
-    public void serverStart(FMLServerStartingEvent event) {
+    public void serverStart(ServerStartingEvent event) {
         clearConfigCache();
     }
 
@@ -143,7 +144,7 @@ public class ZombieAwareness
      */
     public static boolean canConfigEntity(EntityType ent) {
         //return MonsterEntity.class.isAssignableFrom(ent.getClass()) || IMob.class.isAssignableFrom(ent.getClass());
-        return ent.getCategory() == EntityClassification.MONSTER;
+        return ent.getCategory() == MobCategory.MONSTER;
     }
 
     public static boolean getDefaultForEntity(EntityType ent) {
@@ -189,7 +190,7 @@ public class ZombieAwareness
      *
      */
     public static void generateEntityTickList() {
-        for(Map.Entry<RegistryKey<EntityType<?>>, EntityType<?>> entry : ForgeRegistries.ENTITIES.getEntries()) {
+        for(Map.Entry<ResourceKey<EntityType<?>>, EntityType<?>> entry : ForgeRegistries.ENTITIES.getEntries()) {
             //calling canProcessEntity fills the lists
             boolean tickEnt = canProcessEntity(entry.getValue(), true);
             /*if (tickEnt) {

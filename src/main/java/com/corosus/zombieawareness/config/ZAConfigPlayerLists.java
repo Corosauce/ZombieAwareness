@@ -3,8 +3,8 @@ package com.corosus.zombieawareness.config;
 import java.io.File;
 
 import com.corosus.zombieawareness.ZombieAwareness;
-import modconfig.ConfigComment;
-import modconfig.IConfigCategory;
+import com.corosus.modconfig.ConfigComment;
+import com.corosus.modconfig.IConfigCategory;
 
 public class ZAConfigPlayerLists implements IConfigCategory {
 
@@ -13,20 +13,10 @@ public class ZAConfigPlayerLists implements IConfigCategory {
 	public static boolean whiteListUsedOmniscient = false;
 	@ConfigComment("Uses list of people to have senses spawned for")
 	public static boolean whiteListUsedSenses = false;
-	/*@ConfigComment("Uses list of mobs to prevent enhanced AI on")
-	public static boolean blacklistUsedAITick = true;
-	@ConfigComment("swaps blacklistUsedAITick/blacklistAITick into a whitelist")
-	public static boolean forceListUsedAITickAsWhitelist = false;*/
-	@ConfigComment("Uses list of people to have spawning of zombies for")
-	public static boolean whiteListUsedExtraSpawning = false;
 	@ConfigComment("List of people to have omniscient targetting effect")
 	public static String whitelistOmniscientTargettedPlayers = "Corosus, SomeDude";
 	@ConfigComment("List of people to have senses spawned for")
 	public static String whitelistSenses = "Corosus, SomeDude";
-	/*@ConfigComment("List of mobs to prevent enhanced AI on")
-	public static String blacklistAITick = "Creeper, Enderman, Wolf";*/
-	@ConfigComment("List of people to have spawning of zombies for")
-	public static String whitelistExtraSpawning = "Corosus";
 
 	@Override
 	public String getName() {

@@ -1,6 +1,6 @@
 package com.corosus.zombieawareness.client;
 
-import net.minecraft.util.SoundEvent;
+import net.minecraft.sounds.SoundEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +18,7 @@ public class SoundProfileEntry {
 	private List<Integer> listSoundEventTypes = new ArrayList<>();
 	private boolean isSoundType;
 	private double multiplier;
-	private double distanceMax = 3D;
+	private double maxDistToSpawnFromPlayer = 4D;
 	private boolean partialMatchOnly = false;
 	//0 = always use
 	private int oddsTo1ToUse = 0;
@@ -63,12 +63,12 @@ public class SoundProfileEntry {
 		this.multiplier = multiplier;
 	}
 
-	public double getDistanceMax() {
-		return distanceMax;
+	public double getMaxDistToSpawnFromPlayer() {
+		return maxDistToSpawnFromPlayer;
 	}
 
-	public SoundProfileEntry setDistanceMax(double distanceMax) {
-		this.distanceMax = distanceMax;
+	public SoundProfileEntry setMaxDistToSpawnFromPlayer(double maxDistToSpawnFromPlayer) {
+		this.maxDistToSpawnFromPlayer = maxDistToSpawnFromPlayer;
 		return this;
 	}
 

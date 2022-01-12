@@ -1,7 +1,7 @@
 package com.corosus.zombieawareness;
 
-import net.minecraft.entity.EntityClassification;
-import net.minecraft.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -18,7 +18,7 @@ public class EntityRegistry {
     public static void registerEntity(RegistryEvent.Register<EntityType<?>> e) {
         IForgeRegistry<EntityType<?>> r = e.getRegistry();
         r.register(
-                EntityType.Builder.of(EntityScent::new, EntityClassification.MISC)
+                EntityType.Builder.of(EntityScent::new, MobCategory.MISC)
                         .setShouldReceiveVelocityUpdates(false)
                         .setUpdateInterval(20)
                         .setTrackingRange(128)

@@ -1,21 +1,19 @@
 package com.corosus.zombieawareness;
 
-import modconfig.ConfigMod;
-import modconfig.ModConfigData;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.IPacket;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.particles.ParticleTypes;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.level.Level;
 import com.corosus.zombieawareness.config.ZAConfig;
 import com.corosus.zombieawareness.config.ZAConfigClient;
-import net.minecraftforge.fml.network.NetworkHooks;
+import net.minecraftforge.entity.IEntityAdditionalSpawnData;
+import net.minecraftforge.network.NetworkHooks;
 
 public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
 
@@ -31,15 +29,15 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     public int type = 0;
     public boolean isUsed = false;
     
-    private static final DataParameter<Integer> STRENGTH_PEAK = EntityDataManager.defineId(EntityScent.class, DataSerializers.INT);
-    private static final DataParameter<Integer> AGE = EntityDataManager.defineId(EntityScent.class, DataSerializers.INT);
+    private static final EntityDataAccessor<Integer> STRENGTH_PEAK = SynchedEntityData.defineId(EntityScent.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> AGE = SynchedEntityData.defineId(EntityScent.class, EntityDataSerializers.INT);
     
     public long lastBuffTime = 0;
     public float lastMultiply = 1F;
     
     public static int MAX_AGE = 30*20;
 
-    public EntityScent(EntityType<EntityScent> entityScentEntityType, World var1) {
+    public EntityScent(EntityType<EntityScent> entityScentEntityType, Level var1) {
         super(entityScentEntityType, var1);
     }
 
@@ -106,24 +104,18 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     	//TODO: if raining, age smell sense much faster
     	
     	int age = this.getEntityData().get(AGE);
-    	this.getEntityData().set(AGE, --age);
+        int decayRate = level.isRaining() && level.canSeeSky(blockPosition()) ? 3 : 1;
+        age -= decayRate;
+        if (age < 0) age = 0;
+
+    	this.getEntityData().set(AGE, age);
         
         if(!level.isClientSide() && age <= 0) {
         	this.kill();
         }
 
-        /*try {
-            ModConfigData data = ConfigMod.lookupFilePathToConfig.get("zombieawareness/Features.toml");
-            if (data != null) {
-                System.out.println(data.valsBooleanConfig.get("soundUseAlternateAlertNoise").get());
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }*/
-
-
         boolean scentDebug = ZAConfigClient.client_debugSensesVisual;
-        if (true || scentDebug) {
+        if (scentDebug) {
 	        if (level.isClientSide()) {
 	        	if (level.getGameTime()/*+this.getEntityId()*/ % 5 == 0) {
 	        		for (int i = 0; i < getStrengthScaled() / 10; i++) {
@@ -146,31 +138,31 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     }
 
     @Override
-    protected void addAdditionalSaveData(CompoundNBT var1) {
+    protected void addAdditionalSaveData(CompoundTag var1) {
         var1.putInt("age", this.getEntityData().get(AGE));
         var1.putInt("strengthpeak", this.getEntityData().get(STRENGTH_PEAK));
         var1.putInt("type", type);
     }
 
     @Override
-    protected void readAdditionalSaveData(CompoundNBT var1) {
+    protected void readAdditionalSaveData(CompoundTag var1) {
     	this.getEntityData().set(AGE, var1.getInt("age"));
     	this.getEntityData().set(STRENGTH_PEAK, var1.getInt("strengthpeak"));
         type = var1.getInt("type");
     }
 
 	@Override
-	public void writeSpawnData(PacketBuffer data) {
+	public void writeSpawnData(FriendlyByteBuf data) {
 		data.writeInt(this.type);	
 	}
 
 	@Override
-	public void readSpawnData(PacketBuffer data) {
+	public void readSpawnData(FriendlyByteBuf data) {
 		type = data.readInt();
 	}
 
     @Override
-    public IPacket<?> getAddEntityPacket() {
+    public Packet<?> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 }

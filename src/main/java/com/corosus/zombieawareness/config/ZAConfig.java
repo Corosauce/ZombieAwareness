@@ -1,8 +1,8 @@
 package com.corosus.zombieawareness.config;
 
 import com.corosus.zombieawareness.ZombieAwareness;
-import modconfig.ConfigComment;
-import modconfig.IConfigCategory;
+import com.corosus.modconfig.ConfigComment;
+import com.corosus.modconfig.IConfigCategory;
 
 import java.io.File;
 
@@ -34,6 +34,12 @@ public class ZAConfig implements IConfigCategory {
 	public static int tickRateAILoop = 5;
 	@ConfigComment("how frequently the mod iterates all players, effects rates, less is more frequent")
 	public static int tickRatePlayerLoop = 20;
+
+	@ConfigComment("How long before a mob can move around again to track a light source, or scent, or sound, increase number to reduce performance impact of mod if needed")
+	public static int tickCooldownBetweenPathfinds = 300;
+
+	@ConfigComment("How likely zombies making noise near you will attract other zombies, higher = less likely, 0 = every time they make a noise")
+	public static int noisyZombiesReinforceOddsTo1 = 5;
 	
 	public static boolean debugConsole = false;
 	/*public static boolean debugConsoleSpawns = false;*/
