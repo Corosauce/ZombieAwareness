@@ -54,8 +54,8 @@ apply plugin: 'maven-publish'
 apply plugin: 'org.spongepowered.mixin'
 
 version = '1.17.1-1.0.0'
-group = 'com.corosus.timeout_fixes' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = 'timeout_fixes'
+group = 'com.corosus.zombieawareness' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = 'zombieawareness'
 
 // Mojang ships Java 16 to end users in 1.17+ instead of Java 8 in 1.16 or lower, so your mod should target Java 16.
 java.toolchain.languageVersion = JavaLanguageVersion.of(16)
@@ -83,7 +83,7 @@ minecraft {
     runs {
         client {
             workingDirectory project.file('run')
-            arg "-mixin.config=timeout_fixes.mixins.json"
+            arg "-mixin.config=zombieawareness.mixins.json"
 
             // Recommended logging data for a userdev environment
             // The markers can be added/remove as needed separated by commas.
@@ -108,7 +108,7 @@ minecraft {
 
         server {
             workingDirectory project.file('run')
-            arg "-mixin.config=timeout_fixes.mixins.json"
+            arg "-mixin.config=zombieawareness.mixins.json"
 
             // Recommended logging data for a userdev environment
             // The markers can be added/remove as needed separated by commas.
@@ -163,8 +163,8 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 apply plugin: 'org.spongepowered.mixin'
 
 mixin {
-    add sourceSets.main, 'timeout_fixes.refmap.json'
-    config 'timeout_fixes.mixins.json'
+    add sourceSets.main, 'zombieawareness.refmap.json'
+    config 'zombieawareness.mixins.json'
 }
 
 repositories {
@@ -172,15 +172,16 @@ repositories {
     // ForgeGradle automatically adds the Forge maven and Maven Central for you
 
     // If you have mod jar dependencies in ./libs, you can declare them as a repository like so:
-    // flatDir {
-    //     dir 'libs'
-    // }
+    flatDir {
+        dir 'libs'
+    }
 }
 
 dependencies {
     // Specify the version of Minecraft to use. If this is any group other than 'net.minecraft', it is assumed
     // that the dep is a ForgeGradle 'patcher' dependency, and its patches will be applied.
     // The userdev artifact is a special name and will get all sorts of transformations applied to it.
+    implementation fg.deobf('com.corosus.coroutil:coroutil:1.18.1-1.2.37')
     minecraft 'net.minecraftforge:forge:1.17.1-37.0.104'
     annotationProcessor 'org.spongepowered:mixin:0.8.5-SNAPSHOT:processor'
 
@@ -201,14 +202,14 @@ dependencies {
 jar {
     manifest {
         attributes([
-                "Specification-Title"     : "timeout_fixes",
+                "Specification-Title"     : "zombieawareness",
                 "Specification-Vendor"    : "corosus",
                 "Specification-Version"   : "1", // We are version 1 of ourselves
                 "Implementation-Title"    : project.name,
                 "Implementation-Version"  : project.jar.archiveVersion,
                 "Implementation-Vendor"   : "examplemodsareus",
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                'MixinConfigs': 'timeout_fixes.mixins.json'
+                'MixinConfigs': 'zombieawareness.mixins.json'
         ])
     }
 }
