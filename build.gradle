@@ -1,6 +1,11 @@
 buildscript {
     repositories {
-        jcenter()
+        maven {
+            url "https://cursemaven.com"
+            content {
+                includeGroup "curse.maven"
+            }
+        }
         mavenCentral()
         maven {
             name = 'sponge'
@@ -53,7 +58,7 @@ apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 apply plugin: 'org.spongepowered.mixin'
 
-version = '1.18.1-1.12.2'
+version = '1.18.1-1.12.3'
 group = 'com.corosus.zombieawareness' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'zombieawareness'
 
@@ -182,6 +187,8 @@ dependencies {
     // that the dep is a ForgeGradle 'patcher' dependency, and its patches will be applied.
     // The userdev artifact is a special name and will get all sorts of transformations applied to it.
     implementation fg.deobf('com.corosus.coroutil:coroutil:1.18.1-1.2.37')
+    //lazydfu-1.0-1.18+
+    implementation fg.deobf("curse.maven:lazydfu-460819:3544496")
     minecraft 'net.minecraftforge:forge:1.18.1-39.0.5'
     annotationProcessor 'org.spongepowered:mixin:0.8.5-SNAPSHOT:processor'
 
