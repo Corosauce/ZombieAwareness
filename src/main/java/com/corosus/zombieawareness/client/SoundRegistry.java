@@ -5,39 +5,32 @@ import java.util.HashMap;
 import com.corosus.zombieawareness.ZombieAwareness;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.eventbus.api.EventPriority;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class SoundRegistry {
 
 	private static HashMap<String, SoundEvent> lookupStringToEvent = new HashMap<>();
 
-	@Mod.EventBusSubscriber(bus=Mod.EventBusSubscriber.Bus.MOD)
-	public static class RegistryEvents {
-		@SubscribeEvent(priority = EventPriority.HIGHEST)
-		public static void onSoundsRegistry(final RegistryEvent.Register<SoundEvent> event) {
-			SoundRegistry.init();
-		}
-	}
+	public static final DeferredRegister<SoundEvent> SOUND_EVENTS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, ZombieAwareness.MODID);
+
+	//public static final RegistryObject<SoundEvent> TESLA_ARMOR_EFFECT = SOUND_EVENTS.register("tesla_armor_effect", () -> new SoundEvent(new ResourceLocation(ZombieAwareness.MODID, "tesla_armor_effect")));
 
 	public static void init() {
 		register("alert");
 		register("target");
 		register("investigate");
+		IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+		SOUND_EVENTS.register(modEventBus);
 	}
 
-	public static void register(String soundPath) {
-		ResourceLocation resLoc = new ResourceLocation(ZombieAwareness.MODID, soundPath);
-		SoundEvent event = new SoundEvent(resLoc).setRegistryName(resLoc);
-		if (lookupStringToEvent.containsKey(soundPath)) {
-			System.out.println("ZA SOUNDS WARNING: duplicate sound registration for " + soundPath);
-		} else {
-			ForgeRegistries.SOUND_EVENTS.register(event);
-			lookupStringToEvent.put(soundPath, event);
-		}
+	public static void register(String name) {
+
+		SoundEvent event = new SoundEvent(new ResourceLocation(ZombieAwareness.MODID, name));
+		lookupStringToEvent.put(name, event);
+		SOUND_EVENTS.register(name, () -> event);
 	}
 
 	public static SoundEvent get(String soundPath) {

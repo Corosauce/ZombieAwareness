@@ -24,7 +24,7 @@ public class SoundProfileEntry {
 	private int oddsTo1ToUse = 0;
 	
 	public static String getSoundEventName(SoundEvent soundEvent) {
-		return soundEvent.location.toString();
+		return soundEvent.getLocation().toString();
 	}
 
 	public SoundProfileEntry(SoundEvent soundEvent, double multiplier/*, double distanceMax*/) {

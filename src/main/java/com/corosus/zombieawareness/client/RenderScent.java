@@ -114,8 +114,7 @@ public class RenderScent extends EntityRenderer {
             if (blockstate.isCollisionShapeFullBlock(p_229092_2_, blockpos)) {
                 VoxelShape voxelshape = blockstate.getShape(p_229092_2_, p_229092_3_.below());
                 if (!voxelshape.isEmpty()) {
-                    float f = (float)(((double)p_229092_11_ - (p_229092_6_ - (double)p_229092_3_.getY()) / 2.0D) * 0.5D * (double)p_229092_2_.getBrightness(p_229092_3_));
-                    f = alpha;
+                    float f = alpha;
                     if (f >= 0.0F) {
                         if (f > 1.0F) {
                             f = 1.0F;

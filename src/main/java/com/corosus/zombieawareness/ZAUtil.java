@@ -26,6 +26,7 @@ import net.minecraft.world.entity.monster.Spider;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.ButtonBlock;
 import net.minecraft.world.level.block.LeverBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -201,7 +202,7 @@ public class ZAUtil {
 
 	public static void processMobSpawn(LivingSpawnEvent.SpecialSpawn event) {
 		if (ZAConfig.zombieRandSpeedBoost > 0) {
-			LivingEntity ent = event.getEntityLiving();
+			LivingEntity ent = event.getEntity();
 
 			if (ent instanceof Zombie) {
 				if (!isMobSpeedBosted((Mob) ent)) {
@@ -345,7 +346,7 @@ public class ZAUtil {
     	
     	if (forceOn || ent.level.random.nextInt(3) == 0) {
 
-			float lightValueAtEntity = ent.level.getBrightness(ent.blockPosition());
+			float lightValueAtEntity = ent.level.getBrightness(LightLayer.BLOCK, ent.blockPosition());
 
     		Random rand = new Random();
     		
@@ -368,7 +369,7 @@ public class ZAUtil {
 
 					if (!ent.level.isLoaded(pos)) continue;
 
-		    		float lightValue = entP.level.getBrightness(pos);
+		    		float lightValue = entP.level.getBrightness(LightLayer.BLOCK, ent.blockPosition());
 
 					//as of 1.16 its float values for brightness, 0.2 seems like a good minimum brightness
 					//moon phases doesnt seem to affect this value
@@ -561,12 +562,12 @@ public class ZAUtil {
     public static void hookBlockEvent(PlayerEvent event, int chance) {
 		if (event.getEntity() != null && !canSpawnTraceQuickCheck(event.getEntity().level)) return;
     	
-    	if (event.getPlayer() == null || (ZAConfigPlayerLists.whiteListUsedSenses && !ZAConfigPlayerLists.whitelistSenses.contains(CoroUtilEntity.getName(event.getPlayer())))) return;
+    	if (event.getEntity() == null || (ZAConfigPlayerLists.whiteListUsedSenses && !ZAConfigPlayerLists.whitelistSenses.contains(CoroUtilEntity.getName(event.getEntity())))) return;
     	
 		if (!event.getEntity().level.isClientSide() && event.getEntity().level.random.nextInt(chance) == 0) {
 
 			int strength = ZAConfig.soundStrength;
-			Vector3d pos = new Vector3d(event.getPlayer().getX(), event.getPlayer().getY(), event.getPlayer().getZ());
+			Vector3d pos = new Vector3d(event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ());
 
 			EntityScent scent = spawnOrBuffSenseAtPos(event.getEntity().level, pos, EnumSenseType.SOUND, strength);
 
@@ -606,10 +607,10 @@ public class ZAUtil {
     	
     	//ZombieAwareness.dbg(event.getEntityLiving().getEntityId() + " targetting " + event.getTarget());
     	
-    	if (event.getEntityLiving() instanceof Mob) {
+    	if (event.getEntity() instanceof Mob) {
     		if (event.getTarget() instanceof Player) {
 	    		//tryPlayAlertSound((EntityLiving)event.getEntityLiving(), new Vec3d(event.getTarget().getX(), event.getTarget().getY(), event.getTarget().getZ()));
-	    		tryPlayTargetSound((Mob)event.getEntityLiving(), (LivingEntity)event.getTarget(), new Vector3d(event.getEntityLiving().getX(), event.getEntityLiving().getY(), event.getEntityLiving().getZ()));
+	    		tryPlayTargetSound((Mob)event.getEntity(), (LivingEntity)event.getTarget(), new Vector3d(event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ()));
     		} else if (event.getTarget() == null) {
     			//dont use, AI stupidly detargets when resetting tasks despite still chasing player, causing double alert noise if this code is used
     			/*if (lookupLastAlertTime.containsKey(event.getEntityLiving())) {
@@ -639,7 +640,7 @@ public class ZAUtil {
         boolean newNode = false;
     	
     	if (var1 == null) {
-    		var1 = new EntityScent(EntityRegistry.SCENT, entSource.level);
+    		var1 = new EntityScent(EntityRegistry.SCENT.get(), entSource.level);
     		newNode = true;
     	}
 
@@ -757,7 +758,7 @@ public class ZAUtil {
     	EntityScent sense = getSenseNodeAtPos(world, parPos, type);
     	
     	if (sense == null) {
-    		sense = new EntityScent(EntityRegistry.SCENT, world);
+    		sense = new EntityScent(EntityRegistry.SCENT.get(), world);
     		sense.type = type.ordinal();
 	        sense.setPos(parPos.x, parPos.y, parPos.z);
     		sense.setStrengthPeak(strength);

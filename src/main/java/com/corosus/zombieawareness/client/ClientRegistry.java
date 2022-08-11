@@ -14,7 +14,7 @@ public class ClientRegistry {
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void registerModels(FMLClientSetupEvent event) {
-        EntityRenderers.register(EntityRegistry.SCENT, render -> new RenderScent(render));
+        EntityRenderers.register(EntityRegistry.SCENT.get(), render -> new RenderScent(render));
     }
 
 }

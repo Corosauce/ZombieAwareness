@@ -1,6 +1,7 @@
 package com.corosus.zombieawareness;
 
 import com.corosus.zombieawareness.client.ClientRegistry;
+import com.corosus.zombieawareness.client.SoundRegistry;
 import com.corosus.zombieawareness.config.*;
 import com.corosus.modconfig.ConfigMod;
 import net.minecraft.resources.ResourceKey;
@@ -45,6 +46,9 @@ public class ZombieAwareness
         MinecraftForge.EVENT_BUS.register(new ZAEventHandler());
         MinecraftForge.EVENT_BUS.addListener(this::serverStart);
 
+        EntityRegistry.init();
+        SoundRegistry.init();
+
         FileUtils.getOrCreateDirectory(FMLPaths.CONFIGDIR.get().resolve(MODID), MODID);
         ConfigMod.addConfigFile(MODID, new ZAConfig());
         ConfigMod.addConfigFile(MODID, new ZAConfigClient());
@@ -53,15 +57,24 @@ public class ZombieAwareness
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, MobListsConfig.CONFIG, ZombieAwareness.MODID + File.separator + "MobLists.toml");
         ConfigMod.addConfigFile(MODID, new ZAConfigPlayerLists());
         //ConfigMod.addConfigFile(MODID, new ZAConfigSpawning());
-        ZombieAwareness.generateEntityTickList();
+        //ZombieAwareness.generateEntityTickList();
         //required to make forge tell us when our mods reload, and we then tell ModConfig about it so it does its thing
         modBus.addListener(this::onReload);
+        modBus.addListener(this::onLoad);
     }
 
     @SubscribeEvent
     public void onReload(final ModConfigEvent.Reloading configEvent) {
         clearConfigCache();
         ConfigMod.onReload(configEvent);
+    }
+
+    @SubscribeEvent
+    public void onLoad(final ModConfigEvent.Loading configEvent) {
+        if (configEvent.getConfig().getFileName().contains("MobLists.toml")) {
+            //System.out.println("ZombieAwareness.generateEntityTickList();");
+            ZombieAwareness.generateEntityTickList();
+        }
     }
 
     @SubscribeEvent
@@ -149,7 +162,7 @@ public class ZombieAwareness
 
     public static boolean getDefaultForEntity(EntityType ent) {
         if (canConfigEntity(ent)) {
-            if (MobListsConfig.GENERAL.enhancedMobs.get().contains(ent.getRegistryName().toString())) {
+            if (MobListsConfig.GENERAL.enhancedMobs.get().contains(ForgeRegistries.ENTITY_TYPES.getKey(ent).toString())) {
                 return true;
             } else {
                 return false;
@@ -175,7 +188,7 @@ public class ZombieAwareness
     public static String getEntityRegisteredName(EntityType ent) {
         try {
 
-            return ent.getRegistryName().toString();
+            return ForgeRegistries.ENTITY_TYPES.getKey(ent).toString();
         } catch (Exception ex) {
             if (ZAConfig.debugConsole) {
                 ex.printStackTrace();
@@ -190,7 +203,7 @@ public class ZombieAwareness
      *
      */
     public static void generateEntityTickList() {
-        for(Map.Entry<ResourceKey<EntityType<?>>, EntityType<?>> entry : ForgeRegistries.ENTITIES.getEntries()) {
+        for(Map.Entry<ResourceKey<EntityType<?>>, EntityType<?>> entry : ForgeRegistries.ENTITY_TYPES.getEntries()) {
             //calling canProcessEntity fills the lists
             boolean tickEnt = canProcessEntity(entry.getValue(), true);
             /*if (tickEnt) {

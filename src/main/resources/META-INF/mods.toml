@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[35,)"
+loaderVersion="[43,)"
 license="All Rights Reserved"
 
 [[mods]]
@@ -10,3 +10,14 @@ authors="Corosus"
 description='''
 Adds sound and smell awareness to mobs
 '''
+[[dependencies.zombieawareness]] #optional
+# the modid of the dependency
+modId="coroutil" #mandatory
+# Does this dependency have to exist - if not, ordering below must be specified
+mandatory=true #mandatory
+# The version range of the dependency
+versionRange="[0,)" #mandatory
+# An ordering relationship for the dependency - BEFORE or AFTER required if the relationship is not mandatory
+ordering="NONE"
+# Side this dependency is applied on - BOTH, CLIENT or SERVER
+side="BOTH"
