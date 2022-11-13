@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "com.corosus.zombieawareness.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "zombieawareness.refmap.json",
+  "mixins": [
+    "MixinPlaySound",
+    "MixinLevelEvent"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8"
+}
