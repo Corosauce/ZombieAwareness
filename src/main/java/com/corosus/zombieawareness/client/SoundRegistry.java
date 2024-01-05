@@ -28,7 +28,7 @@ public class SoundRegistry {
 
 	public static void register(String name) {
 
-		SoundEvent event = new SoundEvent(new ResourceLocation(ZombieAwareness.MODID, name));
+		SoundEvent event = SoundEvent.createVariableRangeEvent(new ResourceLocation(ZombieAwareness.MODID, name));
 		lookupStringToEvent.put(name, event);
 		SOUND_EVENTS.register(name, () -> event);
 	}

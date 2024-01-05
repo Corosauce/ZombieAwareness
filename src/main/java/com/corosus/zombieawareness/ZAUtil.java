@@ -1,15 +1,11 @@
 package com.corosus.zombieawareness;
 
-import com.corosus.coroutil.util.CoroUtilAttributes;
-import com.corosus.coroutil.util.CoroUtilEntity;
-import com.corosus.coroutil.util.CoroUtilPath;
-import com.corosus.coroutil.util.CoroUtilWorldTime;
+import com.corosus.coroutil.util.*;
 import com.corosus.zombieawareness.client.SoundProfileEntry;
 import com.corosus.zombieawareness.client.SoundRegistry;
 import com.corosus.zombieawareness.config.ZAConfig;
 import com.corosus.zombieawareness.config.ZAConfigFeatures;
 import com.corosus.zombieawareness.config.ZAConfigPlayerLists;
-import com.mojang.math.Vector3d;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -35,8 +31,9 @@ import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent;
-import net.minecraftforge.event.entity.living.LivingSpawnEvent;
+import net.minecraftforge.event.entity.living.MobSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import org.joml.Vector3d;
 
 import java.util.*;
 
@@ -69,8 +66,15 @@ public class ZAUtil {
     public static boolean debug = false;
     
     static {
-		addSoundHooks();
+		//do not initialize early, thanks to forge config not allowing early config loading
+		//addSoundHooks();
     }
+
+	public static void initSoundHookDataIfEmpty() {
+		if (listSoundProfiles.size() == 0) {
+			addSoundHooks();
+		}
+	}
 
 	public static void addSoundHooks() {
 		int noisyInteractRange = 30;
@@ -124,10 +128,10 @@ public class ZAUtil {
 
 		//long dist ones
 		if (ZAConfigFeatures.noisyZombies) listSoundProfiles.add(new SoundProfileEntry(SoundEvents.ZOMBIE_AMBIENT, 0.8D, ZAConfig.noisyZombiesReinforceOddsTo1).setMaxDistToSpawnFromPlayer(18));
-		if (ZAConfigFeatures.noisyPistons) listSoundProfiles.add(new SoundProfileEntry(SoundEvents.PISTON_EXTEND, 2D, 20).setMaxDistToSpawnFromPlayer(24));
+		if (ZAConfigFeatures.noisyPistons) listSoundProfiles.add(new SoundProfileEntry(SoundEvents.PISTON_EXTEND, 2D, 5).setMaxDistToSpawnFromPlayer(24));
 
 		//not used traditionally, looked up directly
-		listSoundProfiles.add(new SoundProfileEntry(SoundEvents.GENERIC_EXPLODE, 3D).setMaxDistToSpawnFromPlayer(24));
+		listSoundProfiles.add(new SoundProfileEntry(SoundEvents.GENERIC_EXPLODE, 10D).setMaxDistToSpawnFromPlayer(24));
 	}
 
 	public static void addSoundIntegerEntry(SoundProfileEntry entry) {
@@ -200,7 +204,7 @@ public class ZAUtil {
         }
     }
 
-	public static void processMobSpawn(LivingSpawnEvent.SpecialSpawn event) {
+	public static void processMobSpawn(MobSpawnEvent.FinalizeSpawn event) {
 		if (ZAConfig.zombieRandSpeedBoost > 0) {
 			LivingEntity ent = event.getEntity();
 
@@ -270,6 +274,7 @@ public class ZAUtil {
 	}
 
 	public static void markPerformedPathing(Mob ent) {
+		//setting to 100+ prevents random pathing from cancelling our path, not entirely though, a mixin does this instead now
 		ent.setNoActionTime(0);
 		ent.getPersistentData().putLong(ZA_LAST_ACTION, ent.level.getGameTime());
 	}
@@ -381,8 +386,11 @@ public class ZAUtil {
 							boolean canSeePos = CoroUtilEntity.canSee(ent, new BlockPos(rX, rY, rZ));
 							if (canSeePos) {
 								ZombieAwareness.dbg("try path to light source - " + rX + ", " + rY + ", " + rZ);
-								if (ent.getNavigation().moveTo(rX, rY, rZ, 1)) {
-								//if (CoroUtilPath.tryMoveToXYZLongDist(ent, rX, rY, rZ, 1)) {
+								//if (ent.getNavigation().moveTo(rX, rY, rZ, 1)) {
+								ent.level.getProfiler().push("zombieawareness_pathfind");
+								boolean pathFound = CoroUtilPath.tryMoveToXYZLongDist(ent, rX, rY, rZ, 1);
+								ent.level.getProfiler().pop();
+								if (pathFound) {
 									ZombieAwareness.dbg("node count: " + ent.getNavigation().getPath().getNodeCount());
 
 									ZombieAwareness.dbg("pathing to lightsource at " + rX + ", " + rY + ", " + rZ + " - " + ent);
@@ -409,7 +417,11 @@ public class ZAUtil {
 
         if(var3 != null) {
         	if (includeWaypoints || var3.type != 2) {
-        		if (CoroUtilPath.tryMoveToEntityLivingLongDist(ent, var3, 1)) {
+				//if (ent.getNavigation().moveTo(var3, 1)) {
+				ent.level.getProfiler().push("zombieawareness_pathfind");
+				boolean pathFound = CoroUtilPath.tryMoveToEntityLivingLongDist(ent, var3, 1);
+				ent.level.getProfiler().pop();
+        		if (pathFound) {
 					markPerformedPathing(ent);
         			ZombieAwareness.dbg("ai_FindSense call, type: " + ((EntityScent)var3).type + " - " + ent.getName() + " -> " + var3.position());
         			return var3;
@@ -472,35 +484,51 @@ public class ZAUtil {
     public static EntityScent getSenseNearEntity(Entity entSource) {
         List<Entity> listEnts = entSource.level.getEntities(entSource, entSource.getBoundingBox().inflate(ZAConfig.maxPFRangeSense, ZAConfig.maxPFRangeSense, ZAConfig.maxPFRangeSense));
         
-        EntityScent entBest = null;
+        EntityScent bestEnt = null;
+		float bestRangeAkaStrength = 0;
+		double bestDist = 9999;
 
-        for(int i = 0; i < listEnts.size(); ++i) {
-        	Entity entCheck = listEnts.get(i);
+		float rangeTooClose = 5F;
+		int randChance = 10;
+		float percentChance = (float)ZAConfig.findSense_PercentChance / 100;
+		//randChance = 0;
+		/*if (entityScent.type == 2) {
+			rangeTooClose = 10F;
+			randChance = 2;
+		}*/
 
-            if (entCheck instanceof EntityScent) {
-            	
-            	double dist = entSource.distanceTo(entCheck);
+		if (entSource.level.random.nextFloat() <= percentChance) {
+			for(int i = 0; i < listEnts.size(); ++i) {
+				Entity entCheck = listEnts.get(i);
 
-				float rangeToClose = 5F;
-				int randChance = 20;
-				if (((EntityScent)entCheck).type == 2) {
-					rangeToClose = 10F;
-					randChance = 2;
+				if (entCheck instanceof EntityScent entityScent) {
+
+					double dist = entSource.distanceTo(entCheck);
+
+					if (entityScent.getRange() > bestRangeAkaStrength && dist < entityScent.getRange() && (entityScent.type != 2 || entSource.level.random.nextInt(2) == 0)) {
+						bestEnt = (EntityScent) entCheck;
+						bestRangeAkaStrength = entityScent.getRange();
+						bestDist = dist;
+						//return entBest;
+					}
 				}
+			}
 
-				if (dist < ((EntityScent)entCheck).getRange() && dist > rangeToClose && entSource.level.random.nextInt(randChance) == 0) {
-					entBest = (EntityScent) entCheck;
-					return entBest;
-				}
-            }
-        }
+			//after we found strongest sound source, if were too close, still do nothing, prevents then wandering to quieter source if theyre next to loud one
+			if (bestDist <= rangeTooClose) {
+				return null;
+			}
+		}
 
-        return entBest;
+        return bestEnt;
     }
 
 	public static void hookPlayEvent(int type, Level world, double pX, double pY, double pZ, int data) {
 
-		addSoundHooks();
+		//TODO: TEMP DEBUG!!!
+		listSoundProfiles.clear();
+
+		initSoundHookDataIfEmpty();
 
 		//if event type is for playing a record
 		if (world.isClientSide() || !canSpawnTraceQuickCheck(world)) return;
@@ -522,7 +550,10 @@ public class ZAUtil {
 
     public static void hookSoundEvent(SoundEvent sound, Level world, double x, double y, double z, float volume, float pitch) {
 
-		addSoundHooks();
+		//TODO: TEMP DEBUG!!!
+		listSoundProfiles.clear();
+
+		initSoundHookDataIfEmpty();
     	
     	if (world.isClientSide() || sound == null || !canSpawnTraceQuickCheck(world)) return;
 
@@ -668,7 +699,7 @@ public class ZAUtil {
 	}
 
     public static boolean canSpawnTrace(Level world, double x, double y, double z) {
-    	BlockPos pos = new BlockPos(x,y,z);
+    	BlockPos pos = CoroUtilBlock.blockPos(x,y,z);
     	if (!world.isLoaded(pos)) return false;
     	BlockState state = world.getBlockState(pos);
     	//iirc circuits check was to prevent senses spawning on pressure plates and triggering them, but there should be better ways to stop that...

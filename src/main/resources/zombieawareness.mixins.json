@@ -5,7 +5,9 @@
   "refmap": "zombieawareness.refmap.json",
   "mixins": [
     "MixinPlaySound",
-    "MixinLevelEvent"
+    "MixinLevelEvent",
+    "MixinPreventWandering",
+    "MixinRecomputePath"
   ],
   "injectors": {
     "defaultRequire": 1

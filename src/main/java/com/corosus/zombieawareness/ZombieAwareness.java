@@ -59,15 +59,15 @@ public class ZombieAwareness
         //ConfigMod.addConfigFile(MODID, new ZAConfigSpawning());
         //ZombieAwareness.generateEntityTickList();
         //required to make forge tell us when our mods reload, and we then tell ModConfig about it so it does its thing
-        modBus.addListener(this::onReload);
+        //modBus.addListener(this::onReload);
         modBus.addListener(this::onLoad);
     }
 
-    @SubscribeEvent
+    /*@SubscribeEvent
     public void onReload(final ModConfigEvent.Reloading configEvent) {
         clearConfigCache();
         ConfigMod.onReload(configEvent);
-    }
+    }*/
 
     @SubscribeEvent
     public void onLoad(final ModConfigEvent.Loading configEvent) {

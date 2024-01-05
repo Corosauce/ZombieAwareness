@@ -67,6 +67,9 @@ public class ZAConfig implements IConfigCategory {
 	@ConfigComment("Only spawn sound senses for players, if false, machines and other things will cause them too")
 	public static boolean blockBreakEvent_PlayersOnly = false;
 
+	@ConfigComment("Every 2 seconds, the percent chance a mob has to look for an active sense in range, 100 = nearly instant, 10 = slowly over time, performance sensitive setting, higher = more frequent pathfind attempts")
+	public static int findSense_PercentChance = 10;
+
 	@Override
 	public String getName() {
 		return "General";
@@ -89,7 +92,7 @@ public class ZAConfig implements IConfigCategory {
 
 	@Override
 	public void hookUpdatedValues() {
-		
+		ZombieAwareness.clearConfigCache();
 	}
 
 }

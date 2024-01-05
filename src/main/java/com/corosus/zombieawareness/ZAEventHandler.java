@@ -1,12 +1,10 @@
 package com.corosus.zombieawareness;
 
 import com.corosus.zombieawareness.client.SoundProfileEntry;
-import com.mojang.math.Vector3d;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.PlayLevelSoundEvent;
-import net.minecraftforge.event.entity.living.LivingSpawnEvent;
 import com.corosus.zombieawareness.config.ZAConfig;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -15,6 +13,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent;
+import net.minecraftforge.event.entity.living.MobSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.entity.player.PlayerEvent.HarvestCheck;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -23,6 +22,7 @@ import net.minecraftforge.event.level.ExplosionEvent;
 import net.minecraftforge.event.level.NoteBlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import org.joml.Vector3d;
 
 @Mod.EventBusSubscriber(modid = ZombieAwareness.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ZAEventHandler {
@@ -30,7 +30,7 @@ public class ZAEventHandler {
 	@SubscribeEvent
 	public void noteBlockEvent(NoteBlockEvent.Play event) {
 		if (event.getLevel() instanceof Level) {
-			ZAUtil.hookSoundEvent(SoundEvents.NOTE_BLOCK_BASS, (Level) event.getLevel(), event.getPos().getX(), event.getPos().getY(), event.getPos().getZ(), 1, 1);
+			ZAUtil.hookSoundEvent(SoundEvents.NOTE_BLOCK_BASS.get(), (Level) event.getLevel(), event.getPos().getX(), event.getPos().getY(), event.getPos().getZ(), 1, 1);
 		}
 	}
 	
@@ -48,7 +48,7 @@ public class ZAEventHandler {
 			}*/
 			
 			if (event.getEntity() != null && !event.getEntity().level.isClientSide()) {
-				ZAUtil.hookSoundEvent(event.getSound(), event.getEntity().level, event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ(), event.getNewVolume(), event.getNewPitch());
+				ZAUtil.hookSoundEvent(event.getSound().get(), event.getEntity().level, event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ(), event.getNewVolume(), event.getNewPitch());
 				//moved to world event listener for getting coords
 				//ZAUtil.soundHook(event.getSound().getSoundName().toString(), event.getEntity().world, (float)event.getEntity().posX, (float)event.getEntity().posY, (float)event.getEntity().posZ, event.getVolume(), event.getPitch());
 			}
@@ -141,7 +141,7 @@ public class ZAEventHandler {
 		if (ent.level.isClientSide) return;
 
 		//ZombieAwarenessOld.tickEntity(ent);
-		if ((ent.level.getGameTime() + ent.getId()) % ZAConfig.tickRateAILoop == 0) {
+		if ((ent.level.getGameTime() + ent.getId()) % Math.max(1, ZAConfig.tickRateAILoop) == 0) {
 			if (ZombieAwareness.canProcessEntity(ent) && ent instanceof Mob) {
 				ZAUtil.tickAI((Mob) ent);
 			}
@@ -149,7 +149,7 @@ public class ZAEventHandler {
 	}
 
 	@SubscribeEvent
-	public void spawnEntity(LivingSpawnEvent.SpecialSpawn event) {
+	public void spawnEntity(MobSpawnEvent.FinalizeSpawn event) {
 		LivingEntity ent = event.getEntity();
 		if (ent.level.isClientSide) return;
 
