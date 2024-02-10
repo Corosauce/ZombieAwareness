@@ -5,14 +5,14 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.PlayLevelSoundEvent;
-import com.corosus.zombieawareness.config.ZAConfig;
+import com.corosus.zombieawareness.config.ZAConfigGeneral;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.living.LivingChangeTargetEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent;
 import net.minecraftforge.event.entity.living.MobSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.entity.player.PlayerEvent.HarvestCheck;
@@ -47,8 +47,8 @@ public class ZAEventHandler {
 				System.out.println(str);
 			}*/
 			
-			if (event.getEntity() != null && !event.getEntity().level.isClientSide()) {
-				ZAUtil.hookSoundEvent(event.getSound().get(), event.getEntity().level, event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ(), event.getNewVolume(), event.getNewPitch());
+			if (event.getEntity() != null && !event.getEntity().level().isClientSide()) {
+				ZAUtil.hookSoundEvent(event.getSound().get(), event.getEntity().level(), event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ(), event.getNewVolume(), event.getNewPitch());
 				//moved to world event listener for getting coords
 				//ZAUtil.soundHook(event.getSound().getSoundName().toString(), event.getEntity().world, (float)event.getEntity().posX, (float)event.getEntity().posY, (float)event.getEntity().posZ, event.getVolume(), event.getPitch());
 			}
@@ -58,27 +58,27 @@ public class ZAEventHandler {
 	}
 	
 	@SubscribeEvent
-	public void setAttackTarget(LivingSetAttackTargetEvent event) {
-		if (!event.getEntity().level.isClientSide) {
-			if (!ZAUtil.isZombieAwarenessActive(event.getEntity().level)) return;
+	public void setAttackTarget(LivingChangeTargetEvent event) {
+		if (!event.getEntity().level().isClientSide) {
+			if (!ZAUtil.isZombieAwarenessActive(event.getEntity().level())) return;
 			ZAUtil.hookSetAttackTarget(event);
 		}
 	}
 	
 	@SubscribeEvent
 	public void breakSpeed(BreakSpeed event) {
-		if (!event.getEntity().level.isClientSide) {
-			if (!ZAUtil.isZombieAwarenessActive(event.getEntity().level)) return;
-			if (!ZAConfig.blockHittingEvent_Active) return;
+		if (!event.getEntity().level().isClientSide) {
+			if (!ZAUtil.isZombieAwarenessActive(event.getEntity().level())) return;
+			if (!ZAConfigGeneral.blockHittingEvent_Active) return;
 			//ZombieAwareness.dbg("BreakSpeed event");
-			ZAUtil.hookBlockEvent(event, ZAConfig.blockHittingEvent_OddsTo1);
+			ZAUtil.hookBlockEvent(event, ZAConfigGeneral.blockHittingEvent_OddsTo1);
 		}
 	}
 
 	@SubscribeEvent
 	public void harvest(HarvestCheck event) {
-		if (!event.getEntity().level.isClientSide) {
-			/*if (!ZAUtil.isZombieAwarenessActive(event.getEntity().level)) return;
+		if (!event.getEntity().level().isClientSide) {
+			/*if (!ZAUtil.isZombieAwarenessActive(event.getEntity().level())) return;
 			ZombieAwareness.dbg("HarvestCheck event");
 			ZAUtil.hookBlockEvent(event, 3);*/
 		}
@@ -86,11 +86,11 @@ public class ZAEventHandler {
 
 	/*@SubscribeEvent
 	public void breakBlock(BlockEvent.HarvestDropsEvent event) {
-		if (!event.getLevel().isClientSide) {
-			if (!ZAUtil.isZombieAwarenessActive(event.getLevel())) return;
+		if (!event.getlevel()().isClientSide) {
+			if (!ZAUtil.isZombieAwarenessActive(event.getlevel()())) return;
 			if (!ZAConfig.blockBreakEvent_Active) return;
 			ZombieAwarenessOld.dbg("HarvestDrops event");
-			ZAUtil.handleBlockBasedEvent(event.getHarvester(), event.getLevel(), event.getPos(), 3);
+			ZAUtil.handleBlockBasedEvent(event.getHarvester(), event.getlevel()(), event.getPos(), 3);
 		}
 	}*/
 
@@ -98,7 +98,7 @@ public class ZAEventHandler {
 	public void breakBlock(BlockEvent.BreakEvent event) {
 		if (!event.getLevel().isClientSide() && event.getLevel() instanceof Level) {
 			if (!ZAUtil.isZombieAwarenessActive((Level)event.getLevel())) return;
-			if (!ZAConfig.blockBreakEvent_Active) return;
+			if (!ZAConfigGeneral.blockBreakEvent_Active) return;
 			ZombieAwareness.dbg("HarvestDrops event");
 			ZAUtil.handleBlockBasedEvent(event.getPlayer(), (Level)event.getLevel(), event.getPos(), 3);
 		}
@@ -106,7 +106,7 @@ public class ZAEventHandler {
 	
 	@SubscribeEvent
 	public void interact(PlayerInteractEvent event) {
-		if (!event.getEntity().level.isClientSide) {
+		if (!event.getEntity().level().isClientSide) {
 			if (event.getHand() == InteractionHand.MAIN_HAND) {
 				/**
 				 * event is way too spammy, since i have much greater sound play access now I am going to try and avoid using this event entirely
@@ -138,10 +138,10 @@ public class ZAEventHandler {
 	@SubscribeEvent
 	public void tickEntity(LivingEvent.LivingTickEvent event) {
 		LivingEntity ent = event.getEntity();
-		if (ent.level.isClientSide) return;
+		if (ent.level().isClientSide) return;
 
 		//ZombieAwarenessOld.tickEntity(ent);
-		if ((ent.level.getGameTime() + ent.getId()) % Math.max(1, ZAConfig.tickRateAILoop) == 0) {
+		if ((ent.level().getGameTime() + ent.getId()) % Math.max(1, ZAConfigGeneral.tickRateAILoop) == 0) {
 			if (ZombieAwareness.canProcessEntity(ent) && ent instanceof Mob) {
 				ZAUtil.tickAI((Mob) ent);
 			}
@@ -151,16 +151,16 @@ public class ZAEventHandler {
 	@SubscribeEvent
 	public void spawnEntity(MobSpawnEvent.FinalizeSpawn event) {
 		LivingEntity ent = event.getEntity();
-		if (ent.level.isClientSide) return;
+		if (ent.level().isClientSide) return;
 
 		ZAUtil.processMobSpawn(event);
 	}
 
 	@SubscribeEvent
 	public void tickPlayer(TickEvent.PlayerTickEvent event) {
-		if (event.player.level.isClientSide || event.phase == TickEvent.Phase.END) return;
+		if (event.player.level().isClientSide || event.phase == TickEvent.Phase.END) return;
 
-		if (event.player.level.getGameTime() % ZAConfig.tickRatePlayerLoop == 0) {
+		if (event.player.level().getGameTime() % ZAConfigGeneral.tickRatePlayerLoop == 0) {
 
 			ZAUtil.tickPlayer(event.player);
 		}

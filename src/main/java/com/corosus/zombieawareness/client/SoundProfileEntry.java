@@ -17,10 +17,11 @@ public class SoundProfileEntry {
 	private String soundName;
 	private List<Integer> listSoundEventTypes = new ArrayList<>();
 	private boolean isSoundType;
+	//when used, the amount it amplifies the strength, and strength translates to distance heard from
 	private double multiplier;
 	private double maxDistToSpawnFromPlayer = 4D;
 	private boolean partialMatchOnly = false;
-	//0 = always use
+	//0 = always use, random chance of actually spawning a sound sense when the sound happens, helps for sounds that play a lot, preventing sense spam
 	private int oddsTo1ToUse = 0;
 	
 	public static String getSoundEventName(SoundEvent soundEvent) {

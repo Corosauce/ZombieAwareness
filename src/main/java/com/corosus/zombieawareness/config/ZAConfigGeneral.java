@@ -6,7 +6,7 @@ import com.corosus.modconfig.IConfigCategory;
 
 import java.io.File;
 
-public class ZAConfig implements IConfigCategory {
+public class ZAConfigGeneral implements IConfigCategory {
 
 	/*@ConfigComment("[Not used for now] Max pathfind range for zombies [performance sensitive]")
 	public static int maxPFRange = 64; //also max awareness range*/

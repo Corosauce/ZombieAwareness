@@ -1,5 +1,6 @@
 package com.corosus.zombieawareness;
 
+import com.corosus.coroutil.util.CU;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -11,7 +12,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.level.Level;
-import com.corosus.zombieawareness.config.ZAConfig;
+import com.corosus.zombieawareness.config.ZAConfigGeneral;
 import com.corosus.zombieawareness.config.ZAConfigClient;
 import net.minecraftforge.entity.IEntityAdditionalSpawnData;
 import net.minecraftforge.network.NetworkHooks;
@@ -69,15 +70,15 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     }
 
     public float getRange() {
-    	float range = (float)getStrengthScaled() / 100.0F * (float)ZAConfig.maxPFRangeSense;
+    	float range = (float)getStrengthScaled() / 100.0F * (float) ZAConfigGeneral.maxPFRangeSense;
 
     	return range;
     }
 
     public void setStrengthPeak(int strength) {
     	int strTry = strength;
-        if (strTry > ZAConfig.senseMaxStrength) {
-        	strTry = ZAConfig.senseMaxStrength;
+        if (strTry > ZAConfigGeneral.senseMaxStrength) {
+        	strTry = ZAConfigGeneral.senseMaxStrength;
         }
         this.getEntityData().set(STRENGTH_PEAK, strTry);
         this.resetAge();
@@ -105,31 +106,31 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     	//TODO: if raining, age smell sense much faster
     	
     	int age = this.getEntityData().get(AGE);
-        int decayRate = level.isRaining() && level.canSeeSky(blockPosition()) ? 3 : 1;
+        int decayRate = level().isRaining() && level().canSeeSky(blockPosition()) ? 3 : 1;
         age -= decayRate;
         if (age < 0) age = 0;
 
     	this.getEntityData().set(AGE, age);
         
-        if(!level.isClientSide() && age <= 0) {
+        if(!level().isClientSide() && age <= 0) {
         	this.kill();
         }
 
         boolean scentDebug = ZAConfigClient.client_debugSensesVisual;
         if (scentDebug) {
-	        if (level.isClientSide()) {
-	        	if (level.getGameTime()/*+this.getEntityId()*/ % 5 == 0) {
+	        if (level().isClientSide()) {
+	        	if (level().getGameTime()/*+this.getEntityId()*/ % 5 == 0) {
 	        		for (int i = 0; i < getStrengthScaled() / 10; i++) {
 	        			double range = 1D;
-	        			double x = getX() - level.random.nextDouble() / 2 + level.random.nextDouble();
-	        			double y = getY() - level.random.nextDouble() / 2 + level.random.nextDouble();
-	        			double z = getZ() - level.random.nextDouble() / 2 + level.random.nextDouble();
+	        			double x = getX() - CU.rand().nextDouble() / 2 + CU.rand().nextDouble();
+	        			double y = getY() - CU.rand().nextDouble() / 2 + CU.rand().nextDouble();
+	        			double z = getZ() - CU.rand().nextDouble() / 2 + CU.rand().nextDouble();
 	        			if (type == 0) {
-	        				level.addParticle(ParticleTypes.HEART, true, x, y, z, 0, 0, 0);
+	        				level().addParticle(ParticleTypes.HEART, true, x, y, z, 0, 0, 0);
                         } else if (type == 1) {
-                            level.addParticle(ParticleTypes.NOTE, true, x, y, z, 0, 0, 0);
+                            level().addParticle(ParticleTypes.NOTE, true, x, y, z, 0, 0, 0);
                         } else if (type == 2) {
-                            level.addParticle(ParticleTypes.ANGRY_VILLAGER, true, x, y, z, 0, 0, 0);
+                            level().addParticle(ParticleTypes.ANGRY_VILLAGER, true, x, y, z, 0, 0, 0);
                         }
 	        			
 	        		}

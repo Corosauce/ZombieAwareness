@@ -5,6 +5,7 @@ import com.corosus.zombieawareness.client.SoundRegistry;
 import com.corosus.zombieawareness.config.*;
 import com.corosus.modconfig.ConfigMod;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -18,8 +19,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.loading.FMLPaths;
-import net.minecraftforge.fml.loading.FileUtils;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,12 +48,13 @@ public class ZombieAwareness
         EntityRegistry.init();
         SoundRegistry.init();
 
-        FileUtils.getOrCreateDirectory(FMLPaths.CONFIGDIR.get().resolve(MODID), MODID);
-        ConfigMod.addConfigFile(MODID, new ZAConfig());
+        new File("./config/" + MODID).mkdirs();
+        ConfigMod.addConfigFile(MODID, new ZAConfigGeneral());
         ConfigMod.addConfigFile(MODID, new ZAConfigClient());
         ConfigMod.addConfigFile(MODID, new ZAConfigFeatures());
         //ConfigMod.addConfigFile(MODID, new ZAConfigMobLists());
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, MobListsConfig.CONFIG, ZombieAwareness.MODID + File.separator + "MobLists.toml");
+        //ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SoundsListsConfig.CONFIG, ZombieAwareness.MODID + File.separator + "SoundLists.toml");
         ConfigMod.addConfigFile(MODID, new ZAConfigPlayerLists());
         //ConfigMod.addConfigFile(MODID, new ZAConfigSpawning());
         //ZombieAwareness.generateEntityTickList();
@@ -75,6 +75,10 @@ public class ZombieAwareness
             //System.out.println("ZombieAwareness.generateEntityTickList();");
             ZombieAwareness.generateEntityTickList();
         }
+
+        if (configEvent.getConfig().getFileName().contains("SoundLists.toml")) {
+            ZombieAwareness.generateSoundList();
+        }
     }
 
     @SubscribeEvent
@@ -87,7 +91,7 @@ public class ZombieAwareness
     }
 
     public static void dbg(Object obj) {
-        if (ZAConfig.debugConsole) {
+        if (ZAConfigGeneral.debugConsole) {
             System.out.println(obj);
         }
     }
@@ -190,7 +194,7 @@ public class ZombieAwareness
 
             return ForgeRegistries.ENTITY_TYPES.getKey(ent).toString();
         } catch (Exception ex) {
-            if (ZAConfig.debugConsole) {
+            if (ZAConfigGeneral.debugConsole) {
                 ex.printStackTrace();
             }
             return ent.getClass().getSimpleName();
@@ -205,10 +209,25 @@ public class ZombieAwareness
     public static void generateEntityTickList() {
         for(Map.Entry<ResourceKey<EntityType<?>>, EntityType<?>> entry : ForgeRegistries.ENTITY_TYPES.getEntries()) {
             //calling canProcessEntity fills the lists
-            boolean tickEnt = canProcessEntity(entry.getValue(), true);
-            /*if (tickEnt) {
-                MobListsConfig.enhancedMobsDefaults.add(entry.getValue().getRegistryName().toString());
-            }*/
+            boolean tickEnt = canConfigEntity(entry.getValue());
+            if (tickEnt) {
+                MobListsConfig.enhanceableMobsList.add(entry.getKey().location().toString());
+            }
         }
+        MobListsConfig.GENERAL.enhanceableMobs.set(MobListsConfig.enhanceableMobsList);
+        //System.out.println(MobListsConfig.enhanceableMobsList);
+    }
+
+    public static void generateSoundList() {
+        for(Map.Entry<ResourceKey<SoundEvent>, SoundEvent> entry : ForgeRegistries.SOUND_EVENTS.getEntries()) {
+            //calling canProcessEntity fills the lists
+            //boolean tickEnt = canConfigEntity(entry.getValue());
+            if (true) {
+                SoundsListsConfig.allSoundsInGameList.add(entry.getKey().location().toString());
+            }
+        }
+        SoundsListsConfig.GENERAL.allSoundsInGame.set(SoundsListsConfig.allSoundsInGameList);
+        System.out.println(SoundsListsConfig.allSoundsInGameList);
+        System.out.println("asdasd");
     }
 }

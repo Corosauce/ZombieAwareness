@@ -38,8 +38,13 @@ public class ZAConfigFeatures implements IConfigCategory {
 	@ConfigComment("How loud sounds should be for a mob targetting you")
 	public static double soundVolumeAlertTarget = 0.5D;
 
+	@ConfigComment("Enhanced mobs will make a sound when they target you")
 	public static boolean soundAlerts = true;
 
+	@ConfigComment("Any hostile mob that targets you will make a sound, even if not enhanced")
+	public static boolean soundAlertsForAllAttackingMobs = false;
+
+	@ConfigComment("Enhanced mobs will make a sound when they are investigating a sense near you")
 	public static boolean soundInvestigates = true;
 
 	@ConfigComment("Uses a different kind of mob alert noise, might break immersion a bit ;)")

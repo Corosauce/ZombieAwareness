@@ -14,7 +14,7 @@ public abstract class MixinLevelEvent {
 
     @Inject(method = "levelEvent",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/server/players/PlayerList;broadcast(Lnet/minecraft/world/entity/player/Player;DDDDLnet/minecraft/resources/ResourceKey;Lnet/minecraft/network/protocol/Packet;)V"))
-    public void injectBroadcast(Player p_8684_, int type, BlockPos blockPos, int data, CallbackInfo ci) {
+    public void levelEvent(Player p_8684_, int type, BlockPos blockPos, int data, CallbackInfo ci) {
         ZAUtil.hookPlayEvent(type, ((ServerLevel)(Object)this), blockPos.getX(), blockPos.getY(), blockPos.getZ(), data);
     }
 }

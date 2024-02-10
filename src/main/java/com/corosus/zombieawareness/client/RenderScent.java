@@ -54,7 +54,7 @@ public class RenderScent extends EntityRenderer {
             //this.doRenderNode(var1, var2, var4, var6, var8, var9);
             float scale = 0.7F + ((float)((EntityScent)pEntity).getAgeScale() * 0.3F);
             float alpha = (float)((EntityScent)pEntity).getAgeScale();
-            renderBlood(pMatrixStack, pBuffer, pEntity, shadowStrength, pPartialTicks, pEntity.level, scale, alpha);
+            renderBlood(pMatrixStack, pBuffer, pEntity, shadowStrength, pPartialTicks, pEntity.level(), scale, alpha);
         }
         this.shadowStrength = 0;
         this.shadowRadius = 0;
