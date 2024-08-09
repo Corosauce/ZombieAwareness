@@ -1,0 +1,144 @@
+{
+  "sources": [
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/inventory_0"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/inventory_1"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/inventory_2"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/chest_0"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/chest_1"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/chest_2"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/crafting_0"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/crafting_1"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/crafting_2"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/escape_menu_0"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/escape_menu_1"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/escape_menu_2"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/chat_idle_0"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/chat_idle_1"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/chat_typing_0"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/chat_typing_1"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/chat_typing_2"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/chat_typing_3"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/chat_typing_4"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/chat_typing_5"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/idle"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/sign"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/book"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/enchanting_table"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/anvil"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/beacon"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/brewing_stand"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/dispenser"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/furnace"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/grindstone"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/hopper"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/horse"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/loom"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/villager"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "watut:particles/command_block"
+    }
+  ]
+}

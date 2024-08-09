@@ -1,23 +1,18 @@
 package com.corosus.zombieawareness;
 
 import com.corosus.coroutil.util.CU;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
+import com.corosus.zombieawareness.config.ZAConfigClient;
+import com.corosus.zombieawareness.config.ZAConfigGeneral;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
-import com.corosus.zombieawareness.config.ZAConfigGeneral;
-import com.corosus.zombieawareness.config.ZAConfigClient;
-import net.minecraftforge.entity.IEntityAdditionalSpawnData;
-import net.minecraftforge.network.NetworkHooks;
 
-public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
+public class EntityScent extends Entity/* implements IEntityAdditionalSpawnData*/ {
 
 	/**
 	 * 
@@ -28,12 +23,13 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
 	 */
 	
 	//0 == blood node, 1 == sound node, 2 == wander node
-    public int type = 0;
+    //public int type = 0;
     public boolean isUsed = false;
     
     private static final EntityDataAccessor<Integer> STRENGTH_PEAK = SynchedEntityData.defineId(EntityScent.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> AGE = SynchedEntityData.defineId(EntityScent.class, EntityDataSerializers.INT);
-    
+    private static final EntityDataAccessor<Byte> TYPE = SynchedEntityData.defineId(EntityScent.class, EntityDataSerializers.BYTE);
+
     public long lastBuffTime = 0;
     public float lastMultiply = 1F;
     
@@ -47,6 +43,7 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
     protected void defineSynchedData() {
     	this.getEntityData().define(STRENGTH_PEAK, Integer.valueOf(0));
     	this.getEntityData().define(AGE, Integer.valueOf(0));
+    	this.getEntityData().define(TYPE, Byte.valueOf((byte) 0));
     }
     
     @Override
@@ -125,11 +122,11 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
 	        			double x = getX() - CU.rand().nextDouble() / 2 + CU.rand().nextDouble();
 	        			double y = getY() - CU.rand().nextDouble() / 2 + CU.rand().nextDouble();
 	        			double z = getZ() - CU.rand().nextDouble() / 2 + CU.rand().nextDouble();
-	        			if (type == 0) {
+	        			if (getSenseType() == 0) {
 	        				level().addParticle(ParticleTypes.HEART, true, x, y, z, 0, 0, 0);
-                        } else if (type == 1) {
+                        } else if (getSenseType() == 1) {
                             level().addParticle(ParticleTypes.NOTE, true, x, y, z, 0, 0, 0);
-                        } else if (type == 2) {
+                        } else if (getSenseType() == 2) {
                             level().addParticle(ParticleTypes.ANGRY_VILLAGER, true, x, y, z, 0, 0, 0);
                         }
 	        			
@@ -139,32 +136,41 @@ public class EntityScent extends Entity implements IEntityAdditionalSpawnData {
         }
     }
 
+    public int getSenseType() {
+        return this.getEntityData().get(TYPE);
+    }
+
+    public void setSenseType(int type) {
+        this.getEntityData().set(TYPE, (byte)type);
+    }
+
     @Override
     protected void addAdditionalSaveData(CompoundTag var1) {
         var1.putInt("age", this.getEntityData().get(AGE));
         var1.putInt("strengthpeak", this.getEntityData().get(STRENGTH_PEAK));
-        var1.putInt("type", type);
+        var1.putInt("type", getSenseType());
     }
 
     @Override
     protected void readAdditionalSaveData(CompoundTag var1) {
     	this.getEntityData().set(AGE, var1.getInt("age"));
     	this.getEntityData().set(STRENGTH_PEAK, var1.getInt("strengthpeak"));
-        type = var1.getInt("type");
+    	this.getEntityData().set(TYPE, var1.getByte("type"));
+        //type = var1.getInt("type");
     }
 
-	@Override
+	/*@Override
 	public void writeSpawnData(FriendlyByteBuf data) {
-		data.writeInt(this.type);	
+		data.writeInt(this.getSenseType());
 	}
 
 	@Override
 	public void readSpawnData(FriendlyByteBuf data) {
 		type = data.readInt();
-	}
+	}*/
 
-    @Override
+    /*@Override
     public Packet<ClientGamePacketListener> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
-    }
+    }*/
 }

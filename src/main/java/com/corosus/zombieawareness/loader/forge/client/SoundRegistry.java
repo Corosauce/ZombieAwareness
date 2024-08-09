@@ -1,6 +1,4 @@
-package com.corosus.zombieawareness.client;
-
-import java.util.HashMap;
+package com.corosus.zombieawareness.loader.forge.client;
 
 import com.corosus.zombieawareness.ZombieAwareness;
 import net.minecraft.resources.ResourceLocation;
@@ -9,6 +7,8 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+
+import java.util.HashMap;
 
 public class SoundRegistry {
 

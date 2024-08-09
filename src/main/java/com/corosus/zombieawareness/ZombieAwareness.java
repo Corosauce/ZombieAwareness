@@ -1,27 +1,17 @@
 package com.corosus.zombieawareness;
 
-import com.corosus.zombieawareness.client.ClientRegistry;
-import com.corosus.zombieawareness.client.SoundRegistry;
+import com.corosus.modconfig.CoroConfigRegistry;
 import com.corosus.zombieawareness.config.*;
-import com.corosus.modconfig.ConfigMod;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.players.PlayerList;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.ForgeRegistries;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.util.List;
@@ -29,50 +19,46 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Mod(ZombieAwareness.MODID)
-public class ZombieAwareness
+public abstract class ZombieAwareness
 {
-    public static final Logger LOGGER = LogManager.getLogger();
 
+    // Define mod id in a common place for everything to reference
     public static final String MODID = "zombieawareness";
 
-    public ZombieAwareness() {
-        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
-        DistExecutor.safeRunForDist(() -> ClientRegistry::new, () -> EventRegistry::new);
+    private static ZombieAwareness instance;
 
-        MinecraftForge.EVENT_BUS.register(this);
-        MinecraftForge.EVENT_BUS.register(new EntityRegistry());
-        MinecraftForge.EVENT_BUS.register(new ZAEventHandler());
-        MinecraftForge.EVENT_BUS.addListener(this::serverStart);
-
-        EntityRegistry.init();
-        SoundRegistry.init();
-
-        new File("./config/" + MODID).mkdirs();
-        ConfigMod.addConfigFile(MODID, new ZAConfigGeneral());
-        ConfigMod.addConfigFile(MODID, new ZAConfigClient());
-        ConfigMod.addConfigFile(MODID, new ZAConfigFeatures());
-        //ConfigMod.addConfigFile(MODID, new ZAConfigMobLists());
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, MobListsConfig.CONFIG, ZombieAwareness.MODID + File.separator + "MobLists.toml");
-        //ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SoundsListsConfig.CONFIG, ZombieAwareness.MODID + File.separator + "SoundLists.toml");
-        ConfigMod.addConfigFile(MODID, new ZAConfigPlayerLists());
-        //ConfigMod.addConfigFile(MODID, new ZAConfigSpawning());
-        //ZombieAwareness.generateEntityTickList();
-        //required to make forge tell us when our mods reload, and we then tell ModConfig about it so it does its thing
-        //modBus.addListener(this::onReload);
-        modBus.addListener(this::onLoad);
+    public static ZombieAwareness instance() {
+        return instance;
     }
 
-    /*@SubscribeEvent
-    public void onReload(final ModConfigEvent.Reloading configEvent) {
-        clearConfigCache();
-        ConfigMod.onReload(configEvent);
-    }*/
+    public ZombieAwareness() {
+        instance = this;
+
+        new File("./config/" + MODID).mkdirs();
+        CoroConfigRegistry.instance().addConfigFile(MODID, new ZAConfigGeneral());
+        CoroConfigRegistry.instance().addConfigFile(MODID, new ZAConfigClient());
+        CoroConfigRegistry.instance().addConfigFile(MODID, new ZAConfigFeatures());
+        //ConfigMod.addConfigFile(MODID, new ZAConfigMobLists());
+
+        //ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SoundsListsConfig.CONFIG, ZombieAwarenessMod.MODID + File.separator + "SoundLists.toml");
+        CoroConfigRegistry.instance().addConfigFile(MODID, new ZAConfigPlayerLists());
+        //ConfigMod.addConfigFile(MODID, new ZAConfigSpawning());
+        //ZombieAwarenessMod.generateEntityTickList();
+        //required to make forge tell us when our mods reload, and we then tell ModConfig about it so it does its thing
+        //modBus.addListener(this::onReload);
+
+    }
+
+    public abstract PlayerList getPlayerList();
+
+    public abstract boolean isModInstalled(String modID);
+
+
 
     @SubscribeEvent
     public void onLoad(final ModConfigEvent.Loading configEvent) {
         if (configEvent.getConfig().getFileName().contains("MobLists.toml")) {
-            //System.out.println("ZombieAwareness.generateEntityTickList();");
+            //System.out.println("ZombieAwarenessMod.generateEntityTickList();");
             ZombieAwareness.generateEntityTickList();
         }
 

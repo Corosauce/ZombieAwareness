@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * I noticed when mobs were pathfollowing to a sense, they would stop randomly, I discovered if I disabled path recomputing, it fixed it.
- * So I am preventing it from running during the cooldown I use for other things, might prevent
+ * So I am preventing it from running during the cooldown I use for other things, might prevent.......9/8/2024 - unfinished though here?!
  */
 @Mixin(PathNavigation.class)
 public abstract class MixinRecomputePath {

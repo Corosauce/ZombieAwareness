@@ -1,6 +1,7 @@
-package com.corosus.zombieawareness.client;
+package com.corosus.zombieawareness.loader.forge.client;
 
-import com.corosus.zombieawareness.EntityRegistry;
+import com.corosus.zombieawareness.client.RenderScent;
+import com.corosus.zombieawareness.loader.forge.EntityRegistry;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;

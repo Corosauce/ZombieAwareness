@@ -1,5 +1,5 @@
 {
-  "required": true,
+  "required": false,
   "package": "com.corosus.zombieawareness.mixin",
   "compatibilityLevel": "JAVA_17",
   "refmap": "zombieawareness.refmap.json",
@@ -7,14 +7,7 @@
     "MixinPlaySound",
     "MixinLevelEvent",
     "MixinPreventWandering",
-    "MixinRecomputePath",
-    "MixinNoteBlock",
-    "MixinExplosion",
-    "MixinLivingEntity",
-    "MixinMob",
-    "MixinPlayer",
-    "MixinServerLevel_playSeededSound",
-    "MixinServerPlayerGameMode"
+    "MixinRecomputePath"
   ],
   "injectors": {
     "defaultRequire": 1

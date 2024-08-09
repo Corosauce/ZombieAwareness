@@ -1,38 +1,34 @@
 package com.corosus.zombieawareness.client;
 
-import com.corosus.zombieawareness.ZombieAwareness;
 import com.corosus.zombieawareness.EntityScent;
+import com.corosus.zombieawareness.ZombieAwareness;
+import com.corosus.zombieawareness.config.ZAConfigClient;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.core.BlockPos;
-import net.minecraft.util.Mth;
-import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.level.LevelReader;
-
-import com.corosus.zombieawareness.config.ZAConfigClient;
-
-import com.mojang.blaze3d.vertex.Tesselator;
-import net.minecraft.client.Camera;
-
-import java.util.Random;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class RenderScent extends EntityRenderer {
     
     public static ResourceLocation TEXTURE64 = new ResourceLocation(ZombieAwareness.MODID + ":textures/entities/bloodx64.png");
     private static final RenderType SHADOW_RENDER_TYPE = RenderType.entityShadow(TEXTURE64);
 
-    protected RenderScent(EntityRendererProvider.Context p_i46179_1_) {
+    public RenderScent(EntityRendererProvider.Context p_i46179_1_) {
         super(p_i46179_1_);
     }
 
@@ -50,7 +46,7 @@ public class RenderScent extends EntityRenderer {
         this.shadowStrength = 1;
         this.shadowRadius = 1;
         //GL11.glPushMatrix();
-        if (ZAConfigClient.client_renderBlood && (((EntityScent)pEntity).type == 0)) {
+        if (ZAConfigClient.client_renderBlood && (((EntityScent)pEntity).getSenseType() == 0)) {
             //this.doRenderNode(var1, var2, var4, var6, var8, var9);
             float scale = 0.7F + ((float)((EntityScent)pEntity).getAgeScale() * 0.3F);
             float alpha = (float)((EntityScent)pEntity).getAgeScale();

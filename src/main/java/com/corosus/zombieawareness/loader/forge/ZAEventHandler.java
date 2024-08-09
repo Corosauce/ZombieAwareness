@@ -1,15 +1,17 @@
-package com.corosus.zombieawareness;
+package com.corosus.zombieawareness.loader.forge;
 
+import com.corosus.zombieawareness.ZAUtil;
+import com.corosus.zombieawareness.ZombieAwareness;
 import com.corosus.zombieawareness.client.SoundProfileEntry;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.PlayLevelSoundEvent;
 import com.corosus.zombieawareness.config.ZAConfigGeneral;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.event.PlayLevelSoundEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingChangeTargetEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
@@ -27,25 +29,25 @@ import org.joml.Vector3d;
 @Mod.EventBusSubscriber(modid = ZombieAwareness.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ZAEventHandler {
 
-	@SubscribeEvent
+	/*@SubscribeEvent
 	public void noteBlockEvent(NoteBlockEvent.Play event) {
 		if (event.getLevel() instanceof Level) {
 			ZAUtil.hookSoundEvent(SoundEvents.NOTE_BLOCK_BASS.get(), (Level) event.getLevel(), event.getPos().getX(), event.getPos().getY(), event.getPos().getZ(), 1, 1);
 		}
-	}
+	}*/
 	
-	@SubscribeEvent
+	/*@SubscribeEvent
 	public void soundEvent(PlayLevelSoundEvent.AtEntity event) {
 		
 		try {
 
-			/*if (event.getSound().getSoundName().toString().contains("piston")) {
+			*//*if (event.getSound().getSoundName().toString().contains("piston")) {
 				System.out.println(event.getSound().getSoundName().toString());
-			}*/
-			/*String str = event.getSound().getRegistryName().toString();
+			}*//*
+			*//*String str = event.getSound().getRegistryName().toString();
 			if (str.contains("tripwire")) {
 				System.out.println(str);
-			}*/
+			}*//*
 			
 			if (event.getEntity() != null && !event.getEntity().level().isClientSide()) {
 				ZAUtil.hookSoundEvent(event.getSound().get(), event.getEntity().level(), event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ(), event.getNewVolume(), event.getNewPitch());
@@ -55,34 +57,34 @@ public class ZAEventHandler {
         } catch (Exception ex) {
         	ex.printStackTrace();
         }
-	}
+	}*/
 	
 	@SubscribeEvent
 	public void setAttackTarget(LivingChangeTargetEvent event) {
 		if (!event.getEntity().level().isClientSide) {
 			if (!ZAUtil.isZombieAwarenessActive(event.getEntity().level())) return;
-			ZAUtil.hookSetAttackTarget(event);
+			ZAUtil.hookSetAttackTarget(event.getEntity(), event.getNewTarget());
 		}
 	}
 	
-	@SubscribeEvent
+	/*@SubscribeEvent
 	public void breakSpeed(BreakSpeed event) {
 		if (!event.getEntity().level().isClientSide) {
 			if (!ZAUtil.isZombieAwarenessActive(event.getEntity().level())) return;
 			if (!ZAConfigGeneral.blockHittingEvent_Active) return;
 			//ZombieAwareness.dbg("BreakSpeed event");
-			ZAUtil.hookBlockEvent(event, ZAConfigGeneral.blockHittingEvent_OddsTo1);
+			ZAUtil.hookBlockEvent(event.getEntity(), ZAConfigGeneral.blockHittingEvent_OddsTo1);
 		}
-	}
+	}*/
 
-	@SubscribeEvent
-	public void harvest(HarvestCheck event) {
-		if (!event.getEntity().level().isClientSide) {
+	//@SubscribeEvent
+	//public void harvest(HarvestCheck event) {
+		//if (!event.getEntity().level().isClientSide) {
 			/*if (!ZAUtil.isZombieAwarenessActive(event.getEntity().level())) return;
 			ZombieAwareness.dbg("HarvestCheck event");
 			ZAUtil.hookBlockEvent(event, 3);*/
-		}
-	}
+		//}
+	//}
 
 	/*@SubscribeEvent
 	public void breakBlock(BlockEvent.HarvestDropsEvent event) {
@@ -94,7 +96,7 @@ public class ZAEventHandler {
 		}
 	}*/
 
-	@SubscribeEvent
+	/*@SubscribeEvent
 	public void breakBlock(BlockEvent.BreakEvent event) {
 		if (!event.getLevel().isClientSide() && event.getLevel() instanceof Level) {
 			if (!ZAUtil.isZombieAwarenessActive((Level)event.getLevel())) return;
@@ -102,7 +104,7 @@ public class ZAEventHandler {
 			ZombieAwareness.dbg("HarvestDrops event");
 			ZAUtil.handleBlockBasedEvent(event.getPlayer(), (Level)event.getLevel(), event.getPos(), 3);
 		}
-	}
+	}*/
 	
 	@SubscribeEvent
 	public void interact(PlayerInteractEvent event) {
@@ -135,7 +137,7 @@ public class ZAEventHandler {
 		event.getLevel().addEventListener(new WorldEventListener(dimID));
 	}*/
 
-	@SubscribeEvent
+	/*@SubscribeEvent
 	public void tickEntity(LivingEvent.LivingTickEvent event) {
 		LivingEntity ent = event.getEntity();
 		if (ent.level().isClientSide) return;
@@ -146,17 +148,17 @@ public class ZAEventHandler {
 				ZAUtil.tickAI((Mob) ent);
 			}
 		}
-	}
+	}*/
 
-	@SubscribeEvent
+	/*@SubscribeEvent
 	public void spawnEntity(MobSpawnEvent.FinalizeSpawn event) {
 		LivingEntity ent = event.getEntity();
 		if (ent.level().isClientSide) return;
 
-		ZAUtil.processMobSpawn(event);
-	}
+		ZAUtil.processMobSpawn(event.getEntity());
+	}*/
 
-	@SubscribeEvent
+	/*@SubscribeEvent
 	public void tickPlayer(TickEvent.PlayerTickEvent event) {
 		if (event.player.level().isClientSide || event.phase == TickEvent.Phase.END) return;
 
@@ -165,7 +167,7 @@ public class ZAEventHandler {
 			ZAUtil.tickPlayer(event.player);
 		}
 
-	}
+	}*/
 
 	/*@SubscribeEvent
 	public void tickWorld(TickEvent.WorldTickEvent event) {
@@ -174,7 +176,7 @@ public class ZAEventHandler {
 		ZombieAwarenessOld.tickWorld(event.world);
 	}*/
 
-	@SubscribeEvent
+	/*@SubscribeEvent
 	public void explosion(ExplosionEvent.Detonate event) {
 		SoundProfileEntry entry = ZAUtil.getSoundIDEntry(SoundEvents.GENERIC_EXPLODE.getLocation().toString());
 		if (entry != null) {
@@ -184,5 +186,5 @@ public class ZAEventHandler {
 				ZAUtil.handleSoundProfileEvent(event.getLevel(), entry, new Vector3d(pos.x, pos.y, pos.z), closestPlayer);
 			}
 		}
-	}
+	}*/
 }

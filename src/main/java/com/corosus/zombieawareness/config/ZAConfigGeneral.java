@@ -1,8 +1,8 @@
 package com.corosus.zombieawareness.config;
 
-import com.corosus.zombieawareness.ZombieAwareness;
 import com.corosus.modconfig.ConfigComment;
 import com.corosus.modconfig.IConfigCategory;
+import com.corosus.zombieawareness.ZombieAwareness;
 
 import java.io.File;
 

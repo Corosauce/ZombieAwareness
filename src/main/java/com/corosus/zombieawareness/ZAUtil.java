@@ -2,11 +2,11 @@ package com.corosus.zombieawareness;
 
 import com.corosus.coroutil.util.*;
 import com.corosus.zombieawareness.client.SoundProfileEntry;
-import com.corosus.zombieawareness.client.SoundRegistry;
-import com.corosus.zombieawareness.config.SoundsListsConfig;
-import com.corosus.zombieawareness.config.ZAConfigGeneral;
+import com.corosus.zombieawareness.loader.forge.client.SoundRegistry;
 import com.corosus.zombieawareness.config.ZAConfigFeatures;
+import com.corosus.zombieawareness.config.ZAConfigGeneral;
 import com.corosus.zombieawareness.config.ZAConfigPlayerLists;
+import com.corosus.zombieawareness.loader.forge.EntityRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -31,9 +31,6 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.event.entity.living.LivingChangeTargetEvent;
-import net.minecraftforge.event.entity.living.MobSpawnEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
 import org.joml.Vector3d;
 
 import java.util.*;
@@ -205,9 +202,8 @@ public class ZAUtil {
         }
     }
 
-	public static void processMobSpawn(MobSpawnEvent.FinalizeSpawn event) {
+	public static void processMobSpawn(LivingEntity ent) {
 		if (ZAConfigGeneral.zombieRandSpeedBoost > 0) {
-			LivingEntity ent = event.getEntity();
 
 			if (ent instanceof Zombie) {
 				if (!isMobSpeedBosted((Mob) ent)) {
@@ -420,7 +416,7 @@ public class ZAUtil {
     	EntityScent var3 = getSenseNearEntity(ent);
 
         if(var3 != null) {
-        	if (includeWaypoints || var3.type != 2) {
+        	if (includeWaypoints || var3.getSenseType() != 2) {
 				//if (ent.getNavigation().moveTo(var3, 1)) {
 				ent.level().getProfiler().push("zombieawareness_pathfind");
 				boolean pathFound = CoroUtilPath.tryMoveToEntityLivingLongDist(ent, var3, 1);
@@ -430,7 +426,7 @@ public class ZAUtil {
 				ent.level().getProfiler().pop();
         		if (pathFound) {
 					markPerformedPathing(ent);
-        			ZombieAwareness.dbg("ai_FindSense call, type: " + ((EntityScent)var3).type + " - " + ent.getName() + " -> " + var3.position());
+        			ZombieAwareness.dbg("ai_FindSense call, type: " + ((EntityScent)var3).getSenseType() + " - " + ent.getName() + " -> " + var3.position());
         			return var3;
         		}
         	}
@@ -499,7 +495,7 @@ public class ZAUtil {
 		int randChance = 10;
 		float percentChance = (float) ZAConfigGeneral.findSense_PercentChance / 100;
 		//randChance = 0;
-		/*if (entityScent.type == 2) {
+		/*if (entityScent.getSenseType() == 2) {
 			rangeTooClose = 10F;
 			randChance = 2;
 		}*/
@@ -512,7 +508,7 @@ public class ZAUtil {
 
 					double dist = entSource.distanceTo(entCheck);
 
-					if (entityScent.getRange() > bestRangeAkaStrength && dist < entityScent.getRange() && (entityScent.type != 2 || CU.rand().nextInt(2) == 0)) {
+					if (entityScent.getRange() > bestRangeAkaStrength && dist < entityScent.getRange() && (entityScent.getSenseType() != 2 || CU.rand().nextInt(2) == 0)) {
 						bestEnt = (EntityScent) entCheck;
 						bestRangeAkaStrength = entityScent.getRange();
 						bestDist = dist;
@@ -611,17 +607,17 @@ public class ZAUtil {
 		}
 	}
     
-    public static void hookBlockEvent(PlayerEvent event, int chance) {
-		if (event.getEntity() != null && !canSpawnTraceQuickCheck(event.getEntity().level())) return;
+    public static void hookBlockEvent(Player player, int chance) {
+		if (player != null && !canSpawnTraceQuickCheck(player.level())) return;
     	
-    	if (event.getEntity() == null || (ZAConfigPlayerLists.whiteListUsedSenses && !ZAConfigPlayerLists.whitelistSenses.contains(CoroUtilEntity.getName(event.getEntity())))) return;
+    	if (player == null || (ZAConfigPlayerLists.whiteListUsedSenses && !ZAConfigPlayerLists.whitelistSenses.contains(CoroUtilEntity.getName(player)))) return;
     	
-		if (!event.getEntity().level().isClientSide() && CU.rand().nextInt(chance) == 0) {
+		if (!player.level().isClientSide() && CU.rand().nextInt(chance) == 0) {
 
 			int strength = ZAConfigGeneral.soundStrength;
-			Vector3d pos = new Vector3d(event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ());
+			Vector3d pos = new Vector3d(player.getX(), player.getY(), player.getZ());
 
-			EntityScent scent = spawnOrBuffSenseAtPos(event.getEntity().level(), pos, EnumSenseType.SOUND, strength);
+			EntityScent scent = spawnOrBuffSenseAtPos(player.level(), pos, EnumSenseType.SOUND, strength);
 
 			ZombieAwareness.dbg("spawned or buffed sound sense from PlayerEvent: " + scent.getStrengthPeak());
 		}
@@ -655,15 +651,15 @@ public class ZAUtil {
 		}
 	}
     
-    public static void hookSetAttackTarget(LivingChangeTargetEvent event) {
+    public static void hookSetAttackTarget(LivingEntity entity, LivingEntity target) {
     	
     	//ZombieAwareness.dbg(event.getEntityLiving().getEntityId() + " targetting " + event.getTarget());
     	
-    	if (event.getEntity() instanceof Mob) {
-    		if (event.getNewTarget() instanceof Player) {
+    	if (entity instanceof Mob) {
+    		if (target instanceof Player) {
 	    		//tryPlayAlertSound((EntityLiving)event.getEntityLiving(), new Vec3d(event.getTarget().getX(), event.getTarget().getY(), event.getTarget().getZ()));
-	    		tryPlayTargetSound((Mob)event.getEntity(), (LivingEntity)event.getNewTarget(), new Vector3d(event.getEntity().getX(), event.getEntity().getY(), event.getEntity().getZ()));
-    		} else if (event.getNewTarget() == null) {
+	    		tryPlayTargetSound((Mob)entity, target, new Vector3d(entity.getX(), entity.getY(), entity.getZ()));
+    		} else if (target == null) {
     			//dont use, AI stupidly detargets when resetting tasks despite still chasing player, causing double alert noise if this code is used
     			/*if (lookupLastAlertTime.containsKey(event.getEntityLiving())) {
     				lookupLastAlertTime.remove(event.getEntityLiving());
@@ -700,7 +696,7 @@ public class ZAUtil {
         
         if (newNode) {
 	        var1.setPos(tryX, tryY, tryZ);
-	        var1.type = 2;
+	        var1.setSenseType(2);
 	        
 	        entSource.level().addFreshEntity(var1);
         }
@@ -783,7 +779,7 @@ public class ZAUtil {
     		for(int j = 0; j < list.size(); j++)
             {
     			EntityScent node = (EntityScent)list.get(j);
-    			if (node.type == type.ordinal()) {
+    			if (node.getSenseType() == type.ordinal()) {
     				return node;
     			}
             }
@@ -811,7 +807,7 @@ public class ZAUtil {
     	
     	if (sense == null) {
     		sense = new EntityScent(EntityRegistry.SCENT.get(), world);
-    		sense.type = type.ordinal();
+    		sense.setSenseType(type.ordinal());
 	        sense.setPos(parPos.x, parPos.y, parPos.z);
     		sense.setStrengthPeak(strength);
 	        world.addFreshEntity(sense);

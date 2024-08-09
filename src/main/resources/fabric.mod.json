@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "version": "${version}",
+
+  "name": "${mod_name}",
+  "description": "${mod_description}",
+  "authors": [
+    "${mod_authors}"
+  ],
+  "license": "${mod_license}",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.corosus.watut.loader.fabric.ZombieAwarenessModFabric"
+    ],
+    "client": [
+      "com.corosus.watut.loader.fabric.WatutModFabricClient"
+    ]
+  },
+  "mixins": [
+    "${mod_id}_fabric.mixins.json"
+  ],
+  "accessWidener": "${mod_id}.accesswidener",
+  "depends": {
+    "fabricloader": ">=0.14.21",
+    "coroutil": ">=1.20.1-1.3.5",
+    "fabric-api": "*",
+    "minecraft": "1.20.x",
+    "java": ">=17"
+  }
+}

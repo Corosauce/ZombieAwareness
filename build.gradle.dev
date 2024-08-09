@@ -1,0 +1,126 @@
+plugins {
+	id 'fabric-loom' version '1.2-SNAPSHOT'
+	id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+repositories {
+	// Add repositories to retrieve artifacts from in here.
+	// You should only use this when depending on other mods because
+	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
+	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
+	// for more information about repositories.
+
+	maven {
+		name = 'CurseMaven'
+		url = "https://cursemaven.com"
+	}
+
+	// Complete Config repos
+	maven {
+		url 'https://jitpack.io'
+	}
+	maven {
+		url "https://maven.terraformersmc.com/"
+	}
+	maven {
+		url "https://maven.shedaniel.me/"
+	}
+	maven {
+		url "https://maven.siphalor.de/"
+	}
+	maven {
+		url "https://maven.isxander.dev/releases"
+	}
+}
+
+dependencies {
+	// To change the versions see the gradle.properties file
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings loom.layered() {
+		officialMojangMappings()
+		parchment("org.parchmentmc.data:parchment-${project.parchment_mc_version}:${project.parchment_version}@zip")
+	}
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	// Fabric API. This is technically optional, but you probably want it anyway.
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+	// Uncomment the following line to enable the deprecated Fabric API modules. 
+	// These are included in the Fabric API production distribution and allow you to update your mod to the latest modules at a later more convenient time.
+
+	// modImplementation "net.fabricmc.fabric-api:fabric-api-deprecated:${project.fabric_version}"
+	modImplementation "curse.maven:lazydfu-433518:3821870" //Lazy DFU for 1.19+
+
+	// Complete Config dep
+	// modImplementation "com.gitlab.Lortseam:completeconfig:base:${project.completeconfig_version}"
+	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
+	modImplementation "com.github.Lortseam.completeconfig:gui-cloth:${project.completeconfig_version}"
+
+	// Forge Deps. For dependency libraries required at compile, you'll have to add an implementation for them as well.
+	implementation "net.minecraftforge:forge:${project.forge_version}:universal"
+	implementation "net.minecraftforge:javafmllanguage:${project.forge_version}"
+	implementation "net.minecraftforge:fmlcore:${project.forge_version}"
+	implementation "net.minecraftforge:eventbus:${project.forge_event_bus_version}"
+	implementation "net.minecraftforge:mergetool:${project.forge_merge_tool_version}:api"
+	implementation "com.electronwill.night-config:core:${project.nightconfig_core_version}"
+}
+
+//If there's mixins
+//loom {
+//	mixin {
+//		defaultRefmapName = "${project.mod_id}.refmap.json"
+//	}
+//}
+
+base {
+	archivesName = "${project.archives_base_name}-${project.minecraft_version}-Fabric"
+}
+
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	// Minecraft 1.18 (1.18-pre2) upwards uses Java 17.
+	it.options.release = 17
+}
+
+java {
+	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+	// if it is present.
+	// If you remove this line, sources will not be generated.
+	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+}
+
+jar {
+	from("LICENSE") {
+		rename { "${it}_${base.archivesName.get()}"}
+	}
+}
+
+// configure the maven publication
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+		}
+	}
+
+	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+	repositories {
+		// Add repositories to publish to here.
+		// Notice: This block does NOT have the same function as the block in the top level.
+		// The repositories here will be used for publishing your artifact, not for
+		// retrieving dependencies.
+	}
+}
