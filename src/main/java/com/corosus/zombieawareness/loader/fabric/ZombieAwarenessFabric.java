@@ -1,42 +1,67 @@
 package com.corosus.zombieawareness.loader.fabric;
 
+import com.corosus.zombieawareness.EntityScent;
 import com.corosus.zombieawareness.ZombieAwareness;
 import com.corosus.zombieawareness.config.MobListsConfig;
+import com.corosus.zombieawareness.config.SoundsListsConfig;
+import fuzs.forgeconfigapiport.api.config.v2.ForgeConfigRegistry;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.players.PlayerList;
-import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraftforge.fml.config.ModConfig;
 
 import java.io.File;
+import java.util.function.Supplier;
 
 public class ZombieAwarenessFabric extends ZombieAwareness implements ModInitializer {
 
 	public static MinecraftServer minecraftServer = null;
 
+	public static Supplier<EntityType<EntityScent>> SENSE_SUP;
+
+	static {
+		SENSE = EntityType.Builder.
+				of(EntityScent::new, MobCategory.MISC)
+				.updateInterval(20)
+				.clientTrackingRange(128)
+				.sized(0f, 0f).build(SENSE_NAME.toString());
+
+		SENSE_SUP = registerImpl(BuiltInRegistries.ENTITY_TYPE, SENSE_NAME, () -> SENSE);
+	}
+
+	static <T extends Entity> Supplier<EntityType<T>> register(String name, EntityType.Builder<T> builder) {
+		ResourceLocation id = new ResourceLocation(ZombieAwareness.MODID, name);
+		return registerImpl(BuiltInRegistries.ENTITY_TYPE, id, () -> builder.build(id.toString()));
+	}
+
+	public static <T> Supplier<T> registerImpl(Registry<? super T> registry, ResourceLocation id, Supplier<T> obj) {
+		T register = Registry.register(registry, id, obj.get());
+		return () -> register;
+	}
+
 	public ZombieAwarenessFabric() {
 		super();
 		new WatutNetworkingFabric();
 
-		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, MobListsConfig.CONFIG, ZombieAwareness.MODID + File.separator + "MobLists.toml");
+		ForgeConfigRegistry.INSTANCE.register(MODID, ModConfig.Type.COMMON, MobListsConfig.CONFIG, ZombieAwareness.MODID + File.separator + "MobLists.toml");
+
+		ForgeConfigRegistry.INSTANCE.register(MODID, ModConfig.Type.COMMON, SoundsListsConfig.CONFIG, ZombieAwareness.MODID + File.separator + "SoundLists.toml");
+
+		//FabricDefaultAttributeRegistry.register(SENSE, EntityScent.createMobAttributes());
 	}
 
 	@Override
 	public void onInitialize() {
 		ServerLifecycleEvents.SERVER_STARTED.register((minecraftServer) -> {
 			ZombieAwarenessFabric.minecraftServer = minecraftServer;
-		});
-		ServerPlayNetworking.registerGlobalReceiver(WatutNetworkingFabric.NBT_PACKET_ID, (server, player, handler, buf, responseSender) -> {
-			CompoundTag nbt = buf.readNbt();
-			server.execute(() -> {
-				if (player != null) {
-					ZombieAwareness.getPlayerStatusManagerServer().receiveAny(player, nbt);
-				}
-			});
 		});
 	}
 

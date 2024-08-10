@@ -2,12 +2,10 @@ package com.corosus.zombieawareness.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.Builder;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@EventBusSubscriber
 public class MobListsConfig {
 
     public static List<String> enhancedMobsDefaults = new ArrayList<>();

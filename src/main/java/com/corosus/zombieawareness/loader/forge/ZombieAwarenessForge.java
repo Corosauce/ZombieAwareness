@@ -2,11 +2,11 @@ package com.corosus.zombieawareness.loader.forge;
 
 import com.corosus.zombieawareness.EventRegistry;
 import com.corosus.zombieawareness.ZombieAwareness;
+import com.corosus.zombieawareness.ZombieAwarenessClient;
 import com.corosus.zombieawareness.config.MobListsConfig;
+import com.corosus.zombieawareness.config.SoundsListsConfig;
 import com.corosus.zombieawareness.loader.forge.client.ClientRegistry;
-import com.corosus.zombieawareness.loader.forge.client.SoundRegistry;
-import net.minecraft.data.DataGenerator;
-import net.minecraft.data.PackOutput;
+import com.corosus.zombieawareness.client.SoundRegistry;
 import net.minecraft.server.players.PlayerList;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -42,18 +42,21 @@ public class ZombieAwarenessForge extends ZombieAwareness {
 
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         DistExecutor.safeRunForDist(() -> ClientRegistry::new, () -> EventRegistry::new);
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            new ZombieAwarenessForgeClient();
+        }
 
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new EntityRegistry());
         MinecraftForge.EVENT_BUS.register(new ZAEventHandler());
-        MinecraftForge.EVENT_BUS.addListener(this::serverStart);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SoundsListsConfig.CONFIG, ZombieAwareness.MODID + File.separator + "SoundLists.toml");
+        //MinecraftForge.EVENT_BUS.addListener(this::serverStart);
 
         EntityRegistry.init();
-        SoundRegistry.init();
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, MobListsConfig.CONFIG, ZombieAwareness.MODID + File.separator + "MobLists.toml");
 
-        modBus.addListener(this::onLoad);
+        //modBus.addListener(this::onLoad);
 
     }
 

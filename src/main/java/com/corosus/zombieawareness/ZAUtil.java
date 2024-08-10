@@ -2,11 +2,10 @@ package com.corosus.zombieawareness;
 
 import com.corosus.coroutil.util.*;
 import com.corosus.zombieawareness.client.SoundProfileEntry;
-import com.corosus.zombieawareness.loader.forge.client.SoundRegistry;
+import com.corosus.zombieawareness.client.SoundRegistry;
 import com.corosus.zombieawareness.config.ZAConfigFeatures;
 import com.corosus.zombieawareness.config.ZAConfigGeneral;
 import com.corosus.zombieawareness.config.ZAConfigPlayerLists;
-import com.corosus.zombieawareness.loader.forge.EntityRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -214,7 +213,8 @@ public class ZAUtil {
 	}
 
 	public static boolean isMobSpeedBosted(Mob ent) {
-		return ent.getPersistentData().getBoolean(SPEED_BOOST_TAG);
+		return ZombieAwareness.instance().getPersistentData(ent).getBoolean(SPEED_BOOST_TAG);
+		//return ent.getPersistentData().getBoolean(SPEED_BOOST_TAG);
 	}
 	
 	public static void giveRandomSpeedBoost(Mob ent) {
@@ -227,7 +227,7 @@ public class ZAUtil {
             if (!ent.getAttribute(Attributes.MOVEMENT_SPEED).hasModifier(speedBoostModifier)) {
 				ZombieAwareness.dbg("boosting zombie speed to " + randBoost);
                 ent.getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(speedBoostModifier);
-				ent.getPersistentData().putBoolean(SPEED_BOOST_TAG, true);
+				ZombieAwareness.instance().getPersistentData(ent).putBoolean(SPEED_BOOST_TAG, true);
             }
 		}
 	}
@@ -273,7 +273,7 @@ public class ZAUtil {
 	public static void markPerformedPathing(Mob ent) {
 		//setting to 100+ prevents random pathing from cancelling our path, not entirely though, a mixin does this instead now
 		ent.setNoActionTime(0);
-		ent.getPersistentData().putLong(ZA_LAST_ACTION, ent.level().getGameTime());
+		ZombieAwareness.instance().getPersistentData(ent).putLong(ZA_LAST_ACTION, ent.level().getGameTime());
 	}
     
     public static void tickAI(Mob ent) {
@@ -283,7 +283,7 @@ public class ZAUtil {
 
     	if (ZAConfigGeneral.debugConsoleSuperDetailed) ZombieAwareness.dbg("ZA DBG: Ticking: " + ent);
 
-		long lastActionTime = ent.getPersistentData().getLong(ZA_LAST_ACTION);
+		long lastActionTime = ZombieAwareness.instance().getPersistentData(ent).getLong(ZA_LAST_ACTION);
 		if (lastActionTime > 0 && ent.level().getGameTime() - ZAConfigGeneral.tickCooldownBetweenPathfinds < lastActionTime) return;
 
 		//if (ent.getNoActionTime() <= 40) return;
@@ -688,7 +688,7 @@ public class ZAUtil {
         boolean newNode = false;
     	
     	if (var1 == null) {
-    		var1 = new EntityScent(EntityRegistry.SCENT.get(), entSource.level());
+    		var1 = new EntityScent(ZombieAwareness.SENSE, entSource.level());
     		newNode = true;
     	}
 
@@ -806,7 +806,7 @@ public class ZAUtil {
     	EntityScent sense = getSenseNodeAtPos(world, parPos, type);
     	
     	if (sense == null) {
-    		sense = new EntityScent(EntityRegistry.SCENT.get(), world);
+    		sense = new EntityScent(ZombieAwareness.SENSE, world);
     		sense.setSenseType(type.ordinal());
 	        sense.setPos(parPos.x, parPos.y, parPos.z);
     		sense.setStrengthPeak(strength);

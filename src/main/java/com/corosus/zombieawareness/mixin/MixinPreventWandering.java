@@ -1,6 +1,7 @@
 package com.corosus.zombieawareness.mixin;
 
 import com.corosus.zombieawareness.ZAUtil;
+import com.corosus.zombieawareness.ZombieAwareness;
 import com.corosus.zombieawareness.config.ZAConfigGeneral;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
@@ -19,7 +20,7 @@ public abstract class MixinPreventWandering {
     @Inject(method = "canUse",
             at = @At(value = "HEAD"), cancellable = true)
     public void canUse(CallbackInfoReturnable<Boolean> cir) {
-        long lastActionTime = mob.getPersistentData().getLong(ZAUtil.ZA_LAST_ACTION);
+        long lastActionTime = ZombieAwareness.instance().getPersistentData(mob).getLong(ZAUtil.ZA_LAST_ACTION);
         if (lastActionTime > 0 && mob.level().getGameTime() - ZAConfigGeneral.tickCooldownBetweenPathfinds < lastActionTime) {
             //System.out.println("cancelling random wander");
             cir.setReturnValue(false);

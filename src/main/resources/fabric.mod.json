@@ -12,14 +12,14 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "com.corosus.watut.loader.fabric.ZombieAwarenessModFabric"
+      "com.corosus.zombieawareness.loader.fabric.ZombieAwarenessFabric"
     ],
     "client": [
-      "com.corosus.watut.loader.fabric.WatutModFabricClient"
+      "com.corosus.zombieawareness.loader.fabric.ZombieAwarenessFabricClient"
     ]
   },
   "mixins": [
-    "${mod_id}_fabric.mixins.json"
+    "${mod_id}.mixins.json"
   ],
   "accessWidener": "${mod_id}.accesswidener",
   "depends": {

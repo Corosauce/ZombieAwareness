@@ -26,13 +26,22 @@ public abstract class MixinExplosion {
     @Shadow
     public Level level;
 
+    @Shadow
+    public double x;
+
+    @Shadow
+    public double y;
+
+    @Shadow
+    public double z;
+
     @Inject(method = "explode",
             at = @At(value = "HEAD"), cancellable = true)
     public void hook(CallbackInfo ci) {
         Explosion explosion = ((Explosion)(Object)this);
         SoundProfileEntry entry = ZAUtil.getSoundIDEntry(SoundEvents.GENERIC_EXPLODE.getLocation().toString());
         if (entry != null) {
-            Vec3 pos = explosion.getPosition();
+            Vec3 pos = new Vec3(x, y, z);
             Player closestPlayer = ZAUtil.getClosestPlayer(level, pos.x, pos.y, pos.z, 128);
             if (closestPlayer != null) {
                 ZAUtil.handleSoundProfileEvent(level, entry, new Vector3d(pos.x, pos.y, pos.z), closestPlayer);

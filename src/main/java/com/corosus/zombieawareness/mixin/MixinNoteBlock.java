@@ -21,6 +21,6 @@ public abstract class MixinNoteBlock {
     @Inject(method = "triggerEvent",
             at = @At(value = "HEAD"), cancellable = true)
     public void triggerEvent(BlockState pState, Level pLevel, BlockPos pPos, int pId, int pParam, CallbackInfoReturnable<Boolean> cir) {
-        ZAUtil.hookSoundEvent(SoundEvents.NOTE_BLOCK_BASS.get(), pLevel, pPos.getX(), pPos.getY(), pPos.getZ(), 1, 1);
+        ZAUtil.hookSoundEvent(SoundEvents.NOTE_BLOCK_BASS.value(), pLevel, pPos.getX(), pPos.getY(), pPos.getZ(), 1, 1);
     }
 }

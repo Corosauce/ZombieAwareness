@@ -34,7 +34,8 @@ minecraft {
     //
     // Use non-default mappings at your own risk. They may not always work.
     // Simply re-run your setup task after changing the mappings to update your workspace.
-    mappings channel: 'official', version: "${project.minecraft_version}"
+    //mappings channel: 'official', version: "${project.minecraft_version}"
+    mappings channel: 'parchment', version: "${project.parchment_version}-${project.parchment_mc_version}"
 
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg') // Currently, this location cannot be changed from the default.
 

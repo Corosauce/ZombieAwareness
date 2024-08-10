@@ -23,13 +23,19 @@ public class EntityRegistry {
         ENTITY_TYPES.register(modEventBus);
     }
 
+    /*public static final RegistryObject<EntityType<EntityScent>> SCENT =
+            ENTITY_TYPES.register("scent", () -> ZombieAwareness.SENSE);*/
+
     public static final RegistryObject<EntityType<EntityScent>> SCENT =
-            ENTITY_TYPES.register("scent", () -> EntityType.Builder.<EntityScent>
-                    of(EntityScent::new, MobCategory.MISC)
-                    .setShouldReceiveVelocityUpdates(false)
-                    .setUpdateInterval(20)
-                    .setTrackingRange(128)
-                    .sized(0f, 0f)
-                    .build(new ResourceLocation(ZombieAwareness.MODID, "scent").toString()));
+            ENTITY_TYPES.register("scent", () -> {
+                ZombieAwareness.SENSE = EntityType.Builder.<EntityScent>
+                                of(EntityScent::new, MobCategory.MISC)
+                        .setShouldReceiveVelocityUpdates(false)
+                        .setUpdateInterval(20)
+                        .setTrackingRange(128)
+                        .sized(0f, 0f)
+                        .build(new ResourceLocation(ZombieAwareness.MODID, "scent").toString());
+                return ZombieAwareness.SENSE;
+            });
 
 }

@@ -2,20 +2,23 @@ package com.corosus.zombieawareness;
 
 import com.corosus.modconfig.CoroConfigRegistry;
 import com.corosus.zombieawareness.config.*;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
-import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -29,6 +32,20 @@ public abstract class ZombieAwareness
 
     public static ZombieAwareness instance() {
         return instance;
+    }
+
+    public static ResourceLocation SENSE_NAME = new ResourceLocation(ZombieAwareness.MODID, "scent");
+    public static EntityType<EntityScent> SENSE;
+
+    public static HashMap<UUID, CompoundTag> entityData = new HashMap<>();
+
+    public CompoundTag getPersistentData(Entity ent) {
+        if (!entityData.containsKey(ent.getUUID())) entityData.put(ent.getUUID(), new CompoundTag());
+        return entityData.get(ent.getUUID());
+    }
+
+    public CompoundTag setPersistentData(Entity ent, CompoundTag compoundTag) {
+        return entityData.put(ent.getUUID(), compoundTag);
     }
 
     public ZombieAwareness() {
@@ -55,21 +72,23 @@ public abstract class ZombieAwareness
 
 
 
-    @SubscribeEvent
+    /*@SubscribeEvent
     public void onLoad(final ModConfigEvent.Loading configEvent) {
         if (configEvent.getConfig().getFileName().contains("MobLists.toml")) {
             //System.out.println("ZombieAwarenessMod.generateEntityTickList();");
-            ZombieAwareness.generateEntityTickList();
+
         }
 
         if (configEvent.getConfig().getFileName().contains("SoundLists.toml")) {
-            ZombieAwareness.generateSoundList();
-        }
-    }
 
-    @SubscribeEvent
-    public void serverStart(ServerStartingEvent event) {
+        }
+    }*/
+
+
+    public static void serverStarting() {
         clearConfigCache();
+        generateEntityTickList();
+        generateSoundList();
     }
 
     public static void clearConfigCache() {
@@ -151,8 +170,9 @@ public abstract class ZombieAwareness
     }
 
     public static boolean getDefaultForEntity(EntityType ent) {
+
         if (canConfigEntity(ent)) {
-            if (MobListsConfig.GENERAL.enhancedMobs.get().contains(ForgeRegistries.ENTITY_TYPES.getKey(ent).toString())) {
+            if (MobListsConfig.GENERAL.enhancedMobs.get().contains(BuiltInRegistries.ENTITY_TYPE.getKey(ent).toString())) {
                 return true;
             } else {
                 return false;
@@ -178,7 +198,7 @@ public abstract class ZombieAwareness
     public static String getEntityRegisteredName(EntityType ent) {
         try {
 
-            return ForgeRegistries.ENTITY_TYPES.getKey(ent).toString();
+            return BuiltInRegistries.ENTITY_TYPE.getKey(ent).toString();
         } catch (Exception ex) {
             if (ZAConfigGeneral.debugConsole) {
                 ex.printStackTrace();
@@ -193,7 +213,7 @@ public abstract class ZombieAwareness
      *
      */
     public static void generateEntityTickList() {
-        for(Map.Entry<ResourceKey<EntityType<?>>, EntityType<?>> entry : ForgeRegistries.ENTITY_TYPES.getEntries()) {
+        for(Map.Entry<ResourceKey<EntityType<?>>, EntityType<?>> entry : BuiltInRegistries.ENTITY_TYPE.entrySet()) {
             //calling canProcessEntity fills the lists
             boolean tickEnt = canConfigEntity(entry.getValue());
             if (tickEnt) {
@@ -205,7 +225,7 @@ public abstract class ZombieAwareness
     }
 
     public static void generateSoundList() {
-        for(Map.Entry<ResourceKey<SoundEvent>, SoundEvent> entry : ForgeRegistries.SOUND_EVENTS.getEntries()) {
+        for(Map.Entry<ResourceKey<SoundEvent>, SoundEvent> entry : BuiltInRegistries.SOUND_EVENT.entrySet()) {
             //calling canProcessEntity fills the lists
             //boolean tickEnt = canConfigEntity(entry.getValue());
             if (true) {
@@ -215,5 +235,9 @@ public abstract class ZombieAwareness
         SoundsListsConfig.GENERAL.allSoundsInGame.set(SoundsListsConfig.allSoundsInGameList);
         System.out.println(SoundsListsConfig.allSoundsInGameList);
         System.out.println("asdasd");
+    }
+
+    public void initSounds() {
+
     }
 }
