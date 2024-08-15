@@ -21,11 +21,4 @@ public class ZombieAwarenessFabricClient extends ZombieAwarenessClient implement
 		EntityRendererRegistry.register(ZombieAwarenessFabric.SENSE, (context) -> new RenderScent(context));
 	}
 
-	@Override
-	public SoundEvent register(String name) {
-		SoundEvent soundEvent = super.register(name);
-		Registry.register(BuiltInRegistries.SOUND_EVENT, new ResourceLocation(ZombieAwareness.MODID, name), soundEvent);
-		return soundEvent;
-	}
-
 }

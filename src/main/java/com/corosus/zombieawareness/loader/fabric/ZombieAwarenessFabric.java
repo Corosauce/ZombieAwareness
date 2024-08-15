@@ -13,6 +13,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.players.PlayerList;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -49,13 +50,14 @@ public class ZombieAwarenessFabric extends ZombieAwareness implements ModInitial
 
 	public ZombieAwarenessFabric() {
 		super();
-		new WatutNetworkingFabric();
 
 		ForgeConfigRegistry.INSTANCE.register(MODID, ModConfig.Type.COMMON, MobListsConfig.CONFIG, ZombieAwareness.MODID + File.separator + "MobLists.toml");
 
-		ForgeConfigRegistry.INSTANCE.register(MODID, ModConfig.Type.COMMON, SoundsListsConfig.CONFIG, ZombieAwareness.MODID + File.separator + "SoundLists.toml");
+		//ForgeConfigRegistry.INSTANCE.register(MODID, ModConfig.Type.COMMON, SoundsListsConfig.CONFIG, ZombieAwareness.MODID + File.separator + "SoundLists.toml");
 
 		//FabricDefaultAttributeRegistry.register(SENSE, EntityScent.createMobAttributes());
+
+		init();
 	}
 
 	@Override
@@ -73,5 +75,12 @@ public class ZombieAwarenessFabric extends ZombieAwareness implements ModInitial
 	@Override
 	public boolean isModInstalled(String modID) {
 		return FabricLoader.getInstance().isModLoaded(modID);
+	}
+
+	@Override
+	public SoundEvent register(String name) {
+		SoundEvent soundEvent = super.register(name);
+		Registry.register(BuiltInRegistries.SOUND_EVENT, new ResourceLocation(ZombieAwareness.MODID, name), soundEvent);
+		return soundEvent;
 	}
 }

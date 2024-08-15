@@ -13,23 +13,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 public class ZombieAwarenessForgeClient extends ZombieAwarenessClient {
 
-    public static final DeferredRegister<SoundEvent> SOUND_EVENTS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, ZombieAwareness.MODID);
-
     public ZombieAwarenessForgeClient() {
         super();
-    }
-
-    @Override
-    public void init() {
-        super.init();
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-        SOUND_EVENTS.register(modEventBus);
-    }
-
-    @Override
-    public SoundEvent register(String name) {
-        SoundEvent soundEvent = super.register(name);
-        SOUND_EVENTS.register(name, () -> soundEvent);
-        return soundEvent;
     }
 }

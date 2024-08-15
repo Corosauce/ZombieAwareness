@@ -38,6 +38,7 @@ public abstract class MixinExplosion {
     @Inject(method = "explode",
             at = @At(value = "HEAD"), cancellable = true)
     public void hook(CallbackInfo ci) {
+        ZombieAwareness.unitTest("4");
         Explosion explosion = ((Explosion)(Object)this);
         SoundProfileEntry entry = ZAUtil.getSoundIDEntry(SoundEvents.GENERIC_EXPLODE.getLocation().toString());
         if (entry != null) {

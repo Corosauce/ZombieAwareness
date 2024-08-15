@@ -1,6 +1,7 @@
 package com.corosus.zombieawareness.mixin;
 
 import com.corosus.zombieawareness.ZAUtil;
+import com.corosus.zombieawareness.ZombieAwareness;
 import com.corosus.zombieawareness.config.ZAConfigGeneral;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
@@ -15,8 +16,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinPlayer {
 
     @Inject(method = "getDestroySpeed",
-            at = @At(value = "HEAD"), cancellable = true, remap=false)
+            at = @At(value = "HEAD"), cancellable = true)
     public void hook(BlockState pState, CallbackInfoReturnable<Float> cir) {
+        ZombieAwareness.unitTest("10");
         Player ent = ((Player)(Object)this);
         if (!ent.level().isClientSide) {
             if (!ZAUtil.isZombieAwarenessActive(ent.level())) return;
@@ -29,6 +31,7 @@ public abstract class MixinPlayer {
     @Inject(method = "tick",
             at = @At(value = "HEAD"), cancellable = true)
     public void hook2(CallbackInfo ci) {
+        ZombieAwareness.unitTest("11");
         Player ent = ((Player)(Object)this);
         if (ent.level().isClientSide) return;
 

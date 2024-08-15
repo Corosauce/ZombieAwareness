@@ -18,7 +18,7 @@
     "MixinRecomputePath",
     "MixinServerLevel_playSeededSound",
     "MixinServerPlayerGameMode",
-    "MixinTargettingForge"
+    "MixinTargettingFabric"
   ],
   "injectors": {
     "defaultRequire": 1

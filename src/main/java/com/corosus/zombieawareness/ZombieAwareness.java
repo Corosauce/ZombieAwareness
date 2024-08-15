@@ -30,6 +30,8 @@ public abstract class ZombieAwareness
 
     private static ZombieAwareness instance;
 
+    private HashMap<String, SoundEvent> lookupStringToEvent = new HashMap<>();
+
     public static ZombieAwareness instance() {
         return instance;
     }
@@ -38,6 +40,18 @@ public abstract class ZombieAwareness
     public static EntityType<EntityScent> SENSE;
 
     public static HashMap<UUID, CompoundTag> entityData = new HashMap<>();
+
+    public static HashMap<String, Boolean> unitTest = new HashMap<>();
+
+    public static void unitTest(String num) {
+        /*if (!unitTest.containsKey(num)) {
+            for (int i = 1; i <= 16; i++) {
+                System.out.println(i + ": " + unitTest.containsKey(String.valueOf(i)));
+            }
+            System.out.println(num + " - count: " + unitTest.size() + " of 16");
+        }
+        unitTest.put(num, true);*/
+    }
 
     public CompoundTag getPersistentData(Entity ent) {
         if (!entityData.containsKey(ent.getUUID())) entityData.put(ent.getUUID(), new CompoundTag());
@@ -63,6 +77,8 @@ public abstract class ZombieAwareness
         //ZombieAwarenessMod.generateEntityTickList();
         //required to make forge tell us when our mods reload, and we then tell ModConfig about it so it does its thing
         //modBus.addListener(this::onReload);
+        generateEntityTickList();
+        //generateSoundList();
 
     }
 
@@ -87,8 +103,6 @@ public abstract class ZombieAwareness
 
     public static void serverStarting() {
         clearConfigCache();
-        generateEntityTickList();
-        generateSoundList();
     }
 
     public static void clearConfigCache() {
@@ -220,7 +234,7 @@ public abstract class ZombieAwareness
                 MobListsConfig.enhanceableMobsList.add(entry.getKey().location().toString());
             }
         }
-        MobListsConfig.GENERAL.enhanceableMobs.set(MobListsConfig.enhanceableMobsList);
+        //MobListsConfig.GENERAL.enhanceableMobs.set(MobListsConfig.enhanceableMobsList);
         //System.out.println(MobListsConfig.enhanceableMobsList);
     }
 
@@ -233,11 +247,23 @@ public abstract class ZombieAwareness
             }
         }
         SoundsListsConfig.GENERAL.allSoundsInGame.set(SoundsListsConfig.allSoundsInGameList);
-        System.out.println(SoundsListsConfig.allSoundsInGameList);
-        System.out.println("asdasd");
+        //System.out.println(SoundsListsConfig.allSoundsInGameList);
+        //System.out.println("asdasd");
     }
 
-    public void initSounds() {
+    public void init() {
+        register("alert");
+        register("target");
+        register("investigate");
+    }
 
+    public SoundEvent register(String name) {
+        SoundEvent event = SoundEvent.createVariableRangeEvent(new ResourceLocation(ZombieAwareness.MODID, name));
+        lookupStringToEvent.put(name, event);
+        return event;
+    }
+
+    public SoundEvent getSound(String soundPath) {
+        return lookupStringToEvent.get(soundPath);
     }
 }

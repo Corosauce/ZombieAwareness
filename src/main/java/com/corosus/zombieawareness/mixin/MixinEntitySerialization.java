@@ -14,6 +14,7 @@ public abstract class MixinEntitySerialization {
     @Inject(method = "addAdditionalSaveData",
             at = @At(value = "HEAD"))
     public void hook(CompoundTag data, CallbackInfo ci) {
+        ZombieAwareness.unitTest("2");
         Mob ent = ((Mob)(Object)this);
         data.put("za_data", ZombieAwareness.instance().getPersistentData(ent));
     }
@@ -21,6 +22,7 @@ public abstract class MixinEntitySerialization {
     @Inject(method = "readAdditionalSaveData",
             at = @At(value = "HEAD"))
     public void hook2(CompoundTag data, CallbackInfo ci) {
+        ZombieAwareness.unitTest("3");
         Mob ent = ((Mob)(Object)this);
         ZombieAwareness.instance().setPersistentData(ent, data.getCompound("za_data"));
     }

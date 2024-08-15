@@ -28,6 +28,7 @@ public abstract class MixinServerPlayerGameMode {
     @Inject(method = "destroyBlock",
             at = @At(value = "HEAD"), cancellable = true)
     public void hook(BlockPos pPos, CallbackInfoReturnable<Boolean> cir) {
+        ZombieAwareness.unitTest("16");
         if (!level.isClientSide) {
             if (!ZAUtil.isZombieAwarenessActive(level)) return;
             if (!ZAConfigGeneral.blockHittingEvent_Active) return;

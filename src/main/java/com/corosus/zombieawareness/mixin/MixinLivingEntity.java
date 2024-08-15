@@ -20,6 +20,7 @@ public abstract class MixinLivingEntity {
     @Inject(method = "tick",
             at = @At(value = "HEAD"), cancellable = true)
     public void hook(CallbackInfo ci) {
+        ZombieAwareness.unitTest("7");
         LivingEntity ent = ((LivingEntity)(Object)this);
         if (ent.level().isClientSide) return;
 

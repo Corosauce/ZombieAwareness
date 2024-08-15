@@ -59,13 +59,13 @@ public class ZAEventHandler {
         }
 	}*/
 	
-	@SubscribeEvent
+	/*@SubscribeEvent
 	public void setAttackTarget(LivingChangeTargetEvent event) {
 		if (!event.getEntity().level().isClientSide) {
 			if (!ZAUtil.isZombieAwarenessActive(event.getEntity().level())) return;
 			ZAUtil.hookSetAttackTarget(event.getEntity(), event.getNewTarget());
 		}
-	}
+	}*/
 	
 	/*@SubscribeEvent
 	public void breakSpeed(BreakSpeed event) {

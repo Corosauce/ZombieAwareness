@@ -650,9 +650,12 @@ public class ZAUtil {
 			ZombieAwareness.dbg("spawned or buffed sound sense from BlockBasedEvent: " + scent.getStrengthPeak());
 		}
 	}
+
+	public static void test(Object... args) {
+		//System.out.println("can attack? " );
+	}
     
     public static void hookSetAttackTarget(LivingEntity entity, LivingEntity target) {
-    	
     	//ZombieAwareness.dbg(event.getEntityLiving().getEntityId() + " targetting " + event.getTarget());
     	
     	if (entity instanceof Mob) {

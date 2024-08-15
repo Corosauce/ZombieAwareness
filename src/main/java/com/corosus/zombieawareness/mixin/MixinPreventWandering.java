@@ -20,6 +20,7 @@ public abstract class MixinPreventWandering {
     @Inject(method = "canUse",
             at = @At(value = "HEAD"), cancellable = true)
     public void canUse(CallbackInfoReturnable<Boolean> cir) {
+        ZombieAwareness.unitTest("13");
         long lastActionTime = ZombieAwareness.instance().getPersistentData(mob).getLong(ZAUtil.ZA_LAST_ACTION);
         if (lastActionTime > 0 && mob.level().getGameTime() - ZAConfigGeneral.tickCooldownBetweenPathfinds < lastActionTime) {
             //System.out.println("cancelling random wander");

@@ -23,6 +23,7 @@ public abstract class MixinIntegratedServer {
     @Inject(method = "initServer",
             at = @At(value = "HEAD"), cancellable = true)
     public void hook(CallbackInfoReturnable<Boolean> cir) {
+        ZombieAwareness.unitTest("5");
         ZombieAwareness.serverStarting();
     }
 }

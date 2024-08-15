@@ -19,7 +19,7 @@
     ]
   },
   "mixins": [
-    "${mod_id}.mixins.json"
+    "${mod_id}.mixins_fabric.json"
   ],
   "accessWidener": "${mod_id}.accesswidener",
   "depends": {

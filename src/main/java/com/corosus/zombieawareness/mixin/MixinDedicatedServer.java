@@ -14,6 +14,7 @@ public abstract class MixinDedicatedServer {
     @Inject(method = "initServer",
             at = @At(value = "HEAD"), cancellable = true)
     public void hook(CallbackInfoReturnable<Boolean> cir) {
+        ZombieAwareness.unitTest("1");
         ZombieAwareness.serverStarting();
     }
 }
