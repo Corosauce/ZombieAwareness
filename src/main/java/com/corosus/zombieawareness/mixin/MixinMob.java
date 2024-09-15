@@ -21,7 +21,7 @@ public abstract class MixinMob {
 
     @Inject(method = "finalizeSpawn",
             at = @At(value = "HEAD"), cancellable = true)
-    public void hook(ServerLevelAccessor pLevel, DifficultyInstance pDifficulty, MobSpawnType pReason, SpawnGroupData pSpawnData, CompoundTag pDataTag, CallbackInfoReturnable<SpawnGroupData> cir) {
+    public void hook(ServerLevelAccessor pLevel, DifficultyInstance pDifficulty, MobSpawnType pReason, SpawnGroupData pSpawnData, CallbackInfoReturnable<SpawnGroupData> cir) {
         ZombieAwareness.unitTest("8");
         LivingEntity ent = ((LivingEntity)(Object)this);
         if (ent.level().isClientSide) return;

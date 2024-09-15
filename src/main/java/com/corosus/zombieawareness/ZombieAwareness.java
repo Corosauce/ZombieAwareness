@@ -36,7 +36,7 @@ public abstract class ZombieAwareness
         return instance;
     }
 
-    public static ResourceLocation SENSE_NAME = new ResourceLocation(ZombieAwareness.MODID, "scent");
+    public static ResourceLocation SENSE_NAME = ResourceLocation.fromNamespaceAndPath(ZombieAwareness.MODID, "scent");
     public static EntityType<EntityScent> SENSE;
 
     public static HashMap<UUID, CompoundTag> entityData = new HashMap<>();
@@ -258,7 +258,7 @@ public abstract class ZombieAwareness
     }
 
     public SoundEvent register(String name) {
-        SoundEvent event = SoundEvent.createVariableRangeEvent(new ResourceLocation(ZombieAwareness.MODID, name));
+        SoundEvent event = SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(ZombieAwareness.MODID, name));
         lookupStringToEvent.put(name, event);
         return event;
     }

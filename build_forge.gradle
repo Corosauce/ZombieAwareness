@@ -1,14 +1,14 @@
 buildscript {
-	dependencies {
-		// Can't use the newer 'plugins' block for Mixin, need to use the old 'apply plugin' method
-		classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.7.+'
-	}
+    dependencies {
+        // Can't use the newer 'plugins' block for Mixin, need to use the old 'apply plugin' method
+        classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.7.+'
+    }
 }
 plugins {
     id 'eclipse'
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
-	id 'org.parchmentmc.librarian.forgegradle' version '1.+'
+    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
 apply plugin: 'org.spongepowered.mixin'
 
@@ -17,7 +17,7 @@ version = project.mod_version
 group = project.maven_group
 
 // Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 minecraft {
@@ -155,12 +155,13 @@ dependencies {
     // The userdev artifact is a special name and will get all sorts of transformations applied to it.
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-	//Uncomment if using mixins (Mixin edits are found in 3 places)
-	annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    //Uncomment if using mixins (Mixin edits are found in 3 places)
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     //implementation fg.deobf("curse.maven:jei-238222:5101366")
     //implementation fg.deobf("curse.maven:farmers-delight-398521:5051242")
+    implementation('net.sf.jopt-simple:jopt-simple:5.0.4') { version { strictly '5.0.4' } }
 
-    implementation fg.deobf("com.corosus.coroutil:coroutil-forge:${project.minecraft_version}-${project.coroutil_version}")
+    implementation ("com.corosus.coroutil:coroutil-forge:${project.minecraft_version}-${project.coroutil_version}")
 
     // Real mod deobf dependency examples - these get remapped to your current mappings
     // implementation fg.deobf("com.tterrag.registrate:Registrate:MC${mc_version}-${registrate_version}") // Adds registrate as a dependency
@@ -174,11 +175,12 @@ dependencies {
 }
 
 sourceSets {
-	main {
-		java {
-			exclude "com/corosus/${project.mod_id}/loader/fabric/**"
-		}
-	}
+    main {
+        java {
+            exclude "com/corosus/${project.mod_id}/loader/fabric/**"
+            exclude "com/corosus/${project.mod_id}/loader/neoforge/**"
+        }
+    }
 }
 
 tasks.named('processResources', ProcessResources).configure {
@@ -197,8 +199,9 @@ tasks.named('processResources', ProcessResources).configure {
 }
 
 processResources {
-	exclude("fabric.mod.json")
-	exclude("${project.mod_id}.accesswidener")
+    exclude("fabric.mod.json")
+    exclude("META-INF/neoforge.mods.toml")
+    exclude("${project.mod_id}.accesswidener")
 }
 
 // Example for how to get properties into the manifest for reading at runtime.
@@ -240,4 +243,16 @@ publishing {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
+
+
+//new for 1.20.4 lexforge
+// Merge the resources and classes into the same directory.
+// This is done because java expects modules to be in a single directory.
+// And if we have it in multiple we have to do performance intensive hacks like having the UnionFileSystem
+// This will eventually be migrated to ForgeGradle so modders don't need to manually do it. But that is later.
+sourceSets.each {
+    def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
+    it.output.resourcesDir = dir
+    it.java.destinationDirectory = dir
 }

@@ -40,7 +40,7 @@ public abstract class MixinExplosion {
     public void hook(CallbackInfo ci) {
         ZombieAwareness.unitTest("4");
         Explosion explosion = ((Explosion)(Object)this);
-        SoundProfileEntry entry = ZAUtil.getSoundIDEntry(SoundEvents.GENERIC_EXPLODE.getLocation().toString());
+        SoundProfileEntry entry = ZAUtil.getSoundIDEntry(SoundEvents.GENERIC_EXPLODE.value().toString());
         if (entry != null) {
             Vec3 pos = new Vec3(x, y, z);
             Player closestPlayer = ZAUtil.getClosestPlayer(level, pos.x, pos.y, pos.z, 128);

@@ -40,10 +40,10 @@ public class EntityScent extends Entity/* implements IEntityAdditionalSpawnData*
     }
 
     @Override
-    protected void defineSynchedData() {
-    	this.getEntityData().define(STRENGTH_PEAK, Integer.valueOf(0));
-    	this.getEntityData().define(AGE, Integer.valueOf(0));
-    	this.getEntityData().define(TYPE, Byte.valueOf((byte) 0));
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        builder.define(STRENGTH_PEAK, Integer.valueOf(0));
+        builder.define(AGE, Integer.valueOf(0));
+        builder.define(TYPE, Byte.valueOf((byte) 0));
     }
     
     @Override

@@ -34,7 +34,7 @@ public class EntityRegistry {
                         .setUpdateInterval(20)
                         .setTrackingRange(128)
                         .sized(0f, 0f)
-                        .build(new ResourceLocation(ZombieAwareness.MODID, "scent").toString());
+                        .build(ResourceLocation.fromNamespaceAndPath(ZombieAwareness.MODID, "scent").toString());
                 return ZombieAwareness.SENSE;
             });
 

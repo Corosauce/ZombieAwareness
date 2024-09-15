@@ -13,11 +13,6 @@ repositories {
 	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
 	// for more information about repositories.
 
-	maven {
-		name = 'CurseMaven'
-		url = "https://cursemaven.com"
-	}
-
 	// Complete Config repos
 	maven {
 		url 'https://jitpack.io'
@@ -34,57 +29,68 @@ repositories {
 	maven {
 		url "https://maven.isxander.dev/releases"
 	}
+	maven {
+		name = "ParchmentMC"
+		url = "https://maven.parchmentmc.net/"
+	}
+	maven {
+		url "https://cursemaven.com"
+	}
+	flatDir {
+		dir 'libs'
+	}
 }
 
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings loom.layered() {
-		officialMojangMappings()
-		parchment("org.parchmentmc.data:parchment-${project.parchment_mc_version}:${project.parchment_version}@zip")
-	}
+	mappings(loom.layered {
+		it.parchment("org.parchmentmc.data:parchment-${minecraft_version}:${parchment_version}@zip")
+		it.officialMojangMappings { nameSyntheticMembers = false }
+	})
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	modImplementation 'com.corosus.coroutil:coroutil-fabric:1.20.1-1.3.3'
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-	// Uncomment the following line to enable the deprecated Fabric API modules. 
-	// These are included in the Fabric API production distribution and allow you to update your mod to the latest modules at a later more convenient time.
-
-	// modImplementation "net.fabricmc.fabric-api:fabric-api-deprecated:${project.fabric_version}"
-	modImplementation "curse.maven:lazydfu-433518:3821870" //Lazy DFU for 1.19+
-
-	// Complete Config dep
-	// modImplementation "com.gitlab.Lortseam:completeconfig:base:${project.completeconfig_version}"
-	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
-	modImplementation "com.github.Lortseam.completeconfig:gui-cloth:${project.completeconfig_version}"
-
-	// Forge Deps. For dependency libraries required at compile, you'll have to add an implementation for them as well.
-	implementation "net.minecraftforge:forge:${project.forge_version}:universal"
-	implementation "net.minecraftforge:javafmllanguage:${project.forge_version}"
-	implementation "net.minecraftforge:fmlcore:${project.forge_version}"
-	implementation "net.minecraftforge:eventbus:${project.forge_event_bus_version}"
-	implementation "net.minecraftforge:mergetool:${project.forge_merge_tool_version}:api"
-	implementation "com.electronwill.night-config:core:${project.nightconfig_core_version}"
+	//include(modImplementation("ForgeConfigAPIPort:ForgeConfigAPIPort:v8.0.0-1.20.1-Fabric"))
+	//using https://www.curseforge.com/minecraft/mc-mods/forge-config-api-port-fabric/files/4583000
+	include(modImplementation("curse.maven:forge-config-api-port-fabric-547434:4583000"))
+	//include(modImplementation("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:v8.0.0-1.20.1-Fabric"))
 }
 
 //If there's mixins
-//loom {
-//	mixin {
-//		defaultRefmapName = "${project.mod_id}.refmap.json"
-//	}
-//}
+loom {
+	accessWidenerPath = file("src/main/resources/${project.mod_id}.accesswidener")
+	mixin {
+		defaultRefmapName = "${project.mod_id}.refmap.json"
+	}
+}
+
+sourceSets {
+	main {
+		java {
+            exclude "com/corosus/${project.mod_id}/api/forge/**"
+			exclude "com/corosus/${project.mod_id}/loader/forge/**"
+		}
+	}
+}
 
 base {
-	archivesName = "${project.archives_base_name}-${project.minecraft_version}-Fabric"
+	archivesName = "${project.archives_base_name}-fabric"
 }
 
 processResources {
 	inputs.property "version", project.version
 
 	filesMatching("fabric.mod.json") {
-		expand "version": project.version
+		expand "mod_id": project.mod_id, "version": project.version, "mod_name": project.mod_name, "mod_description": project.mod_description, "mod_authors": project.mod_authors, "mod_license": project.mod_license
 	}
+	
+	exclude("META-INF/mods.toml")
+	exclude("META-INF/accesstransformer.cfg")
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -96,7 +102,7 @@ java {
 	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
 	// if it is present.
 	// If you remove this line, sources will not be generated.
-	withSourcesJar()
+	//withSourcesJar()
 
 	sourceCompatibility = JavaVersion.VERSION_17
 	targetCompatibility = JavaVersion.VERSION_17
@@ -104,7 +110,7 @@ java {
 
 jar {
 	from("LICENSE") {
-		rename { "${it}_${base.archivesName.get()}"}
+		rename { "${it}_${project.archivesBaseName}"}
 	}
 }
 

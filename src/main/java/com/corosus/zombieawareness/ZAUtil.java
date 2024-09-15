@@ -7,6 +7,7 @@ import com.corosus.zombieawareness.config.ZAConfigFeatures;
 import com.corosus.zombieawareness.config.ZAConfigGeneral;
 import com.corosus.zombieawareness.config.ZAConfigPlayerLists;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -128,7 +129,7 @@ public class ZAUtil {
 		if (ZAConfigFeatures.noisyPistons) listSoundProfiles.add(new SoundProfileEntry(SoundEvents.PISTON_EXTEND, 2D, 5).setMaxDistToSpawnFromPlayer(24));
 
 		//not used traditionally, looked up directly
-		listSoundProfiles.add(new SoundProfileEntry(SoundEvents.GENERIC_EXPLODE, 10D).setMaxDistToSpawnFromPlayer(24));
+		listSoundProfiles.add(new SoundProfileEntry(SoundEvents.GENERIC_EXPLODE.value(), 10D).setMaxDistToSpawnFromPlayer(24));
 	}
 
 	public static void addSoundIntegerEntry(SoundProfileEntry entry) {
@@ -223,8 +224,9 @@ public class ZAUtil {
 			if (ent.isBaby()) {
 				randBoost *= -1;
 			}
-			AttributeModifier speedBoostModifier = new AttributeModifier(CoroUtilAttributes.SPEED_BOOST_UUID, "ZA speed boost", randBoost, AttributeModifier.Operation.MULTIPLY_BASE);
-            if (!ent.getAttribute(Attributes.MOVEMENT_SPEED).hasModifier(speedBoostModifier)) {
+			ResourceLocation resourceLocation = ResourceLocation.fromNamespaceAndPath(ZombieAwareness.MODID, "speed_boost");
+			AttributeModifier speedBoostModifier = new AttributeModifier(resourceLocation, randBoost, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+            if (!ent.getAttribute(Attributes.MOVEMENT_SPEED).hasModifier(speedBoostModifier.id())) {
 				ZombieAwareness.dbg("boosting zombie speed to " + randBoost);
                 ent.getAttribute(Attributes.MOVEMENT_SPEED).addPermanentModifier(speedBoostModifier);
 				ZombieAwareness.instance().getPersistentData(ent).putBoolean(SPEED_BOOST_TAG, true);
@@ -373,16 +375,19 @@ public class ZAUtil {
 
 					if (!ent.level().isLoaded(pos)) continue;
 
-		    		float lightValue = entP.level().getBrightness(LightLayer.BLOCK, ent.blockPosition());
+		    		float lightValueNearPlayer = entP.level().getBrightness(LightLayer.BLOCK, pos);
 
 					//as of 1.16 its float values for brightness, 0.2 seems like a good minimum brightness
 					//moon phases doesnt seem to affect this value
+					//CULog.dbg("lightValue to player " + lightValue);
 
 		    		//if bright enough and also as bright or brighter than where they are currently
-		    		if (forceOn || lightValue > 0.2F/* && lightValue >= lightValueAtEntity*/) {
+		    		if (forceOn || lightValueNearPlayer > 0.2F && lightValueNearPlayer >= lightValueAtEntity) {
 						//adjusted to 32 from 64
+						//CULog.dbg("dist to player " + ent.distanceTo(entP));
 		    			if ((forceOn || CU.rand().nextInt(5) == 0) && ent.distanceTo(entP) > 16) {
 							boolean canSeePos = CoroUtilEntity.canSee(ent, new BlockPos(rX, rY, rZ));
+
 							if (canSeePos) {
 								ZombieAwareness.dbg("try path to light source - " + rX + ", " + rY + ", " + rZ);
 								//if (ent.getNavigation().moveTo(rX, rY, rZ, 1)) {
@@ -395,6 +400,7 @@ public class ZAUtil {
 
 									ZombieAwareness.dbg("pathing to lightsource at " + rX + ", " + rY + ", " + rZ + " - " + ent);
 									markPerformedPathing(ent);
+									CULog.dbg("dist to player " + ent.distanceTo(entP));
 								}
 								return true;
 							}

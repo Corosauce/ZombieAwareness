@@ -3,8 +3,7 @@ package com.corosus.zombieawareness.loader.fabric;
 import com.corosus.zombieawareness.EntityScent;
 import com.corosus.zombieawareness.ZombieAwareness;
 import com.corosus.zombieawareness.config.MobListsConfig;
-import com.corosus.zombieawareness.config.SoundsListsConfig;
-import fuzs.forgeconfigapiport.api.config.v2.ForgeConfigRegistry;
+import fuzs.forgeconfigapiport.fabric.api.forge.v4.ForgeConfigRegistry;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.loader.api.FabricLoader;
@@ -39,7 +38,7 @@ public class ZombieAwarenessFabric extends ZombieAwareness implements ModInitial
 	}
 
 	static <T extends Entity> Supplier<EntityType<T>> register(String name, EntityType.Builder<T> builder) {
-		ResourceLocation id = new ResourceLocation(ZombieAwareness.MODID, name);
+		ResourceLocation id = ResourceLocation.fromNamespaceAndPath(ZombieAwareness.MODID, name);
 		return registerImpl(BuiltInRegistries.ENTITY_TYPE, id, () -> builder.build(id.toString()));
 	}
 
@@ -80,7 +79,7 @@ public class ZombieAwarenessFabric extends ZombieAwareness implements ModInitial
 	@Override
 	public SoundEvent register(String name) {
 		SoundEvent soundEvent = super.register(name);
-		Registry.register(BuiltInRegistries.SOUND_EVENT, new ResourceLocation(ZombieAwareness.MODID, name), soundEvent);
+		Registry.register(BuiltInRegistries.SOUND_EVENT, ResourceLocation.fromNamespaceAndPath(ZombieAwareness.MODID, name), soundEvent);
 		return soundEvent;
 	}
 }

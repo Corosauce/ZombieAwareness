@@ -25,7 +25,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class RenderScent extends EntityRenderer {
     
-    public static ResourceLocation TEXTURE64 = new ResourceLocation(ZombieAwareness.MODID + ":textures/entities/bloodx64.png");
+    public static ResourceLocation TEXTURE64 = ResourceLocation.fromNamespaceAndPath(ZombieAwareness.MODID, "textures/entities/bloodx64.png");
     private static final RenderType SHADOW_RENDER_TYPE = RenderType.entityShadow(TEXTURE64);
 
     public RenderScent(EntityRendererProvider.Context p_i46179_1_) {
@@ -143,7 +143,7 @@ public class RenderScent extends EntityRenderer {
     }
 
     private static void shadowVertex(PoseStack.Pose p_229091_0_, VertexConsumer p_229091_1_, float p_229091_2_, float p_229091_3_, float p_229091_4_, float p_229091_5_, float p_229091_6_, float p_229091_7_, float light) {
-        p_229091_1_.vertex(p_229091_0_.pose(), p_229091_3_, p_229091_4_, p_229091_5_).color(1.0F * light, 1.0F * light, 1.0F * light, p_229091_2_).uv(p_229091_6_, p_229091_7_).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(15728880).normal(p_229091_0_.normal(), 0.0F, 1.0F, 0.0F).endVertex();
+        p_229091_1_.addVertex(p_229091_0_.pose(), p_229091_3_, p_229091_4_, p_229091_5_).setColor(1.0F * light, 1.0F * light, 1.0F * light, p_229091_2_).setUv(p_229091_6_, p_229091_7_).setOverlay(OverlayTexture.NO_OVERLAY).setLight(15728880).setNormal(p_229091_0_, 0.0F, 1.0F, 0.0F);
     }
 
 }

@@ -12,7 +12,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ClientRegistry {
 
-    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void registerModels(FMLClientSetupEvent event) {
         EntityRenderers.register(EntityRegistry.SCENT.get(), render -> new RenderScent(render));

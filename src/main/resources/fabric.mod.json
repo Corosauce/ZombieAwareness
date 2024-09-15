@@ -24,9 +24,9 @@
   "accessWidener": "${mod_id}.accesswidener",
   "depends": {
     "fabricloader": ">=0.14.21",
-    "coroutil": ">=1.20.1-1.3.5",
+    "coroutil": ">=1.21.0-1.3.5",
     "fabric-api": "*",
-    "minecraft": "1.20.x",
-    "java": ">=17"
+    "minecraft": "1.21.x",
+    "java": ">=21"
   }
 }
