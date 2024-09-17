@@ -1,4 +1,4 @@
-package com.corosus.zombieawareness.config;
+package com.corosus.zombieawareness.loader.fabric.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.Builder;

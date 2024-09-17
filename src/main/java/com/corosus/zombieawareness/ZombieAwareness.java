@@ -2,7 +2,6 @@ package com.corosus.zombieawareness;
 
 import com.corosus.modconfig.CoroConfigRegistry;
 import com.corosus.zombieawareness.config.*;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
@@ -14,11 +13,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.function.Supplier;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -30,7 +25,7 @@ public abstract class ZombieAwareness
 
     private static ZombieAwareness instance;
 
-    private HashMap<String, SoundEvent> lookupStringToEvent = new HashMap<>();
+    public HashMap<String, SoundEvent> lookupStringToEvent = new HashMap<>();
 
     public static ZombieAwareness instance() {
         return instance;
@@ -42,6 +37,7 @@ public abstract class ZombieAwareness
     public static HashMap<UUID, CompoundTag> entityData = new HashMap<>();
 
     public static HashMap<String, Boolean> unitTest = new HashMap<>();
+    public static List<String> enhanceableMobsList = new ArrayList<>();
 
     public static void unitTest(String num) {
         /*if (!unitTest.containsKey(num)) {
@@ -186,7 +182,7 @@ public abstract class ZombieAwareness
     public static boolean getDefaultForEntity(EntityType ent) {
 
         if (canConfigEntity(ent)) {
-            if (MobListsConfig.GENERAL.enhancedMobs.get().contains(BuiltInRegistries.ENTITY_TYPE.getKey(ent).toString())) {
+            if (ZombieAwareness.instance().getEnhancedMobs().contains(BuiltInRegistries.ENTITY_TYPE.getKey(ent).toString())) {
                 return true;
             } else {
                 return false;
@@ -231,14 +227,14 @@ public abstract class ZombieAwareness
             //calling canProcessEntity fills the lists
             boolean tickEnt = canConfigEntity(entry.getValue());
             if (tickEnt) {
-                MobListsConfig.enhanceableMobsList.add(entry.getKey().location().toString());
+                enhanceableMobsList.add(entry.getKey().location().toString());
             }
         }
         //MobListsConfig.GENERAL.enhanceableMobs.set(MobListsConfig.enhanceableMobsList);
         //System.out.println(MobListsConfig.enhanceableMobsList);
     }
 
-    public static void generateSoundList() {
+    /*public static void generateSoundList() {
         for(Map.Entry<ResourceKey<SoundEvent>, SoundEvent> entry : BuiltInRegistries.SOUND_EVENT.entrySet()) {
             //calling canProcessEntity fills the lists
             //boolean tickEnt = canConfigEntity(entry.getValue());
@@ -249,7 +245,7 @@ public abstract class ZombieAwareness
         SoundsListsConfig.GENERAL.allSoundsInGame.set(SoundsListsConfig.allSoundsInGameList);
         //System.out.println(SoundsListsConfig.allSoundsInGameList);
         //System.out.println("asdasd");
-    }
+    }*/
 
     public void init() {
         register("alert");
@@ -266,4 +262,6 @@ public abstract class ZombieAwareness
     public SoundEvent getSound(String soundPath) {
         return lookupStringToEvent.get(soundPath);
     }
+
+    public abstract List<? extends String> getEnhancedMobs();
 }

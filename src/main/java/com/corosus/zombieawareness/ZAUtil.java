@@ -400,7 +400,7 @@ public class ZAUtil {
 
 									ZombieAwareness.dbg("pathing to lightsource at " + rX + ", " + rY + ", " + rZ + " - " + ent);
 									markPerformedPathing(ent);
-									CULog.dbg("dist to player " + ent.distanceTo(entP));
+									//CULog.dbg("dist to player " + ent.distanceTo(entP));
 								}
 								return true;
 							}

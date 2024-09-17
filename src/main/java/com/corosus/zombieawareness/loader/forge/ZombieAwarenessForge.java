@@ -2,18 +2,12 @@ package com.corosus.zombieawareness.loader.forge;
 
 import com.corosus.zombieawareness.EventRegistry;
 import com.corosus.zombieawareness.ZombieAwareness;
-import com.corosus.zombieawareness.ZombieAwarenessClient;
-import com.corosus.zombieawareness.config.MobListsConfig;
-import com.corosus.zombieawareness.config.SoundsListsConfig;
 import com.corosus.zombieawareness.loader.forge.client.ClientRegistry;
-import com.corosus.zombieawareness.client.SoundRegistry;
+import com.corosus.zombieawareness.loader.forge.config.MobListsConfig;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.data.ExistingFileHelper;
-import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModList;
@@ -28,6 +22,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.server.ServerLifecycleHooks;
 
 import java.io.File;
+import java.util.List;
 
 @Mod(ZombieAwarenessForge.MODID)
 public class ZombieAwarenessForge extends ZombieAwareness {
@@ -52,7 +47,6 @@ public class ZombieAwarenessForge extends ZombieAwareness {
 
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new EntityRegistry());
-        MinecraftForge.EVENT_BUS.register(new ZAEventHandler());
         //ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SoundsListsConfig.CONFIG, ZombieAwareness.MODID + File.separator + "SoundLists.toml");
         //MinecraftForge.EVENT_BUS.addListener(this::serverStart);
 
@@ -92,5 +86,10 @@ public class ZombieAwarenessForge extends ZombieAwareness {
         SoundEvent soundEvent = super.register(name);
         SOUND_EVENTS.register(name, () -> soundEvent);
         return soundEvent;
+    }
+
+    @Override
+    public List<? extends String> getEnhancedMobs() {
+        return com.corosus.zombieawareness.loader.forge.config.MobListsConfig.GENERAL.enhancedMobs.get();
     }
 }

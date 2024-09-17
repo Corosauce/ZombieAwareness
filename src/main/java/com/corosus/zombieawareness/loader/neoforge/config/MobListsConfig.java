@@ -1,7 +1,7 @@
-package com.corosus.zombieawareness.config;
+package com.corosus.zombieawareness.loader.neoforge.config;
 
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.common.ForgeConfigSpec.Builder;
+import com.corosus.zombieawareness.ZombieAwareness;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +9,6 @@ import java.util.List;
 public class MobListsConfig {
 
     public static List<String> enhancedMobsDefaults = new ArrayList<>();
-    public static List<String> enhanceableMobsList = new ArrayList<>();
     //public static List<String> listEnhancedMobsParsedConfig = new ArrayList<>();
 
     static {
@@ -23,14 +22,14 @@ public class MobListsConfig {
         enhancedMobsDefaults.add(mc + "zombie_villager");
     }
 
-    private static final Builder BUILDER = new Builder();
+    private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
     public static final CategoryGeneral GENERAL = new CategoryGeneral();
 
     public static final class CategoryGeneral {
 
-        public final ForgeConfigSpec.ConfigValue<List<? extends String>> enhancedMobs;
-        public final ForgeConfigSpec.ConfigValue<List<? extends String>> enhanceableMobs;
+        public final ModConfigSpec.ConfigValue<List<? extends String>> enhancedMobs;
+        public final ModConfigSpec.ConfigValue<List<? extends String>> enhanceableMobs;
 
         private CategoryGeneral() {
 
@@ -39,11 +38,11 @@ public class MobListsConfig {
             enhancedMobs = BUILDER.comment("Mobs enhanced by zombie awareness").defineList("enhancedMobs", enhancedMobsDefaults,
                     it -> it instanceof String);
 
-            enhanceableMobs = BUILDER.comment("This is a list to use as a reference for your modpack for mobs you might want to enhance, if these mobs also walk on the ground, they will probably work if you add them to enhancedMobs").defineList("enhanceableMobs", enhanceableMobsList,
+            enhanceableMobs = BUILDER.comment("This is a list to use as a reference for your modpack for mobs you might want to enhance, if these mobs also walk on the ground, they will probably work if you add them to enhancedMobs").defineList("enhanceableMobs", ZombieAwareness.enhanceableMobsList,
                     it -> it instanceof String);
 
             BUILDER.pop();
         }
     }
-    public static final ForgeConfigSpec CONFIG = BUILDER.build();
+    public static final ModConfigSpec CONFIG = BUILDER.build();
 }

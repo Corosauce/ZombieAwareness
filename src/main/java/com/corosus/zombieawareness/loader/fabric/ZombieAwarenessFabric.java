@@ -2,7 +2,7 @@ package com.corosus.zombieawareness.loader.fabric;
 
 import com.corosus.zombieawareness.EntityScent;
 import com.corosus.zombieawareness.ZombieAwareness;
-import com.corosus.zombieawareness.config.MobListsConfig;
+import com.corosus.zombieawareness.loader.fabric.config.MobListsConfig;
 import fuzs.forgeconfigapiport.fabric.api.forge.v4.ForgeConfigRegistry;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -19,6 +19,7 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraftforge.fml.config.ModConfig;
 
 import java.io.File;
+import java.util.List;
 import java.util.function.Supplier;
 
 public class ZombieAwarenessFabric extends ZombieAwareness implements ModInitializer {
@@ -81,5 +82,10 @@ public class ZombieAwarenessFabric extends ZombieAwareness implements ModInitial
 		SoundEvent soundEvent = super.register(name);
 		Registry.register(BuiltInRegistries.SOUND_EVENT, ResourceLocation.fromNamespaceAndPath(ZombieAwareness.MODID, name), soundEvent);
 		return soundEvent;
+	}
+
+	@Override
+	public List<? extends String> getEnhancedMobs() {
+		return com.corosus.zombieawareness.loader.fabric.config.MobListsConfig.GENERAL.enhancedMobs.get();
 	}
 }
