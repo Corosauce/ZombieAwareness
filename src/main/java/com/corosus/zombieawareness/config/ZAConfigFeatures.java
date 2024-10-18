@@ -19,11 +19,11 @@ public class ZAConfigFeatures implements IConfigCategory {
 	@ConfigComment("Pistons cause sound sense sources attracting monsters")
 	public static boolean noisyPistons = true;
 	@ConfigComment("Causes monsters to horde up and wander the surface together to random points")
-	public static boolean wanderingHordes = false;/*
+	public static boolean wanderingHordes = true;/*
 	@ConfigComment("Spawn extra zombies randomly on the surface at night if dark and away from player until Spawning.extraSpawningMaxCount is reached")
-	public static boolean extraSpawningSurface = false;
+	public static boolean extraSpawningSurface = true;
 	@ConfigComment("Spawn extra zombies in caves where other zombies already are if dark and away from player until Spawning.extraSpawningMaxCount is reached")
-	public static boolean extraSpawningCave = false;
+	public static boolean extraSpawningCave = true;
 	@ConfigComment("MC/Forge default is 0.1, this overrides that default, set to -1 to cause no override then restore forges default in their config")
 	public static double zombieSummonHelpBaseChance = 0D;
 	@ConfigComment("MC/Forge default is 0.05, this overrides that default, set to -1 to cause no override then restore forges default in their config")
@@ -42,7 +42,7 @@ public class ZAConfigFeatures implements IConfigCategory {
 	public static boolean soundAlerts = true;
 
 	@ConfigComment("Any hostile mob that targets you will make a sound, even if not enhanced")
-	public static boolean soundAlertsForAllAttackingMobs = false;
+	public static boolean soundAlertsForAllAttackingMobs = true;
 
 	@ConfigComment("Enhanced mobs will make a sound when they are investigating a sense near you")
 	public static boolean soundInvestigates = true;
