@@ -40,7 +40,6 @@ public class ZombieAwarenessNeoForge extends ZombieAwareness {
         EntityRegistry.init(container);
 
         if (FMLEnvironment.dist.isClient()) {
-            ClientEvents clientEvents = new ClientEvents();
             container.getEventBus().addListener(ClientRegistry::registerModels);
 
         }

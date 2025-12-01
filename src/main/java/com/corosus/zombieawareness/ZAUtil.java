@@ -11,6 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -32,6 +33,7 @@ import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.phys.AABB;
 import org.joml.Vector3d;
+import org.joml.Vector3f;
 
 import java.util.*;
 
@@ -162,6 +164,8 @@ public class ZAUtil {
     }
 	
 	public static void tickPlayer(Player player) {
+
+		if (player == null || !shouldTargetPlayer(player)) return;
     	
 		if (ZAConfigFeatures.wanderingHordes) {
 
@@ -360,6 +364,9 @@ public class ZAUtil {
     		
     		for (int i = 0; i < 4; i++) {
     			Player entP = getClosestPlayerToEntity(ent.level(), ent, 999);
+
+				if (entP == null || !shouldTargetPlayer(entP)) return false;
+
         		if (entP != null) {
 
 					//adjusted from 32 for 1.16 to get better results, vanilla might have changed something
@@ -585,7 +592,12 @@ public class ZAUtil {
 
 		if (entry != null) {
 			Player closestPlayer = getClosestPlayer(world, x, y, z, entry.getMaxDistToSpawnFromPlayer());
+
+
+
+			if (closestPlayer == null || !shouldTargetPlayer(closestPlayer)) return;
 			if (closestPlayer != null) {
+				CULog.dbg("name " + CoroUtilEntity.getName(closestPlayer));
 				Vector3d pos = new Vector3d(x, y, z);
 				if (!canSpawnTrace(world, x, y, z)) {
 					//spawn 1 higher up, added for tripwire detection, cant spawn sense on tripwire
@@ -612,11 +624,29 @@ public class ZAUtil {
 			}
 		}
 	}
+
+	public static boolean shouldTargetPlayer(Player player) {
+		if (player == null) return false;
+
+		if (ZAConfigPlayerLists.whiteListUsedSenses) {
+			if (ZAConfigPlayerLists.whitelistSenses.contains(CoroUtilEntity.getName(player))) {
+				if (!areAnyPlayersNearbyNotWhitelisted(player.level(), player.getX(), player.getY(), player.getZ(), ZAConfigPlayerLists.dist)) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		}
+
+		return true;
+	}
     
     public static void hookBlockEvent(Player player, int chance) {
 		if (player != null && !canSpawnTraceQuickCheck(player.level())) return;
     	
-    	if (player == null || (ZAConfigPlayerLists.whiteListUsedSenses && !ZAConfigPlayerLists.whitelistSenses.contains(CoroUtilEntity.getName(player)))) return;
+    	if (player == null || !shouldTargetPlayer(player)) return;
     	
 		if (!player.level().isClientSide() && CU.rand().nextInt(chance) == 0) {
 
@@ -642,9 +672,7 @@ public class ZAUtil {
 
 		if (!canSpawnTraceQuickCheck(world)) return;
 
-		if (player != null && ZAConfigPlayerLists.whiteListUsedSenses) {
-			if (ZAConfigPlayerLists.whitelistSenses.contains(CoroUtilEntity.getName(player))) return;
-		}
+		if (player == null || !shouldTargetPlayer(player)) return;
 
 		if (!world.isClientSide() && CU.rand().nextInt(chance) == 0) {
 
@@ -753,7 +781,8 @@ public class ZAUtil {
         for (int i = 0; i < world.players().size(); ++i)
         {
             Player entityplayer1 = world.players().get(i);
-            if (!ZAConfigPlayerLists.whiteListUsedSenses || ZAConfigPlayerLists.whitelistSenses.contains(CoroUtilEntity.getName(entityplayer1))) {
+
+			if (shouldTargetPlayer(entityplayer1)) {
             	double d5 = entityplayer1.distanceToSqr(x, y, z);
 
                 if ((maxDistance < 0.0D || d5 < maxDistance * maxDistance) && (closestDist == -1.0D || d5 < closestDist))
@@ -766,6 +795,29 @@ public class ZAUtil {
 
         return closestPlayer;
     }
+
+	//TODO: cache the results for x ticks, 5 seconds maybe
+	public static boolean areAnyPlayersNearbyNotWhitelisted(Level world, double x, double y, double z, double maxDistance) {
+		if (!ZAConfigPlayerLists.whiteListUsedSenses) return false;
+		if (!ZAConfigPlayerLists.notNearNonWhitelistedPlayers) return false;
+
+		for (int i = 0; i < world.players().size(); ++i)
+		{
+			Player entityplayer1 = world.players().get(i);
+			if (!ZAConfigPlayerLists.whitelistSenses.contains(CoroUtilEntity.getName(entityplayer1))) {
+				double dist = Mth.sqrt((float) entityplayer1.distanceToSqr(x, y, z));
+
+				if (dist < maxDistance) {
+
+					//CULog.dbg("return true, dist: " + dist);
+					return true;
+				}
+			}
+		}
+
+		//CULog.dbg("return false");
+		return false;
+	}
 
     /**
      * Checks if a scent of the same type is already at this location
